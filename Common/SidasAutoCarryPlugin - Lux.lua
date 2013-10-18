@@ -37,8 +37,8 @@ local qRange, eRange, rRange = 1175, 1100, 3000
 local FlashSlot = nil
 
 local SkillQ = {spellKey = _Q, range = qRange, speed = 1.2, delay = 200, width = 100, configName = "lightBinding", displayName = "Q (Light Binding)", enabled = true, skillShot = true, minions = true, reset = false, reqTarget = true}
-local SkillE = {spellKey = _E, range = eRange, speed = 1.3, delay = 200, width = 0, configName = "lucentSingularity", displayName = "E (Lucent Singularity)", minion = false}
-local SkillR = {spellKey = _R, range = rRange, speed = 12, delay = 1000, width = 190, configName = "finalSpark", displayName = "R (Final Spark)", minion = false}
+local SkillE = {spellKey = _E, range = eRange, speed = 1.3, delay = 200, width = 0, configName = "lucentSingularity", displayName = "E (Lucent Singularity)", enabled = true, skillShot = true, minions = false, reset = false, reqTarget = true}
+local SkillR = {spellKey = _R, range = rRange, speed = 12, delay = 1000, width = 190, configName = "finalSpark", displayName = "R (Final Spark)", enabled = true, skillShot = true, minions = false, reset = false, reqTarget = true}
 
 local QReady, WReady, EReady, RReady, FlashReady = false, false, false, false, false
 
@@ -75,7 +75,7 @@ function PluginOnTick()
 	-- Combo, Harass, Ultimate, Escape Combo - Checks
 	if AutoCarry.PluginMenu.lCombo and AutoCarry.MainMenu.AutoCarry then lCombo() end
 	if AutoCarry.PluginMenu.lHarass and AutoCarry.MainMenu.MixedMode then lHarass() end
-	if AutoCarry.PluginMenu.lUlt and AutoCarry.PluginMenu.lUltAim then lUlt() end
+	if AutoCarry.PluginMenu.lUlt and AutoCarry.PluginMenu.lUltAim and Target ~= nil and Target.type == "obj_AI_Hero" and GetDistance(Target) < rRange and GetDistance(Target) > 300 then lUlt() end
 end
 
 function PluginOnDraw()
@@ -121,10 +121,8 @@ end
 -- Custom Functions
 function lCombo()
 	if ValidTarget(Target) then
-		if AutoCarry.PluginMenu.lQ and QReady and GetDistance(Target) < qRange then
-			if not AutoCarry.GetCollision(SkillQ, myHero, Target) then
-				AutoCarry.CastSkillshot(SkillQ, Target)
-			end
+		if AutoCarry.PluginMenu.lQ and QReady and GetDistance(Target) < qRange-50 then
+			AutoCarry.CastSkillshot(SkillQ, Target)
 		end
 		if AutoCarry.PluginMenu.lE and EReady and GetDistance(Target) < eRange then
 			AutoCarry.CastSkillshot(SkillE, Target)
@@ -147,11 +145,9 @@ function lHarass()
 	end
 end
 
-function rUlt()
+function lUlt()
 	if RReady and GetDistance(Target) <= rRange then
-		if not AutoCarry.GetCollision(SkillR, myHero, Target) then
-			AutoCarry.CastSkillshot(SkillR, Target)
-		end
+		AutoCarry.CastSkillshot(SkillR, Target)
 	end
 end
 
@@ -171,9 +167,12 @@ function lSpellCheck()
 	end
 
 	QReady = (myHero:CanUseSpell(SkillQ.spellKey) == READY)
-	--WReady = (myHero:CanUseSpell(SkillW.spellKey) == READY)
+	-- WReady = (myHero:CanUseSpell(SkillW.spellKey) == READY)
 	EReady = (myHero:CanUseSpell(SkillE.spellKey) == READY)
 	RReady = (myHero:CanUseSpell(_R) == READY)
 
 	FlashReady = (FlashSlot ~= nil and myHero:CanUseSpell(FlashSlot) == READY)
 end
+
+--UPDATEURL=
+--HASH=82208B621E0CE6FE59AC11E60165A633
