@@ -171,7 +171,7 @@ function lSpellCheck()
 	end
 
 	QReady = (myHero:CanUseSpell(SkillQ.spellKey) == READY)
-	WReady = (myHero:CanUseSpell(SkillW.spellKey) == READY)
+	--WReady = (myHero:CanUseSpell(SkillW.spellKey) == READY)
 	EReady = (myHero:CanUseSpell(SkillE.spellKey) == READY)
 	RReady = (myHero:CanUseSpell(_R) == READY)
 
