@@ -181,5 +181,5 @@ function bSkillshot(spell, target)
     end
 end
 
---UPDATEURL=
+--UPDATEURL=https://raw.github.com/RoachxD/BoL_Scripts/master/Common/SidasAutoCarryPlugin%20-%20Blitzcrank.lua
 --HASH=70B1EBC9449E4FA774112516F4BD2DB3
