@@ -2,7 +2,7 @@
  
         Auto Carry Plugin - Blitzcrank Edition
 		Author: Roach_
-		Version: 1.0a
+		Version: 1.0b
 		Copyright 2013
 
 		Dependency: Sida's Auto Carry: Revamped
@@ -21,6 +21,11 @@
 			Escape Artist(with Flash)
 
 		History:
+			Version: 1.0b
+				Fixed Errors
+				Fixed Prediction
+				No more grabing minions
+		
 			Version: 1.0a
 				First release
 --]]
@@ -63,13 +68,6 @@ end
 function PluginOnTick()
 	-- Get Attack Target
 	Target = AutoCarry.GetAttackTarget()
-	
-	-- Prediction
-	if ValidTarget(Target) then
-		travelDuration = (SkillQ.delay + GetDistance(myHero, Target)/SkillQ.speed)
-		Target:SetPrediction(travelDuration)
-		bPred = Target.nextPosition
-	end
 
 	-- Check Spells
 	bSpellCheck()
@@ -117,8 +115,8 @@ end
 -- Custom Functions
 function bCombo()
 	if ValidTarget(Target) then
-		if QReady and bPred ~= nil and GetDistance(bPred) < (qRange-10) and not minionCollision(bPred, SkillQ.width, qRange) then
-			AutoCarry.CastSkillshot(SkillQ.spellKey, bPred.x, bPred.y)
+		if QReady and GetDistance(Target) < (qRange-25) then
+			bSkillshot(SkillQ, Target)
 		end
 		
 		if WReady and AutoCarry.PluginMenu.bWC then
@@ -140,8 +138,8 @@ function bKillsteal()
 end
 
 function bEscapeCombo()	
-	if QReady and bPred ~= nil and GetDistance(bPred) < (qRange-10) and not minionCollision(bPred, SkillQ.width, qRange) then
-		AutoCarry.CastSkillshot(SkillQ.spellKey, bPred.x, bPred.y)
+	if QReady and GetDistance(Target) < (qRange-25) then
+		bSkillshot(SkillQ, Target)
 		CastSpell(SkillE.spellKey)
 		if AutoCarry.PluginMenu.bEscapeFlash and FlashReady and GetDistance(mousePos) > 300 and isChanneling("Attack") then
 			CastSpell(FlashSlot, mousePos.x, mousePos.z)
@@ -177,26 +175,11 @@ function bSpellCheck()
 	FlashReady = (FlashSlot ~= nil and myHero:CanUseSpell(FlashSlot) == READY)
 end
 
-function minionCollision(pred, width, range)
-	for _, minionObjectE in pairs(enemyMinions.objects) do
-		if bPred ~= nil and player:GetDistance(minionObjectE) < range then
-			ex = player.x
-			ez = player.z
-			tx = bPred.x
-			tz = bPred.z
-			dx = ex - tx
-			dz = ez - tz
-			if dx ~= 0 then
-				m = dz/dx
-				c = ez - m*ex
-			end
-			mx = minionObjectE.x
-			mz = minionObjectE.z
-			distanc = (math.abs(mz - m*mx - c))/(math.sqrt(m*m+1))
-			if distanc < width and math.sqrt((tx - ex)*(tx - ex) + (tz - ez)*(tz - ez)) > math.sqrt((tx - mx)*(tx - mx) + (tz - mz)*(tz - mz)) then
-				return true
-			end
-		end
-	end
-	return false
+function bSkillshot(spell, target) 
+    if not AutoCarry.GetCollision(spell, myHero, target) then
+        AutoCarry.CastSkillshot(spell, target)
+    end
 end
+
+--UPDATEURL=
+--HASH=70B1EBC9449E4FA774112516F4BD2DB3
