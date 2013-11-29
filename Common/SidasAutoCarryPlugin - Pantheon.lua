@@ -2,7 +2,7 @@
  
         Auto Carry Plugin - Pantheon Edition
 		Author: Roach_
-		Version: 1.1c
+		Version: 2.0a
 		Copyright 2013
 
 		Dependency: Sida's Auto Carry: Revamped
@@ -22,6 +22,21 @@
 			Escape Artist(with Flash)
 
 		History:
+			Version: 2.0a
+				Added a Toggle for for Core Combo
+				Added an Extra Menu
+				Added Customizable Chase Combo
+				Added Farm with Q
+				Added Lane Clear with E
+				Added Auto Pots/Items
+				Added Minimum Mana to Harass/Farm - Check
+				Modified Menu - More customizable
+				Modified KS only with Q
+				Modified Harass - Working with Mixed Mode
+				Optimised Chase Combo
+				Rewrited some Functions
+				-- Fully Optimised the Script
+				
 			Version: 1.1c
 				Added Chase Combo
 				Fixed a bug where E was not casting
@@ -81,25 +96,76 @@ local SkillE = {spellKey = _E, range = eRange, speed = 2, delay = 0, width = 200
 
 local QReady, WReady, EReady, RReady, FlashReady = false, false, false, false, false
 
+-- Regeneration
+local UsingHPot, UsingMPot, UsingFlask = false, false, false
+
+-- Our lovely script
+function PluginOnLoadMenu()
+        Menu = AutoCarry.PluginMenu
+        Menu2 = AutoCarry.MainMenu
+        Menu:addParam("pPlugin", "[Cast Options]", SCRIPT_PARAM_INFO, "")
+        Menu:addParam("pCombo", "[Combo Options]", SCRIPT_PARAM_INFO, "")
+        Menu:addParam("pAutoQ", "Auto Cast Q", SCRIPT_PARAM_ONOFF, true)
+        Menu:addParam("pAutoW", "Auto Cast W", SCRIPT_PARAM_ONOFF, true)
+        Menu:addParam("pAutoE", "Auto Cast E", SCRIPT_PARAM_ONOFF, true)
+        Menu:permaShow("pPlugin")
+		
+        Menu:addParam("pGap", "", SCRIPT_PARAM_INFO, "")
+		
+		Menu:addParam("pChase", "[Chase Combo Options]", SCRIPT_PARAM_INFO, "")
+		Menu:addParam("pChaseCombo", "Use Chase Combo", SCRIPT_PARAM_ONKEYDOWN, false, pChaseComboHotkey)
+		Menu:addParam("pAutoCW", "Auto Cast W - Chase", SCRIPT_PARAM_ONOFF, true)
+		Menu:addParam("pAutoCE", "Auto Cast E - Chase", SCRIPT_PARAM_ONOFF, true)
+		Menu:addParam("pAutoCQ", "Auto Cast Q - Chase", SCRIPT_PARAM_ONOFF, true)
+		Menu:permaShow("pChase")
+        Menu:permaShow("pChaseCombo")
+		
+		Menu:addParam("pGap", "", SCRIPT_PARAM_INFO, "")
+		
+        Menu:addParam("pKS", "[Kill Steal Options]", SCRIPT_PARAM_INFO, "")
+		Menu:addParam("pKillsteal", "Auto Kill Steal with Q", SCRIPT_PARAM_ONOFF, true)
+        Menu:permaShow("pKS")
+        Menu:permaShow("pKillsteal")
+		
+        Menu:addParam("pGap", "", SCRIPT_PARAM_INFO, "")
+		
+        Menu:addParam("pMisc", "[Misc Options]", SCRIPT_PARAM_INFO, "")
+        Menu:addParam("pAutoLVL", "Auto Level Spells", SCRIPT_PARAM_ONOFF, false)
+        Menu:addParam("pMinMana", "Minimum Mana to Farm/Harass", SCRIPT_PARAM_SLICE, 0.4, 0.1, 0.9, 1)
+		Menu:addParam("pEscape", "Escape Artist", SCRIPT_PARAM_ONKEYDOWN, false, pEscapeHotkey)
+		Menu:addParam("pEscapeFlash", "Escape: Flash to Mouse", SCRIPT_PARAM_ONOFF, false)
+		Menu:permaShow("pMisc")
+		Menu:permaShow("pEscape")
+		
+		Menu:addParam("pGap", "", SCRIPT_PARAM_INFO, "")
+		
+		Menu:addParam("pH", "[Harass Options]", SCRIPT_PARAM_INFO, "")
+        Menu:addParam("pHarass", "Auto Harass with Q", SCRIPT_PARAM_ONOFF, true)
+		
+		Menu:addParam("pGap", "", SCRIPT_PARAM_INFO, "")
+		
+		Menu:addParam("pFarm", "[Farm Options]", SCRIPT_PARAM_INFO, "")
+        Menu:addParam("pFarmQ", "Auto Farm with Q", SCRIPT_PARAM_ONOFF, false)
+		Menu:addParam("pFarmE", "Auto Clear Lane with E", SCRIPT_PARAM_ONOFF, false)
+		
+		Extras = scriptConfig("Sida's Auto Carry Plugin: "..myHero.charName..": Extras", myHero.charName)
+		Extras:addParam("pDraw", "[Draw Options]", SCRIPT_PARAM_INFO, "")
+		Extras:addParam("pDCR", "Draw Combo Range", SCRIPT_PARAM_ONOFF, true)
+		Extras:addParam("pDCT", "Draw Crit Text", SCRIPT_PARAM_ONOFF, true)
+		
+		Extras:addParam("pGap", "", SCRIPT_PARAM_INFO, "")
+		
+		Extras:addParam("pHPMana", "[Auto Pots/Items Options]", SCRIPT_PARAM_INFO, "")
+		Extras:addParam("pWItem", "Auto Wooglets", SCRIPT_PARAM_ONOFF, true)
+		Extras:addParam("pWHealth", "Min Health % for Wooglets", SCRIPT_PARAM_SLICE, 15, 0, 100, -1)
+		Extras:addParam("pHP", "Auto Health Pots", SCRIPT_PARAM_ONOFF, true)
+		Extras:addParam("pMP", "Auto Auto Mana Pots", SCRIPT_PARAM_ONOFF, true)
+		Extras:addParam("pHPHealth", "Min % for Health Pots", SCRIPT_PARAM_SLICE, 50, 0, 100, -1)
+end
+
 function PluginOnLoad() 
 	-- Params/PluginMenu
-	AutoCarry.PluginMenu:addParam("pPlugin", "[Pantheon Plugin Options]", SCRIPT_PARAM_INFO, "")
-	AutoCarry.PluginMenu:addParam("pCombo", "Use Combo With Auto Carry", SCRIPT_PARAM_ONOFF, true)
-	AutoCarry.PluginMenu:addParam("pChaseCombo", "Use Chase Combo", SCRIPT_PARAM_ONKEYDOWN, false, pChaseComboHotkey)
-	AutoCarry.PluginMenu:addParam("pHarass", "Harass with Mixed Mode", SCRIPT_PARAM_ONOFF, true)
-	AutoCarry.PluginMenu:addParam("pUltCombo", "Auto-Combo After Ultimate", SCRIPT_PARAM_ONOFF, false)
-	AutoCarry.PluginMenu:addParam("pKillsteal", "Killsteal with Q/W/W+Q", SCRIPT_PARAM_ONOFF, true)
-	AutoCarry.PluginMenu:addParam("pDCR", "Draw Combo Range", SCRIPT_PARAM_ONOFF, true)
-	AutoCarry.PluginMenu:addParam("pDCT", "Draw Crit Text", SCRIPT_PARAM_ONOFF, true)
-	AutoCarry.PluginMenu:addParam("pEscape", "Escape Artist", SCRIPT_PARAM_ONKEYDOWN, false, pEscapeHotkey)
-	AutoCarry.PluginMenu:addParam("pEscapeFlash", "Escape: Flash to Mouse", SCRIPT_PARAM_ONOFF, false)
-	
-	-- Params/Mini-Menu
-	AutoCarry.PluginMenu:permaShow("pCombo")
-	AutoCarry.PluginMenu:permaShow("pHarass")
-	AutoCarry.PluginMenu:permaShow("pUltCombo")
-	AutoCarry.PluginMenu:permaShow("pKillsteal")
-	AutoCarry.PluginMenu:permaShow("pEscape")
+	PluginOnLoadMenu()
 	
 	-- Range
 	AutoCarry.SkillsCrosshair.range = qwRange
@@ -124,105 +190,159 @@ function PluginOnTick()
 		AutoCarry.CanMove = true
 	end
 
-	-- Combo, Harass, Killsteal, Escape Combo - Checks
-	if AutoCarry.PluginMenu.pCombo and AutoCarry.MainMenu.AutoCarry then pCombo() end
-	if AutoCarry.PluginMenu.pChaseCombo then pChaseCombo() end
-	if AutoCarry.PluginMenu.pHarass and AutoCarry.MainMenu.MixedMode then pHarass() end
-	if AutoCarry.PluginMenu.pUltCombo then pUltCombo() end
-	if AutoCarry.PluginMenu.pKillsteal then pKillsteal() end
-	if AutoCarry.PluginMenu.pEscape then pEscapeCombo() end
+	-- Combo, Harass, Killsteal, Escape Combo, Farm - Checks
+	pCombo()
+	pChaseCombo()
+	pHarass()
+	pKillsteal()
+	pEscapeCombo()
+	pFarm()
 	
 	-- Draw Critical Text
-	if not myHero.dead and AutoCarry.PluginMenu.pDCT then pDrawCritText() end
+	pDrawCritText()
+	
+	-- Auto Regeneration
+	if Extras.WItem and IsMyHealthLow() and Target and WGTReady then CastSpell(wgtSlot) end
+	if Extras.pHP and NeedHP() and not (UsingHPot or UsingFlask) and (HPReady or FSKReady) then CastSpell((hpSlot or fskSlot)) end
+	if Extras.pMP and IsMyManaLow() and not (UsingMPot or UsingFlask) and(MPReady or FSKReady) then CastSpell((mpSlot or fskSlot)) end
 end
 
 function PluginOnDraw()
 	-- Draw Panth's Range = 600
-	if not myHero.dead and AutoCarry.PluginMenu.pDCR then
+	if not myHero.dead and Extras.pDCR then
 		DrawCircle(myHero.x, myHero.y, myHero.z, qwRange, 0x00FF00)
 	end
 end
 
+-- Animation Detection
 function PluginOnAnimation(unit, animationName)
 	-- Set lastAnimation = Last Animation used
 	if unit.isMe and lastAnimation ~= animationName then lastAnimation = animationName end
 end
 
+-- Object Detection
+function PluginOnCreateObj(obj)
+	if obj.name:find("TeleportHome.troy") then
+		if GetDistance(obj, myHero) <= 70 then
+			Recall = true
+		end
+	end
+	if obj.name:find("Regenerationpotion_itm.troy") then
+		if GetDistance(obj, myHero) <= 70 then
+			UsingHPot = true
+		end
+	end
+	if obj.name:find("Global_Item_HealthPotion.troy") then
+		if GetDistance(obj, myHero) <= 70 then
+			UsingHPot = true
+			UsingFlask = true
+		end
+	end
+	if obj.name:find("Global_Item_ManaPotion.troy") then
+		if GetDistance(obj, myHero) <= 70 then
+			UsingFlask = true
+			UsingMPot = true
+		end
+	end
+end
+
 -- Custom Functions
 function pCombo()
-	if ValidTarget(Target) then
-		if QReady and GetDistance(Target) < qwRange then 
-			CastSpell(SkillQ.spellKey, Target)
-		end
-		
-		if WReady and GetDistance(Target) < qwRange then
-			CastSpell(SkillW.spellKey, Target)
-		end
-		
-		if EReady and GetDistance(Target) < eRange then
-			AutoCarry.CastSkillshot(SkillE, Target)
+	if Menu.pCombo and Menu2.AutoCarry then
+		if ValidTarget(Target) then
+			if QReady and Menu.pAutoQ and GetDistance(Target) < qwRange then 
+				CastSpell(SkillQ.spellKey, Target)
+			end
+			
+			if WReady and Menu.pAutoW and GetDistance(Target) < qwRange then
+				CastSpell(SkillW.spellKey, Target)
+			end
+			
+			if EReady and Menu.pAutoE and GetDistance(Target) < eRange then
+				AutoCarry.CastSkillshot(SkillE, Target)
+			end
 		end
 	end
 end
 
 function pHarass()
-	if ValidTarget(Target) then
-		if QReady and GetDistance(Target) < qwRange and (myHero.mana > (45+55+40+(GetSpellData(_E).level*5))) then 
-			CastSpell(SkillQ.spellKey, Target)
-			myHero:Attack(Target)
+	if Menu.pHarass and Menu2.MixedMode then
+		if ValidTarget(Target) then
+			if QReady and GetDistance(Target) < qwRange and (myHero.mana / myHero.maxMana) > Menu.pMinMana then 
+				CastSpell(SkillQ.spellKey, Target)
+				myHero:Attack(Target)
+			end
+		end
+	end
+end
+
+function pFarm()
+	if Menu.pFarmQ and (Menu2.LastHit) and (myHero.mana / myHero.maxMana) > Menu.pMinMana then
+		for _, minion in pairs(AutoCarry.EnemyMinions().objects) do
+			if ValidTarget(minion) and QReady and GetDistance(minion) <= qwRange then
+				if minion.health < getDmg("Q", minion, myHero) then
+					CastSpell(_Q, minion)
+				end
+			end
+		end
+	end
+	if Menu.pFarmE and (Menu2.LaneClear) and (myHero.mana / myHero.maxMana) > Menu.pMinMana then
+		for _, minion in pairs(AutoCarry.EnemyMinions().objects) do
+			if ValidTarget(minion) and EReady and GetDistance(minion) <= eRange then
+				if minion.health < getDmg("E", minion, myHero) then
+					CastSpell(_E, minion)
+				end
+			end
 		end
 	end
 end
 
 function pChaseCombo()
-	if ValidTarget(Target) then
-		if WReady and GetDistance(Target) < qwRange then
-			CastSpell(SkillW.spellKey, Target)
+	if Menu.pChaseCombo then
+		if ValidTarget(Target) then
+			if WReady and Menu.pAutoCW  and GetDistance(Target) < qwRange then
+				CastSpell(SkillW.spellKey, Target)
+			end
+			
+			if EReady and Menu.pAutoCE and GetDistance(Target) < eRange then
+				AutoCarry.CastSkillshot(SkillE, Target)
+			end
+			
+			if QReady and Menu.pAutoCQ and GetDistance(Target) < qwRange and isChanneling("Spell3") then 
+				CastSpell(SkillQ.spellKey, Target)
+			end
+		end
+		if not isChanneling("Spell3") then
+			myHero:MoveTo(mousePos.x, mousePos.z)
 		end
 		
-		if EReady and GetDistance(Target) < eRange and isChanneling("Spell2") then
-			AutoCarry.CastSkillshot(SkillE, Target)
-		end
-		
-		if QReady and GetDistance(Target) < qwRange and isChanneling("Spell3") then 
-			CastSpell(SkillQ.spellKey, Target)
-		end
 	end
 end
 
-function pUltCombo()
-	if isChanneling("Spell4") then pCombo() end
-end
-
 function pKillsteal()
-	for _, enemy in pairs(AutoCarry.EnemyTable) do
-		if QReady and WReady then
-			if ValidTarget(enemy) and GetDistance(enemy) < qwRange and enemy.health < (getDmg("Q", enemy, myHero) + getDmg("W", enemy, myHero)) and myHero.mana >= (myHero:GetSpellData(_W).mana + myHero:GetSpellData(_Q).mana) then
-				CastSpell(SkillW.spellKey, enemy)
-				if isChanneling("Spell2") then CastSpell(SkillQ.spellKey, enemy) end
-			end 
-		elseif not QReady and WReady then
-			if ValidTarget(enemy) and GetDistance(enemy) < qwRange and enemy.health < getDmg("W", enemy, myHero) then
-				CastSpell(SkillW.spellKey, enemy)
-			end 
-		elseif QReady and not WReady then
-			if ValidTarget(enemy) and GetDistance(enemy) < qwRange and enemy.health < getDmg("Q", enemy, myHero) then
-				CastSpell(SkillQ.spellKey, enemy)
-			end 
+	if Menu.pKillsteal then
+		for _, enemy in pairs(AutoCarry.EnemyTable) do
+			if QReady then
+				if ValidTarget(enemy) and GetDistance(enemy) < qwRange and enemy.health < getDmg("Q", enemy, myHero) then
+					CastSpell(SkillQ.spellKey, enemy)
+				end
+			end
 		end
 	end
 end
 
 function pEscapeCombo()	
-	if WReady and GetDistance(Target) < qwRange then
-		CastSpell(SkillW.spellKey, Target)
-		if AutoCarry.PluginMenu.pEscapeFlash and FlashReady and GetDistance(mousePos) > 300 and isChanneling("Spell2") then
-			CastSpell(FlashSlot, mousePos.x, mousePos.z)
+	if Menu.pEscape then
+		if WReady and GetDistance(Target) < qwRange then
+			CastSpell(SkillW.spellKey, Target)
+			if Menu.pEscapeFlash and FlashReady and GetDistance(mousePos) > 300 and isChanneling("Spell2") then
+				CastSpell(FlashSlot, mousePos.x, mousePos.z)
+			end
 		end
-	end
-	
-	if AutoCarry.PluginMenu.pEscapeFlash then
-		myHero:MoveTo(mousePos.x, mousePos.z)
+		
+		if Menu.pEscapeFlash then
+			myHero:MoveTo(mousePos.x, mousePos.z)
+		end
 	end
 end
 
@@ -235,6 +355,9 @@ function isChanneling(animationName)
 end
 
 function pSpellCheck()
+	wgtSlot = GetInventorySlotItem(3090)
+	hpSlot, mpSlot, fskSlot = GetInventorySlotItem(2003),GetInventorySlotItem(2004),GetInventorySlotItem(2041)
+
 	if myHero:GetSpellData(SUMMONER_1).name:find("SummonerFlash") then
 		FlashSlot = SUMMONER_1
 	elseif myHero:GetSpellData(SUMMONER_2).name:find("SummonerFlash") then
@@ -245,16 +368,50 @@ function pSpellCheck()
 	WReady = (myHero:CanUseSpell(SkillW.spellKey) == READY)
 	EReady = (myHero:CanUseSpell(SkillE.spellKey) == READY)
 	RReady = (myHero:CanUseSpell(_R) == READY)
+	WGTReady = (wgtSlot ~= nil and myHero:CanUseSpell(wgtSlot) == READY)
+	HPReady = (hpSlot ~= nil and myHero:CanUseSpell(hpSlot) == READY)
+	MPReady = (mpSlot ~= nil and myHero:CanUseSpell(mpSlot) == READY)
+	FSKReady = (fskSlot ~= nil and myHero:CanUseSpell(fskSlot) == READY)
 
 	FlashReady = (FlashSlot ~= nil and myHero:CanUseSpell(FlashSlot) == READY)
 end
 
 function pDrawCritText()
-	for _, enemy in pairs(AutoCarry.EnemyTable) do
-		if ValidTarget(enemy) then
-			if enemy.health <= enemy.maxHealth*0.15 then
-				PrintFloatText(enemy, 10, "CRITICAL HIT!")
+	if not myHero.dead and Extras.pDCT then
+		for _, enemy in pairs(AutoCarry.EnemyTable) do
+			if ValidTarget(enemy) then
+				if enemy.health <= enemy.maxHealth*0.15 then
+					PrintFloatText(enemy, 10, "Critical Hit!")
+				end
 			end
 		end
 	end
 end
+
+-- Auto Regeneration
+function IsMyManaLow()
+    if (myHero.mana / myHero.maxMana) < Menu.pMinMana then
+        return true
+    else
+        return false
+    end
+end
+
+function IsMyHealthLow()
+	if myHero.health < (myHero.maxHealth * (Extras.WHealth / 100)) then
+		return true
+	else
+		return false
+	end
+end
+
+function NeedHP()
+	if myHero.health < (myHero.maxHealth * (Extras.pHPHealth / 100)) then
+		return true
+	else
+		return false
+	end
+end
+
+--UPDATEURL=https://raw.github.com/RoachxD/BoL_Scripts/master/Common/SidasAutoCarryPlugin%20-%20Pantheon.lua
+--HASH=D2A4E405F4D438CE222C0762EFC64C5E
