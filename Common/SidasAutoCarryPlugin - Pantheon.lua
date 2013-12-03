@@ -2,7 +2,7 @@
  
         Auto Carry Plugin - Pantheon Edition
 		Author: Roach_
-		Version: 2.0a
+		Version: 2.0b
 		Copyright 2013
 
 		Dependency: Sida's Auto Carry: Revamped
@@ -22,6 +22,11 @@
 			Escape Artist(with Flash)
 
 		History:
+			Version: 2.0b
+				Fixed Auto Pots
+				Changed Min Mana display
+				Removed Auto Spell Leveler from Menu as it's not done yet
+			
 			Version: 2.0a
 				Added a Toggle for for Core Combo
 				Added an Extra Menu
@@ -97,70 +102,70 @@ local SkillE = {spellKey = _E, range = eRange, speed = 2, delay = 0, width = 200
 local QReady, WReady, EReady, RReady, FlashReady = false, false, false, false, false
 
 -- Regeneration
-local UsingHPot, UsingMPot, UsingFlask = false, false, false
+local UsingHPot, UsingMPot, UsingFlask, Recall = false, false, false, false
 
 -- Our lovely script
 function PluginOnLoadMenu()
-        Menu = AutoCarry.PluginMenu
-        Menu2 = AutoCarry.MainMenu
-        Menu:addParam("pPlugin", "[Cast Options]", SCRIPT_PARAM_INFO, "")
-        Menu:addParam("pCombo", "[Combo Options]", SCRIPT_PARAM_INFO, "")
-        Menu:addParam("pAutoQ", "Auto Cast Q", SCRIPT_PARAM_ONOFF, true)
-        Menu:addParam("pAutoW", "Auto Cast W", SCRIPT_PARAM_ONOFF, true)
-        Menu:addParam("pAutoE", "Auto Cast E", SCRIPT_PARAM_ONOFF, true)
-        Menu:permaShow("pPlugin")
-		
-        Menu:addParam("pGap", "", SCRIPT_PARAM_INFO, "")
-		
-		Menu:addParam("pChase", "[Chase Combo Options]", SCRIPT_PARAM_INFO, "")
-		Menu:addParam("pChaseCombo", "Use Chase Combo", SCRIPT_PARAM_ONKEYDOWN, false, pChaseComboHotkey)
-		Menu:addParam("pAutoCW", "Auto Cast W - Chase", SCRIPT_PARAM_ONOFF, true)
-		Menu:addParam("pAutoCE", "Auto Cast E - Chase", SCRIPT_PARAM_ONOFF, true)
-		Menu:addParam("pAutoCQ", "Auto Cast Q - Chase", SCRIPT_PARAM_ONOFF, true)
-		Menu:permaShow("pChase")
-        Menu:permaShow("pChaseCombo")
-		
-		Menu:addParam("pGap", "", SCRIPT_PARAM_INFO, "")
-		
-        Menu:addParam("pKS", "[Kill Steal Options]", SCRIPT_PARAM_INFO, "")
-		Menu:addParam("pKillsteal", "Auto Kill Steal with Q", SCRIPT_PARAM_ONOFF, true)
-        Menu:permaShow("pKS")
-        Menu:permaShow("pKillsteal")
-		
-        Menu:addParam("pGap", "", SCRIPT_PARAM_INFO, "")
-		
-        Menu:addParam("pMisc", "[Misc Options]", SCRIPT_PARAM_INFO, "")
-        Menu:addParam("pAutoLVL", "Auto Level Spells", SCRIPT_PARAM_ONOFF, false)
-        Menu:addParam("pMinMana", "Minimum Mana to Farm/Harass", SCRIPT_PARAM_SLICE, 0.4, 0.1, 0.9, 1)
-		Menu:addParam("pEscape", "Escape Artist", SCRIPT_PARAM_ONKEYDOWN, false, pEscapeHotkey)
-		Menu:addParam("pEscapeFlash", "Escape: Flash to Mouse", SCRIPT_PARAM_ONOFF, false)
-		Menu:permaShow("pMisc")
-		Menu:permaShow("pEscape")
-		
-		Menu:addParam("pGap", "", SCRIPT_PARAM_INFO, "")
-		
-		Menu:addParam("pH", "[Harass Options]", SCRIPT_PARAM_INFO, "")
-        Menu:addParam("pHarass", "Auto Harass with Q", SCRIPT_PARAM_ONOFF, true)
-		
-		Menu:addParam("pGap", "", SCRIPT_PARAM_INFO, "")
-		
-		Menu:addParam("pFarm", "[Farm Options]", SCRIPT_PARAM_INFO, "")
-        Menu:addParam("pFarmQ", "Auto Farm with Q", SCRIPT_PARAM_ONOFF, false)
-		Menu:addParam("pFarmE", "Auto Clear Lane with E", SCRIPT_PARAM_ONOFF, false)
-		
-		Extras = scriptConfig("Sida's Auto Carry Plugin: "..myHero.charName..": Extras", myHero.charName)
-		Extras:addParam("pDraw", "[Draw Options]", SCRIPT_PARAM_INFO, "")
-		Extras:addParam("pDCR", "Draw Combo Range", SCRIPT_PARAM_ONOFF, true)
-		Extras:addParam("pDCT", "Draw Crit Text", SCRIPT_PARAM_ONOFF, true)
-		
-		Extras:addParam("pGap", "", SCRIPT_PARAM_INFO, "")
-		
-		Extras:addParam("pHPMana", "[Auto Pots/Items Options]", SCRIPT_PARAM_INFO, "")
-		Extras:addParam("pWItem", "Auto Wooglets", SCRIPT_PARAM_ONOFF, true)
-		Extras:addParam("pWHealth", "Min Health % for Wooglets", SCRIPT_PARAM_SLICE, 15, 0, 100, -1)
-		Extras:addParam("pHP", "Auto Health Pots", SCRIPT_PARAM_ONOFF, true)
-		Extras:addParam("pMP", "Auto Auto Mana Pots", SCRIPT_PARAM_ONOFF, true)
-		Extras:addParam("pHPHealth", "Min % for Health Pots", SCRIPT_PARAM_SLICE, 50, 0, 100, -1)
+	Menu = AutoCarry.PluginMenu
+	Menu2 = AutoCarry.MainMenu
+	Menu:addParam("pPlugin", "[Cast Options]", SCRIPT_PARAM_INFO, "")
+	Menu:addParam("pCombo", "[Combo Options]", SCRIPT_PARAM_INFO, "")
+	Menu:addParam("pAutoQ", "Auto Cast Q", SCRIPT_PARAM_ONOFF, true)
+	Menu:addParam("pAutoW", "Auto Cast W", SCRIPT_PARAM_ONOFF, true)
+	Menu:addParam("pAutoE", "Auto Cast E", SCRIPT_PARAM_ONOFF, true)
+	Menu:permaShow("pPlugin")
+	
+	Menu:addParam("pGap", "", SCRIPT_PARAM_INFO, "")
+	
+	Menu:addParam("pChase", "[Chase Combo Options]", SCRIPT_PARAM_INFO, "")
+	Menu:addParam("pChaseCombo", "Use Chase Combo", SCRIPT_PARAM_ONKEYDOWN, false, pChaseComboHotkey)
+	Menu:addParam("pAutoCW", "Auto Cast W - Chase", SCRIPT_PARAM_ONOFF, true)
+	Menu:addParam("pAutoCE", "Auto Cast E - Chase", SCRIPT_PARAM_ONOFF, true)
+	Menu:addParam("pAutoCQ", "Auto Cast Q - Chase", SCRIPT_PARAM_ONOFF, true)
+	Menu:permaShow("pChase")
+	Menu:permaShow("pChaseCombo")
+	
+	Menu:addParam("pGap", "", SCRIPT_PARAM_INFO, "")
+	
+	Menu:addParam("pKS", "[Kill Steal Options]", SCRIPT_PARAM_INFO, "")
+	Menu:addParam("pKillsteal", "Auto Kill Steal with Q", SCRIPT_PARAM_ONOFF, true)
+	Menu:permaShow("pKS")
+	Menu:permaShow("pKillsteal")
+	
+	Menu:addParam("pGap", "", SCRIPT_PARAM_INFO, "")
+	
+	Menu:addParam("pMisc", "[Misc Options]", SCRIPT_PARAM_INFO, "")
+	-- Menu:addParam("pAutoLVL", "Auto Level Spells", SCRIPT_PARAM_ONOFF, false)
+	Menu:addParam("pMinMana", "Minimum Mana to Farm/Harass", SCRIPT_PARAM_SLICE, 40, 0, 100, -1)
+	Menu:addParam("pEscape", "Escape Artist", SCRIPT_PARAM_ONKEYDOWN, false, pEscapeHotkey)
+	Menu:addParam("pEscapeFlash", "Escape: Flash to Mouse", SCRIPT_PARAM_ONOFF, false)
+	Menu:permaShow("pMisc")
+	Menu:permaShow("pEscape")
+	
+	Menu:addParam("pGap", "", SCRIPT_PARAM_INFO, "")
+	
+	Menu:addParam("pH", "[Harass Options]", SCRIPT_PARAM_INFO, "")
+	Menu:addParam("pHarass", "Auto Harass with Q", SCRIPT_PARAM_ONOFF, true)
+	
+	Menu:addParam("pGap", "", SCRIPT_PARAM_INFO, "")
+	
+	Menu:addParam("pFarm", "[Farm Options]", SCRIPT_PARAM_INFO, "")
+	Menu:addParam("pFarmQ", "Auto Farm with Q", SCRIPT_PARAM_ONOFF, false)
+	Menu:addParam("pFarmE", "Auto Clear Lane with E", SCRIPT_PARAM_ONOFF, false)
+	
+	Extras = scriptConfig("Sida's Auto Carry Plugin: "..myHero.charName..": Extras", myHero.charName)
+	Extras:addParam("pDraw", "[Draw Options]", SCRIPT_PARAM_INFO, "")
+	Extras:addParam("pDCR", "Draw Combo Range", SCRIPT_PARAM_ONOFF, true)
+	Extras:addParam("pDCT", "Draw Crit Text", SCRIPT_PARAM_ONOFF, true)
+	
+	Extras:addParam("pGap", "", SCRIPT_PARAM_INFO, "")
+	
+	Extras:addParam("pHPMana", "[Auto Pots/Items Options]", SCRIPT_PARAM_INFO, "")
+	Extras:addParam("pWItem", "Auto Wooglets", SCRIPT_PARAM_ONOFF, true)
+	Extras:addParam("pWHealth", "Min Health % for Wooglets", SCRIPT_PARAM_SLICE, 15, 0, 100, -1)
+	Extras:addParam("pHP", "Auto Health Pots", SCRIPT_PARAM_ONOFF, true)
+	Extras:addParam("pMP", "Auto Auto Mana Pots", SCRIPT_PARAM_ONOFF, true)
+	Extras:addParam("pHPHealth", "Min % for Health Pots", SCRIPT_PARAM_SLICE, 50, 0, 100, -1)
 end
 
 function PluginOnLoad() 
@@ -175,6 +180,8 @@ end
 
 
 function PluginOnTick()
+	if Recall then return end
+
 	-- Get Attack Target
 	Target = AutoCarry.GetAttackTarget()
 
@@ -243,6 +250,23 @@ function PluginOnCreateObj(obj)
 			UsingFlask = true
 			UsingMPot = true
 		end
+	end
+end
+
+function PluginOnDeleteObj(obj)
+	if obj.name:find("TeleportHome.troy") then
+		Recall = false
+	end
+	if obj.name:find("Regenerationpotion_itm.troy") then
+		UsingHPot = false
+	end
+	if obj.name:find("Global_Item_HealthPotion.troy") then
+		UsingHPot = false
+		UsingFlask = false
+	end
+	if obj.name:find("Global_Item_ManaPotion.troy") then
+		UsingMPot = false
+		UsingFlask = false
 	end
 end
 
@@ -388,9 +412,9 @@ function pDrawCritText()
 	end
 end
 
--- Auto Regeneration
+-- Auto Potions
 function IsMyManaLow()
-    if (myHero.mana / myHero.maxMana) < Menu.pMinMana then
+    if (myHero.mana / myHero.maxMana) <= (Menu.pMinMana / 100) then
         return true
     else
         return false
@@ -398,7 +422,7 @@ function IsMyManaLow()
 end
 
 function IsMyHealthLow()
-	if myHero.health < (myHero.maxHealth * (Extras.WHealth / 100)) then
+	if (myHero.health / myHero.maxHealth) <= (Extras.WHealth / 100) then
 		return true
 	else
 		return false
@@ -406,7 +430,7 @@ function IsMyHealthLow()
 end
 
 function NeedHP()
-	if myHero.health < (myHero.maxHealth * (Extras.pHPHealth / 100)) then
+	if (myHero.health / myHero.maxHealth) <= (Extras.pHPHealth / 100) then
 		return true
 	else
 		return false
