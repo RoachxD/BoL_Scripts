@@ -2,7 +2,7 @@
  
         Auto Carry Plugin - Wukong/Monkey King Edition
 		Author: Roach_
-		Version: 1.0a
+		Version: 1.0b
 		Copyright 2013
 
 		Dependency: Sida's Auto Carry: Revamped
@@ -22,6 +22,11 @@
 			Auto Pots/Items
 
 		History:
+			Version: 1.0b
+				Fixed Harass Option
+				Changed the way to check if mana is low
+				Added Animation Check
+				
 			Version: 1.0a
 				First release
 
@@ -149,6 +154,12 @@ function PluginOnDraw()
 	end
 end
 
+-- Animation Detection
+function PluginOnAnimation(unit, animationName)
+	-- Set lastAnimation = Last Animation used
+	if unit.isMe and lastAnimation ~= animationName then lastAnimation = animationName end
+end
+
 -- Object Detection
 function PluginOnCreateObj(obj)
 	if obj.name:find("TeleportHome.troy") then
@@ -214,11 +225,11 @@ end
 function wHarass()
 	if Menu.wHarass and Menu2.MixedMode then
 		if ValidTarget(Target) then
-			if EReady and GetDistance(Target) < eRange and (myHero.mana / myHero.maxMana) > Menu.wMinMana then 
+			if EReady and GetDistance(Target) < eRange and not IsMyManaLow() then 
 				CastSpell(SkillE.spellKey, Target)
-				myHero:Attack(Target)
 			end
-			if WReady and Menu.wHarassEscape then
+			
+			if WReady and isChanneling("Spell3") and Menu.wHarassEscape then
 				CastSpell(_W)
 			end
 		end
@@ -226,7 +237,7 @@ function wHarass()
 end
 
 function wFarm()
-	if Menu.wFarmQ and (Menu2.LastHit) and (myHero.mana / myHero.maxMana) > Menu.wMinMana then
+	if Menu.wFarmQ and (Menu2.LastHit) and not IsMyManaLow() then
 		for _, minion in pairs(AutoCarry.EnemyMinions().objects) do
 			if ValidTarget(minion) and QReady and GetDistance(minion) <= qRange then
 				if minion.health < getDmg("Q", minion, myHero) then
@@ -235,7 +246,7 @@ function wFarm()
 			end
 		end
 	end
-	if Menu.wFarmE and (Menu2.LaneClear) and (myHero.mana / myHero.maxMana) > Menu.wMinMana then
+	if Menu.wFarmE and (Menu2.LaneClear) and not IsMyManaLow() then
 		for _, minion in pairs(AutoCarry.EnemyMinions().objects) do
 			if ValidTarget(minion) and EReady and GetDistance(minion) <= eRange then
 				if minion.health < getDmg("E", minion, myHero) then
@@ -251,7 +262,7 @@ function wKillsteal()
 		for _, enemy in pairs(AutoCarry.EnemyTable) do
 			if ValidTarget(enemy) then
 				if QReady and GetDistance(enemy) < qRange and enemy.health < getDmg("Q", enemy, myHero) then
-						CastSpell(SkillQ.spellKey, enemy)
+					CastSpell(SkillQ.spellKey, enemy)
 				end
 				if EReady and GetDistance(enemy) > qRange and GetDistance(enemy) < eRange and enemy.health < getDmg("E", enemy, myHero) then
 					CastSpell(SkillE.spellKey, enemy)
@@ -297,6 +308,14 @@ function wSpellCheck()
 	FSKReady = (fskSlot ~= nil and myHero:CanUseSpell(fskSlot) == READY)
 
 	FlashReady = (FlashSlot ~= nil and myHero:CanUseSpell(FlashSlot) == READY)
+end
+
+function isChanneling(animationName)
+	if lastAnimation == animationName then
+		return true
+	else
+		return false
+	end
 end
 
 -- Auto Potions
