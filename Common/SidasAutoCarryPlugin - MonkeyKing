@@ -2,7 +2,7 @@
  
         Auto Carry Plugin - Wukong/Monkey King Edition
 		Author: Roach_
-		Version: 1.0b
+		Version: 1.0c
 		Copyright 2013
 
 		Dependency: Sida's Auto Carry: Revamped
@@ -22,6 +22,15 @@
 			Auto Pots/Items
 
 		History:
+			Version: 1.0c
+				Added a new Check for using Q in Harass Mode
+				Fixed Harass Function(Many thanks to Sida for his ideea with the DelayedAction)
+				Rewrote Low Checks Functions
+				Added a new Check for Mana Potions
+					- One for Harass/Farm
+					- One for Potions
+				Deleted Wooglets Support as an Usable Item
+				
 			Version: 1.0b
 				Fixed Harass Option
 				Changed the way to check if mana is low
@@ -41,8 +50,9 @@ local qRange, eRange, rRange = 300, 625, 162
 
 local FlashSlot = nil
 
-local SkillQ = {spellKey = _Q, range = qRange, speed = 2, delay = 0, width = 200, configName = "crushingBlow", displayName = "Q (Crushing Blow)", enabled = true, skillShot = false, minions = false, reset = false, reqTarget = true }
-local SkillE = {spellKey = _E, range = eRange, speed = 2, delay = 0, width = 200, configName = "nimbusStrike", displayName = "E (Nimbus Strike)", enabled = true, skillShot = false, minions = false, reset = false, reqTarget = true }
+local SkillQ = { spellKey = _Q, range = 300, speed = 2, delay = 0, width = 200, configName = "crushingBlow", displayName = "Q (Crushing Blow)", enabled = true, skillShot = false, minions = true, reset = true, reqTarget = false }
+local SkillW = { spellKey = _W, range = myHero.range-50, speed = 2, delay = 0, width = 200, configName = "decoy", displayName = "W (Decoy)", enabled = true, skillShot = false, minions = false, reset = false, reqTarget = false }
+local SkillE = { spellKey = _E, range = 625, speed = 2, delay = 0, width = 200, configName = "nimbusStrilke", displayName = "E (Nimbus Strike)", enabled = true, skillShot = false, minions = false, reset = false, reqTarget = true }
 
 local QReady, WReady, EReady, RReady, FlashReady = false, false, false, false, false
 
@@ -70,7 +80,7 @@ function PluginOnLoadMenu()
 	Menu:addParam("wGap", "", SCRIPT_PARAM_INFO, "")
 	
 	Menu:addParam("wMisc", "[Misc Options]", SCRIPT_PARAM_INFO, "")
-	-- Menu:addParam("pAutoLVL", "Auto Level Spells", SCRIPT_PARAM_ONOFF, false)
+	-- Menu:addParam("wAutoLVL", "Auto Level Spells", SCRIPT_PARAM_ONOFF, false)
 	Menu:addParam("wMinMana", "Minimum Mana to Farm/Harass", SCRIPT_PARAM_SLICE, 40, 0, 100, -1)
 	Menu:addParam("wEscape", "Escape Artist", SCRIPT_PARAM_ONKEYDOWN, false, wEscapeHotkey)
 	Menu:addParam("wEscapeFlash", "Escape: Flash to Mouse", SCRIPT_PARAM_ONOFF, false)
@@ -80,7 +90,8 @@ function PluginOnLoadMenu()
 	Menu:addParam("wGap", "", SCRIPT_PARAM_INFO, "")
 	
 	Menu:addParam("wH", "[Harass Options]", SCRIPT_PARAM_INFO, "")
-	Menu:addParam("wHarass", "Auto Harass with E", SCRIPT_PARAM_ONOFF, true)
+	Menu:addParam("wHarassE", "Auto Harass with E", SCRIPT_PARAM_ONOFF, true)
+	Menu:addParam("wHarassQ", "Auto Harass with Q", SCRIPT_PARAM_ONOFF, false)
 	Menu:addParam("wHarassEscape", "Auto use W after Harass", SCRIPT_PARAM_ONOFF, false)
 	
 	Menu:addParam("wGap", "", SCRIPT_PARAM_INFO, "")
@@ -89,7 +100,7 @@ function PluginOnLoadMenu()
 	Menu:addParam("wFarmQ", "Auto Farm with Q", SCRIPT_PARAM_ONOFF, false)
 	Menu:addParam("wFarmE", "Auto Clear Lane with E", SCRIPT_PARAM_ONOFF, false)
 	
-	Extras = scriptConfig("Sida's Auto Carry Plugin: "..myHero.charName..": Extras", myHero.charName)
+	Extras = scriptConfig("Sida's Auto Carry: "..myHero.charName.." Extras", myHero.charName)
 	Extras:addParam("wDraw", "[Draw Options]", SCRIPT_PARAM_INFO, "")
 	Extras:addParam("wDQ", "Draw Q Range", SCRIPT_PARAM_ONOFF, false)
 	Extras:addParam("wDW", "Draw W Range(Check Cooldowns)", SCRIPT_PARAM_ONOFF, false)
@@ -97,29 +108,28 @@ function PluginOnLoadMenu()
 	
 	Extras:addParam("wGap", "", SCRIPT_PARAM_INFO, "")
 	
-	Extras:addParam("wHPMana", "[Auto Pots/Items Options]", SCRIPT_PARAM_INFO, "")
-	Extras:addParam("wWItem", "Auto Wooglets", SCRIPT_PARAM_ONOFF, true)
-	Extras:addParam("wWHealth", "Minimum Health for Wooglets", SCRIPT_PARAM_SLICE, 15, 0, 100, -1)
+	Extras:addParam("wHPMana", "[Auto Pots Options]", SCRIPT_PARAM_INFO, "")
 	Extras:addParam("wHP", "Auto Health Pots", SCRIPT_PARAM_ONOFF, true)
 	Extras:addParam("wMP", "Auto Auto Mana Pots", SCRIPT_PARAM_ONOFF, true)
-	Extras:addParam("wHPHealth", "Minimum Health for Pots", SCRIPT_PARAM_SLICE, 50, 0, 100, -1)
+	Extras:addParam("wHealth", "Minimum Health for Pots", SCRIPT_PARAM_SLICE, 50, 0, 100, -1)
+	Extras:addParam("wMana", "Minimum Mana for Pots", SCRIPT_PARAM_SLICE, 50, 0, 100, -1)
 end
 function PluginOnLoad() 
 	-- Params/PluginMenu
 	PluginOnLoadMenu()
 	
 	-- Range
-	AutoCarry.SkillsCrosshair.range = eRange-25
+	AutoCarry.SkillsCrosshair.range = eRange
 end 
 
 function PluginOnTick()
 	if Recall then return end
-
+	
 	-- Get Attack Target
 	Target = AutoCarry.GetAttackTarget()
 
-	-- Check Spells
-	wSpellCheck()
+	-- Checks
+	wChecks()
 
 	-- Combo, Harass, Killsteal, Escape Combo, Farm - Checks
 	wCombo()
@@ -129,13 +139,12 @@ function PluginOnTick()
 	wFarm()
 	
 	-- Auto Regeneration
-	if Extras.wWItem and IsMyHealthLow() and Target and WGTReady then CastSpell(wgtSlot) end
-	if Extras.wHP and NeedHP() and not (UsingHPot or UsingFlask) and (HPReady or FSKReady) then CastSpell((hpSlot or fskSlot)) end
-	if Extras.wMP and IsMyManaLow() and not (UsingMPot or UsingFlask) and(MPReady or FSKReady) then CastSpell((mpSlot or fskSlot)) end
+	if Extras.wHP and IsLow('Health') and not (UsingHPot or UsingFlask) and (HPReady or FSKReady) then CastSpell((hpSlot or fskSlot)) end
+	if Extras.wMP and IsLow('Mana') and not (UsingMPot or UsingFlask) and(MPReady or FSKReady) then CastSpell((mpSlot or fskSlot)) end
 end
 
 function PluginOnDraw()
-	-- Draw Wukong's Range = 625 - 25
+	-- Draw Wukong's Range = 625
 	local tempColor = { 0xFF0000, 0xFF0000, 0xFF0000 }
 	
 	if not myHero.dead then
@@ -154,10 +163,13 @@ function PluginOnDraw()
 	end
 end
 
--- Animation Detection
-function PluginOnAnimation(unit, animationName)
-	-- Set lastAnimation = Last Animation used
-	if unit.isMe and lastAnimation ~= animationName then lastAnimation = animationName end
+-- Spell Detection
+function OnProcessSpell(unit, spell)
+	-- Set lastSpell = Last Spell used
+	if unit.isMe and lastSpell ~= spell.name then
+		lastSpell = spell.name
+		PrintChat( unit.charName .. " has used: " .. spell.name )
+	end
 end
 
 -- Object Detection
@@ -223,30 +235,38 @@ function wCombo()
 end
 
 function wHarass()
-	if Menu.wHarass and Menu2.MixedMode then
+	if Menu2.MixedMode then
 		if ValidTarget(Target) then
-			if EReady and GetDistance(Target) < eRange and not IsMyManaLow() then 
+			if Menu.wHarassE and  EReady and GetDistance(Target) < eRange and not IsLow('Mana Harass') then 
 				CastSpell(SkillE.spellKey, Target)
 			end
 			
-			if WReady and isChanneling("Spell3") and Menu.wHarassEscape then
-				CastSpell(_W)
+			if Menu.wHarassQ and QReady and GetDistance(Target) < qRange then
+				CastSpell(SkillQ.spellKey, Target)
+				myHero:Attack(Target)
+			end
+			
+			if Menu.wHarassEscape and WReady and ((isSpelling("MonkeyKingQAttack") and Menu.wHarassE and Menu.wHarassQ) or (isSpelling("MonkeyKingNimbus") and Menu.wHarassE and not Menu.wHarassQ)) then
+				CastSpell(SkillW.spellKey)
+				wInStealth = true
+				DelayAction(function() wInStealth = false end, 1.5)
 			end
 		end
 	end
 end
 
 function wFarm()
-	if Menu.wFarmQ and (Menu2.LastHit) and not IsMyManaLow() then
+	if Menu.wFarmQ and (Menu2.LastHit) and not IsLow('Mana Farm') then
 		for _, minion in pairs(AutoCarry.EnemyMinions().objects) do
 			if ValidTarget(minion) and QReady and GetDistance(minion) <= qRange then
 				if minion.health < getDmg("Q", minion, myHero) then
 					CastSpell(SkillQ.spellKey, minion)
+					myHero:Attack(minion)
 				end
 			end
 		end
 	end
-	if Menu.wFarmE and (Menu2.LaneClear) and not IsMyManaLow() then
+	if Menu.wFarmE and (Menu2.LaneClear) and not IsLow('Mana Farm') then
 		for _, minion in pairs(AutoCarry.EnemyMinions().objects) do
 			if ValidTarget(minion) and EReady and GetDistance(minion) <= eRange then
 				if minion.health < getDmg("E", minion, myHero) then
@@ -288,9 +308,8 @@ function wEscapeCombo()
 end
 
 -- Scondary Functions
-function wSpellCheck()
-	wgtSlot = GetInventorySlotItem(3090)
-	hpSlot, mpSlot, fskSlot = GetInventorySlotItem(2003),GetInventorySlotItem(2004),GetInventorySlotItem(2041)
+function wChecks()
+	hpSlot, mpSlot, fskSlot = GetInventorySlotItem(2003), GetInventorySlotItem(2004), GetInventorySlotItem(2041)
 
 	if myHero:GetSpellData(SUMMONER_1).name:find("SummonerFlash") then
 		FlashSlot = SUMMONER_1
@@ -302,43 +321,47 @@ function wSpellCheck()
 	WReady = (myHero:CanUseSpell(_W) == READY)
 	EReady = (myHero:CanUseSpell(SkillE.spellKey) == READY)
 	RReady = (myHero:CanUseSpell(_R) == READY)
-	WGTReady = (wgtSlot ~= nil and myHero:CanUseSpell(wgtSlot) == READY)
 	HPReady = (hpSlot ~= nil and myHero:CanUseSpell(hpSlot) == READY)
 	MPReady = (mpSlot ~= nil and myHero:CanUseSpell(mpSlot) == READY)
 	FSKReady = (fskSlot ~= nil and myHero:CanUseSpell(fskSlot) == READY)
 
 	FlashReady = (FlashSlot ~= nil and myHero:CanUseSpell(FlashSlot) == READY)
+	
+	if wInStealth then
+		AutoCarry.CanAttack = false
+	else
+		AutoCarry.CanAttack = true
+	end
 end
 
-function isChanneling(animationName)
-	if lastAnimation == animationName then
-		return true
+function isSpelling(spell)
+	if lastSpell == spell then
+		return true 
 	else
 		return false
 	end
 end
 
--- Auto Potions
-function IsMyManaLow()
-    if (myHero.mana / myHero.maxMana) <= (Menu.wMinMana / 100) then
-        return true
-    else
-        return false
-    end
-end
-
-function IsMyHealthLow()
-	if (myHero.health / myHero.maxHealth) <= (Extras.wWHealth / 100) then
-		return true
-	else
-		return false
+function IsLow(Name)
+	if Name == 'Mana' then
+		if (myHero.mana / myHero.maxMana) <= (Extras.wMana / 100) then
+			return true
+		else
+			return false
+		end
 	end
-end
-
-function NeedHP()
-	if (myHero.health / myHero.maxHealth) <= (Extras.wHPHealth / 100) then
-		return true
-	else
-		return false
+	if Name == 'Mana Harass' or Name == 'Mana Farm' then
+		if (myHero.mana / myHero.maxMana) <= (Menu.wMinMana / 100) then
+			return true
+		else
+			return false
+		end
+	end
+	if Name == 'Health' then
+		if (myHero.health / myHero.maxHealth) <= (Extras.wWHealth / 100) then
+			return true
+		else
+			return false
+		end
 	end
 end
