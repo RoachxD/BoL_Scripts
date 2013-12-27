@@ -2,7 +2,7 @@
  
         Auto Carry Plugin - Pantheon Edition
 		Author: Roach_
-		Version: 2.0b
+		Version: 2.0c
 		Copyright 2013
 
 		Dependency: Sida's Auto Carry: Revamped
@@ -22,9 +22,18 @@
 			Escape Artist(with Flash)
 
 		History:
+			Version: 2.0c
+				Improved combo function
+				Fixed Harass Function
+				Rewrote Low Checks Functions
+				Added a new Check for Mana Potions
+					- One for Harass/Farm
+					- One for Potions
+				Deleted Wooglets Support as an Usable Item
+				
 			Version: 2.0b
-				Fixed Auto Pots
-				Changed Min Mana display
+				Fixed Auto Potions
+				Changed Min Mana Display in Menu
 				Removed Auto Spell Leveler from Menu as it's not done yet
 			
 			Version: 2.0a
@@ -95,8 +104,8 @@ local qwRange, eRange = 600, 300
 
 local FlashSlot = nil
 
-local SkillQ = {spellKey = _Q, range = cRange, speed = 2, delay = 0, width = 200, configName = "spearShot", displayName = "Q (Spear Shot)", enabled = true, skillShot = false, minions = false, reset = false, reqTarget = true }
-local SkillW = {spellKey = _W, range = cRange, speed = 2, delay = 0, width = 200, configName = "AoZ", displayName = "W (Aegis of Zeonia)", enabled = true, skillShot = false, minions = false, reset = false, reqTarget = true }
+local SkillQ = {spellKey = _Q, range = qwRange, speed = 2, delay = 0, width = 200, configName = "spearShot", displayName = "Q (Spear Shot)", enabled = true, skillShot = false, minions = false, reset = false, reqTarget = true }
+local SkillW = {spellKey = _W, range = qwRange, speed = 2, delay = 0, width = 200, configName = "AoZ", displayName = "W (Aegis of Zeonia)", enabled = true, skillShot = false, minions = false, reset = false, reqTarget = true }
 local SkillE = {spellKey = _E, range = eRange, speed = 2, delay = 0, width = 200, configName = "heartseekerStrike", displayName = "E (Heartseeker Strike)", enabled = true, skillShot = true, minions = false, reset = false, reqTarget = true }
 
 local QReady, WReady, EReady, RReady, FlashReady = false, false, false, false, false
@@ -153,7 +162,7 @@ function PluginOnLoadMenu()
 	Menu:addParam("pFarmQ", "Auto Farm with Q", SCRIPT_PARAM_ONOFF, false)
 	Menu:addParam("pFarmE", "Auto Clear Lane with E", SCRIPT_PARAM_ONOFF, false)
 	
-	Extras = scriptConfig("Sida's Auto Carry Plugin: "..myHero.charName..": Extras", myHero.charName)
+	Extras = scriptConfig("Sida's Auto Carry: "..myHero.charName.." Extras", myHero.charName)
 	Extras:addParam("pDraw", "[Draw Options]", SCRIPT_PARAM_INFO, "")
 	Extras:addParam("pDCR", "Draw Combo Range", SCRIPT_PARAM_ONOFF, true)
 	Extras:addParam("pDCT", "Draw Crit Text", SCRIPT_PARAM_ONOFF, true)
@@ -161,11 +170,10 @@ function PluginOnLoadMenu()
 	Extras:addParam("pGap", "", SCRIPT_PARAM_INFO, "")
 	
 	Extras:addParam("pHPMana", "[Auto Pots/Items Options]", SCRIPT_PARAM_INFO, "")
-	Extras:addParam("pWItem", "Auto Wooglets", SCRIPT_PARAM_ONOFF, true)
-	Extras:addParam("pWHealth", "Min Health % for Wooglets", SCRIPT_PARAM_SLICE, 15, 0, 100, -1)
 	Extras:addParam("pHP", "Auto Health Pots", SCRIPT_PARAM_ONOFF, true)
 	Extras:addParam("pMP", "Auto Auto Mana Pots", SCRIPT_PARAM_ONOFF, true)
-	Extras:addParam("pHPHealth", "Min % for Health Pots", SCRIPT_PARAM_SLICE, 50, 0, 100, -1)
+	Extras:addParam("pHPHealth", "Minimum Health for Pots", SCRIPT_PARAM_SLICE, 50, 0, 100, -1)
+	Extras:addParam("pMana", "Minimum Mana for Pots", SCRIPT_PARAM_SLICE, 50, 0, 100, -1)
 end
 
 function PluginOnLoad() 
@@ -186,7 +194,7 @@ function PluginOnTick()
 	Target = AutoCarry.GetAttackTarget()
 
 	-- Check Spells
-	pSpellCheck()
+	pChecks()
 
 	-- Check if myHero is using _E
 	if isChanneling("Spell3") then
@@ -209,9 +217,8 @@ function PluginOnTick()
 	pDrawCritText()
 	
 	-- Auto Regeneration
-	if Extras.WItem and IsMyHealthLow() and Target and WGTReady then CastSpell(wgtSlot) end
-	if Extras.pHP and NeedHP() and not (UsingHPot or UsingFlask) and (HPReady or FSKReady) then CastSpell((hpSlot or fskSlot)) end
-	if Extras.pMP and IsMyManaLow() and not (UsingMPot or UsingFlask) and(MPReady or FSKReady) then CastSpell((mpSlot or fskSlot)) end
+	if Extras.pHP and IsLow('Health') and not (UsingHPot or UsingFlask) and (HPReady or FSKReady) then CastSpell((hpSlot or fskSlot)) end
+	if Extras.pMP and IsLow('Mana') and not (UsingMPot or UsingFlask) and(MPReady or FSKReady) then CastSpell((mpSlot or fskSlot)) end
 end
 
 function PluginOnDraw()
@@ -282,7 +289,7 @@ function pCombo()
 				CastSpell(SkillW.spellKey, Target)
 			end
 			
-			if EReady and Menu.pAutoE and GetDistance(Target) < eRange then
+			if EReady and Menu.pAutoE and GetDistance(Target) < eRange and ( not Target.canMove or GetDistance(Target) < 175) then
 				AutoCarry.CastSkillshot(SkillE, Target)
 			end
 		end
@@ -292,7 +299,7 @@ end
 function pHarass()
 	if Menu.pHarass and Menu2.MixedMode then
 		if ValidTarget(Target) then
-			if QReady and GetDistance(Target) < qwRange and (myHero.mana / myHero.maxMana) > Menu.pMinMana then 
+			if QReady and GetDistance(Target) < qwRange and not IsLow('Mana Harass') then 
 				CastSpell(SkillQ.spellKey, Target)
 				myHero:Attack(Target)
 			end
@@ -301,7 +308,7 @@ function pHarass()
 end
 
 function pFarm()
-	if Menu.pFarmQ and (Menu2.LastHit) and (myHero.mana / myHero.maxMana) > Menu.pMinMana then
+	if Menu.pFarmQ and (Menu2.LastHit) and not IsLow('Mana Farm') then
 		for _, minion in pairs(AutoCarry.EnemyMinions().objects) do
 			if ValidTarget(minion) and QReady and GetDistance(minion) <= qwRange then
 				if minion.health < getDmg("Q", minion, myHero) then
@@ -310,7 +317,7 @@ function pFarm()
 			end
 		end
 	end
-	if Menu.pFarmE and (Menu2.LaneClear) and (myHero.mana / myHero.maxMana) > Menu.pMinMana then
+	if Menu.pFarmE and (Menu2.LaneClear) and not IsLow('Mana Farm') then
 		for _, minion in pairs(AutoCarry.EnemyMinions().objects) do
 			if ValidTarget(minion) and EReady and GetDistance(minion) <= eRange then
 				if minion.health < getDmg("E", minion, myHero) then
@@ -378,8 +385,7 @@ function isChanneling(animationName)
 	end
 end
 
-function pSpellCheck()
-	wgtSlot = GetInventorySlotItem(3090)
+function pChecks()
 	hpSlot, mpSlot, fskSlot = GetInventorySlotItem(2003),GetInventorySlotItem(2004),GetInventorySlotItem(2041)
 
 	if myHero:GetSpellData(SUMMONER_1).name:find("SummonerFlash") then
@@ -412,28 +418,27 @@ function pDrawCritText()
 	end
 end
 
--- Auto Potions
-function IsMyManaLow()
-    if (myHero.mana / myHero.maxMana) <= (Menu.pMinMana / 100) then
-        return true
-    else
-        return false
-    end
-end
-
-function IsMyHealthLow()
-	if (myHero.health / myHero.maxHealth) <= (Extras.WHealth / 100) then
-		return true
-	else
-		return false
+function IsLow(Name)
+	if Name == 'Mana' then
+		if (myHero.mana / myHero.maxMana) <= (Extras.pMana / 100) then
+			return true
+		else
+			return false
+		end
 	end
-end
-
-function NeedHP()
-	if (myHero.health / myHero.maxHealth) <= (Extras.pHPHealth / 100) then
-		return true
-	else
-		return false
+	if Name == 'Mana Harass' or Name == 'Mana Farm' then
+		if (myHero.mana / myHero.maxMana) <= (Menu.pMinMana / 100) then
+			return true
+		else
+			return false
+		end
+	end
+	if Name == 'Health' then
+		if (myHero.health / myHero.maxHealth) <= (Extras.pWHealth / 100) then
+			return true
+		else
+			return false
+		end
 	end
 end
 
