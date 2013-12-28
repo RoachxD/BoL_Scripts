@@ -168,7 +168,7 @@ function OnProcessSpell(unit, spell)
 	-- Set lastSpell = Last Spell used
 	if unit.isMe and lastSpell ~= spell.name then
 		lastSpell = spell.name
-		PrintChat( unit.charName .. " has used: " .. spell.name )
+		--PrintChat( unit.charName .. " has used: " .. spell.name )
 	end
 end
 
@@ -358,7 +358,7 @@ function IsLow(Name)
 		end
 	end
 	if Name == 'Health' then
-		if (myHero.health / myHero.maxHealth) <= (Extras.wWHealth / 100) then
+		if (myHero.health / myHero.maxHealth) <= (Extras.wHealth / 100) then
 			return true
 		else
 			return false
