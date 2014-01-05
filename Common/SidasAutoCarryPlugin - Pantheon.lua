@@ -2,7 +2,7 @@
  
         Auto Carry Plugin - Pantheon Edition
 		Author: Roach_
-		Version: 2.0c
+		Version: 2.0d
 		Copyright 2013
 
 		Dependency: Sida's Auto Carry: Revamped
@@ -22,6 +22,10 @@
 			Escape Artist(with Flash)
 
 		History:
+			Version: 2.0d
+				Fixed Auto-Pots Problem
+				Hopefully fixed AutoE Bug
+				
 			Version: 2.0c
 				Improved combo function
 				Fixed Harass Function
@@ -289,8 +293,10 @@ function pCombo()
 				CastSpell(SkillW.spellKey, Target)
 			end
 			
-			if EReady and Menu.pAutoE and GetDistance(Target) < eRange and ( not Target.canMove or GetDistance(Target) < 175) then
-				AutoCarry.CastSkillshot(SkillE, Target)
+			if EReady and Menu.pAutoE and GetDistance(Target) < eRange then
+				if not Target.canMove or GetDistance(Target) < 175 then
+					AutoCarry.CastSkillshot(SkillE, Target)
+				end
 			end
 		end
 	end
@@ -434,7 +440,7 @@ function IsLow(Name)
 		end
 	end
 	if Name == 'Health' then
-		if (myHero.health / myHero.maxHealth) <= (Extras.pWHealth / 100) then
+		if (myHero.health / myHero.maxHealth) <= (Extras.pHPHealth / 100) then
 			return true
 		else
 			return false
