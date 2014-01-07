@@ -370,9 +370,9 @@ end
 
 function pEscapeCombo()	
 	if Menu.pEscape then
-		if WReady and GetDistance(Target) < qwRange then
+		if ValidTarget(Target) and GetDistance(Target) < qwRange then
 			CastSpell(SkillW.spellKey, Target)
-			if Menu.pEscapeFlash and FlashReady and GetDistance(mousePos) > 300 and isChanneling("Spell2") then
+			if Menu.pEscapeFlash and FlashReady and GetDistance(mousePos) > 300 and not WReady then
 				CastSpell(FlashSlot, mousePos.x, mousePos.z)
 			end
 		end
