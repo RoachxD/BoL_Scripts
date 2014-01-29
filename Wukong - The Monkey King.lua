@@ -9,26 +9,16 @@
 			 `8b8' `8d8'  ~Y8888P' YP   YD  `Y88P'  VP   V8P  Y888P
 
 
-		Script - Wukong - The Monkey King 2.0 by Roach
+		Script - Wukong - The Monkey King 2.0.1 by Roach
 
 		Dependency: 
 			- Nothing
 
 		Changelog:
-			1.0.1
-				- First release
-			1.0.2
-				- Fixed Harass Option
-				- Changed the way to check if mana is low
-				- Added Animation Check
-			1.0.3
-				- Added a new Check for using Q in Harass Mode
-				- Fixed Harass Function(Many thanks to Sida for his ideea with the DelayedAction)
-				- Rewrote Low Checks Functions
-				- Added a new Check for Mana Potions
-					- One for Harass/Farm
-					- One for Potions
-				- Deleted Wooglets Support as an Usable Item
+			2.0.1
+				- Fixed Orbwalking in Lane Clear/Jungle Clear
+				- Improved Combo Combination
+				- Removed R from KillSteal Option
 			2.0
 				- No longer AutoCarry Script
 				- Rewrote everything
@@ -52,6 +42,21 @@
 					- Requirements:
 						- VIP
 				- Using ARGB Function for the Draw Ranges
+			1.0.3
+				- Added a new Check for using Q in Harass Mode
+				- Fixed Harass Function(Many thanks to Sida for his ideea with the DelayedAction)
+				- Rewrote Low Checks Functions
+				- Added a new Check for Mana Potions
+					- One for Harass/Farm
+					- One for Potions
+				- Deleted Wooglets Support as an Usable Item
+			1.0.2
+				- Fixed Harass Option
+				- Changed the way to check if mana is low
+				- Added Animation Check
+			1.0.1
+				- First release
+			
 --]]
 -- / Hero Name Check / --
 if myHero.charName ~= "MonkeyKing" then return end
@@ -62,7 +67,7 @@ function OnLoad()
 	--->
 		Variables()
 		WukongMenu()
-		PrintChat("<font color='#FF0000'> >> Wukong - The Monkey King 2.0 Loaded <<</font>")
+		PrintChat("<font color='#FF0000'> >> Wukong - The Monkey King 2.0.1 Loaded <<</font>")
 	---<
 end
 -- / Loading Function / --
@@ -154,7 +159,7 @@ function Variables()
 	end
 	--- Drawing Vars ---
 	--->
-		TextList = {"Harass him", "Q = Kill", "E = Kill!", "E+Q = Kill", "E+Q+R: ", "Need CDs"}
+		--TextList = {"Harass him", "Q = Kill", "E = Kill!", "E+Q = Kill", "E+Q+R: ", "Need CDs"}
 		KillText = {}
 		colorText = ARGB(255,255,204,0)
 	---<
@@ -179,7 +184,6 @@ function Variables()
 		enemyTable = {}
 		enemysInTable = 0
 		enemyMinions = minionManager(MINION_ENEMY, 1000, player, MINION_SORT_HEALTH_ASC)
-		allyMinions = minionManager(MINION_ALLY, 1000, player, MINION_SORT_HEALTH_DES)
 		JungleMobs = {}
 		JungleFocusMobs = {}
 		priorityTable = {
@@ -425,7 +429,7 @@ function HarassCombo()
 				end
 			end
 			--- Harass Mode 1 ---
-			--- Harass Mode 2 Q+W ---
+			--- Harass Mode 2 E+W ---
 			if WukongMenu.harass.hMode == 2 then
 				if SkillW.ready then
 					CastE(Target)
@@ -505,7 +509,7 @@ function MixedClear()
 	--- Jungle Clear ---
 	--->
 		if WukongMenu.clear.JungleFarm then
-			local JungleMob = GetJungleMob()
+			JungleMob = GetJungleMob()
 			if JungleMob then
 				if WukongMenu.clear.clearOrbJ then
 					if TimeToAttack() then myHero:Attack(JungleMob) end
@@ -516,6 +520,8 @@ function MixedClear()
 				if WukongMenu.clear.clearE and SkillE.ready and GetDistance(JungleMob) <= SkillE.range then
 					CastE(JungleMob) 
 				end
+			elseif heroCanMove() then
+				moveToCursor()
 			end
 		end
 	---<
@@ -534,6 +540,8 @@ function MixedClear()
 					if WukongMenu.clear.clearE and SkillE.ready and GetDistance(minion) <= SkillE.range then
 						CastE(minion)
 					end
+				elseif heroCanMove() then
+					moveToCursor()
 				end
 			end
 		end
@@ -795,31 +803,6 @@ end
 ---<
 --- Set Priorities ---
 -- / Misc Functions / --
-
--- / On Send Packet Function / --
-function OnSendPacket(packet)
-	-- Block Packets if Channeling --
-	--->
-		--[[if isChanneling("Spell4") then
-			local packet = Packet(packet)
-			if packet:get('name') == 'S_MOVE' or packet:get('name') == 'S_CAST' and packet:get('sourceNetworkId') == myHero.networkID then
-				if WukongMenu.combo.stopUlt then
-					if Target and GetDistance(Target) < SkillR.range then
-						if not SkillQ.ready and SkillW.ready and SkillE.ready and Target.health > (qDmg + eDmg) then
-							packet:block()
-						end
-					end
-				else
-					if Target and GetDistance(Target) < SkillR.range then
-						packet:block()
-					end
-				end
-			end
-		end]]--
-	---<
-	--- Block Packets if Channeling --
-end
--- / On Send Packet Function / --
 
 -- / On Create Obj Function / --
 function OnCreateObj(obj)
@@ -1148,15 +1131,14 @@ function Checks()
 	--- Checks if Items are Ready ---
 	--- Checks if Health Pots / Mana Pots are Ready ---
 	--->
-		Items.HealthPot.ready = (Items.HealthPot.slot ~= nil and myHero:CanUseSpell(Items.HealthPot.slot) == READY)
-		Items.ManaPot.ready = (Items.ManaPot.slot ~= nil and myHero:CanUseSpell(Items.ManaPot.slot) == READY)
-		Items.FlaskPot.ready = (Items.FlaskPot.slot ~= nil and myHero:CanUseSpell(Items.FlaskPot.slot) == READY)
+		Items.HealthPot.ready	= (Items.HealthPot.slot	~= nil and myHero:CanUseSpell(Items.HealthPot.slot)	== READY)
+		Items.ManaPot.ready		= (Items.ManaPot.slot	~= nil and myHero:CanUseSpell(Items.ManaPot.slot)	== READY)
+		Items.FlaskPot.ready	= (Items.FlaskPot.slot	~= nil and myHero:CanUseSpell(Items.FlaskPot.slot)	== READY)
 	---<
 	--- Checks if Health Pots / Mana Pots are Ready ---	
 	--- Updates Minions ---
 	--->
 		enemyMinions:update()
-		allyMinions:update()
 	---<
 	--- Updates Minions ---
 	--- Setting Cast of Ult ---
