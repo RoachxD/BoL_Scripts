@@ -9,12 +9,18 @@
 			 `8b8' `8d8'  ~Y8888P' YP   YD  `Y88P'  VP   V8P  Y888P
 
 
-		Script - Wukong - The Monkey King 2.0.1 by Roach
+		Script - Wukong - The Monkey King 2.0.2 by Roach
 
 		Dependency: 
 			- Nothing
 
 		Changelog:
+			2.0.2
+				- Fixed Consumables
+				- Fixed some typo from the Autocarry Version
+				- Added Tiamat and Hydra on the Items List
+				- Removed Orbwalker from Lane Clear
+				- Fixed Jungle Clear
 			2.0.1
 				- Fixed Orbwalking in Lane Clear/Jungle Clear
 				- Improved Combo Combination
@@ -67,7 +73,7 @@ function OnLoad()
 	--->
 		Variables()
 		WukongMenu()
-		PrintChat("<font color='#FF0000'> >> Wukong - The Monkey King 2.0.1 Loaded <<</font>")
+		PrintChat("<font color='#FF0000'> >> Wukong - The Monkey King 2.0.2 Loaded <<</font>")
 	---<
 end
 -- / Loading Function / --
@@ -321,7 +327,6 @@ function WukongMenu()
 			WukongMenu.clear:addParam("ClearLane", "Use Skills to Clear Lane", SCRIPT_PARAM_ONOFF, true)
 			WukongMenu.clear:addParam("clearQ", "Clear with "..SkillQ.name.." (Q)", SCRIPT_PARAM_ONOFF, true)
 			WukongMenu.clear:addParam("clearE", "Clear with "..SkillE.name.." (E)", SCRIPT_PARAM_ONOFF, true)
-			WukongMenu.clear:addParam("clearOrbM", "OrbWalk Minions", SCRIPT_PARAM_ONOFF, true)
 			WukongMenu.clear:addParam("clearOrbJ", "OrbWalk Jungle", SCRIPT_PARAM_ONOFF, true)
 		---<
 		---> KillSteal Menu
@@ -506,6 +511,23 @@ end
 
 -- / Clear Function / --
 function MixedClear()
+	--- Lane Clear ---
+	--->
+		if WukongMenu.clear.ClearLane then
+			for _, minion in pairs(enemyMinions.objects) do
+				if ValidTarget(minion) and GetDistance(minion) < SkillE.range then
+						if TimeToAttack() then myHero:Attack(minion) end
+					if WukongMenu.clear.clearQ and SkillQ.ready and GetDistance(minion) <= SkillQ.range then
+						CastQ(minion)
+					end
+					if WukongMenu.clear.clearE and SkillE.ready and GetDistance(minion) <= SkillE.range then
+						CastE(minion)
+					end
+				end
+			end
+		end
+	---<
+	--- Lane Clear ---
 	--- Jungle Clear ---
 	--->
 		if WukongMenu.clear.JungleFarm then
@@ -520,33 +542,16 @@ function MixedClear()
 				if WukongMenu.clear.clearE and SkillE.ready and GetDistance(JungleMob) <= SkillE.range then
 					CastE(JungleMob) 
 				end
-			elseif heroCanMove() then
-				moveToCursor()
-			end
-		end
-	---<
-	--- Jungle Clear ---
-	--- Lane Clear ---
-	--->
-		if WukongMenu.clear.ClearLane then
-			for _, minion in pairs(enemyMinions.objects) do
-				if  ValidTarget(minion) and GetDistance(minion) < SkillE.range then
-					if WukongMenu.clear.clearOrbM then
-						if TimeToAttack() then myHero:Attack(minion) end
+			else
+				for _, minion in pairs(enemyMinions.objects) do
+					if not ValidTarget(minion) and GetDistance(minion) > SkillE.range then
+						moveToCursor()
 					end
-					if WukongMenu.clear.clearQ and SkillQ.ready and GetDistance(minion) <= SkillQ.range then
-						CastQ(minion)
-					end
-					if WukongMenu.clear.clearE and SkillE.ready and GetDistance(minion) <= SkillE.range then
-						CastE(minion)
-					end
-				elseif heroCanMove() then
-					moveToCursor()
 				end
 			end
 		end
 	---<
-	--- Lane Clear ---
+	--- Jungle Clear ---
 end
 -- / Clear Function / --
 
@@ -679,9 +684,11 @@ function DamageCalculation()
 				if bftReady then bftdmg = (bftSlot and getDmg("BLACKFIRE",enemy,myHero) or 0) end
         	    if hxgReady then hxgDmg = (hxgSlot and getDmg("HXG",enemy,myHero) or 0) end
             	if bwcReady then bwcDmg = (bwcSlot and getDmg("BWC",enemy,myHero) or 0) end
+				if tmtReady then tmtDmg = (tmtSlot and getDmg("TMT",enemy,myHero) or 0) end
+				if hdrReady then hdrDmg = (hdrSlot and getDmg("RSH",enemy,myHero) or 0) end
             	if iReady then iDmg = (ignite and getDmg("IGNITE",enemy,myHero) or 0) end
             	onspellDmg = (liandrysSlot and getDmg("LIANDRYS",enemy,myHero) or 0)+(blackfireSlot and getDmg("BLACKFIRE",enemy,myHero) or 0)
-            	itemsDmg = dfgDmg + bftDmg + hxgDmg + bwcDmg + iDmg + onspellDmg
+            	itemsDmg = dfgDmg + bftDmg + hxgDmg + bwcDmg + tmtDmg + hdrDmg + iDmg + onspellDmg
 			end
 		end
     ---<
@@ -1109,6 +1116,8 @@ function Checks()
 		znaSlot, wgtSlot, bftSlot =										GetInventorySlotItem(3157),
 																		GetInventorySlotItem(3090),
 																		GetInventorySlotItem(3188)
+		tmtSlot, hdrSlot =												GetInventorySlotItem(3077),
+																		GetInventorySlotItem(3074)
 	---<
 	--- Slots for Items ---
 	--- Checks if Spells are Ready ---
@@ -1128,6 +1137,7 @@ function Checks()
 		znaReady = (znaSlot ~= nil and myHero:CanUseSpell(znaSlot) == READY)
 		wgtReady = (wgtSlot ~= nil and myHero:CanUseSpell(wgtSlot) == READY)
 		bftReady = (bftSlot ~= nil and myHero:CanUseSpell(bftSlot) == READY)
+		tmtReady = (tmtSlot ~= nil and myHero:CanUseSpell(tmtSlot) == READY)
 		hdrReady = (hdrSlot ~= nil and myHero:CanUseSpell(hdrSlot) == READY)
 	---<
 	--- Checks if Items are Ready ---
