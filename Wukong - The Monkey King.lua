@@ -127,7 +127,7 @@ function Variables()
 		{
 					HealthPot		= {slot = nil, ready = false, inUse = false},
 					ManaPot			= {slot = nil, ready = false, inUse = false},
-					FlaskPot		= {slot = nil, ready = false, inUse = false}
+					FlaskPot		= {slot = nil, ready = false			   }
 		}
 	---<
 	--- Items Vars ---
@@ -638,14 +638,14 @@ function UseConsumables()
 	--- Check if Zhonya/Wooglets Needed --
 	--- Check if HP Potions Needed --
 	--->
-		if WukongMenu.misc.aHP and isLow('Health') and not (Items.HealthPot.inUse or Items.FlaskPot.inUse) and (Items.HealthPot.ready or Items.FlaskPot.ready) then
+		if WukongMenu.misc.aHP and isLow('Health') and not Items.HealthPot.inUse and (Items.HealthPot.ready or Items.FlaskPot.ready) then
 			CastSpell((Items.HealthPot.slot or Items.FlaskPot.slot))
 		end
 	---<
 	--- Check if HP Potions Needed --
 	--- Check if MP Potions Needed --
 	--->
-		if WukongMenu.misc.aMP and isLow('Mana') and not (Items.ManaPot.inUse or Items.FlaskPot.inUse) and (Items.ManaPot.ready or Items.FlaskPot.ready) then
+		if WukongMenu.misc.aMP and isLow('Mana') and not Items.ManaPot.inUse and (Items.ManaPot.ready or Items.FlaskPot.ready) then
 			CastSpell((Items.ManaPot.slot or Items.FlaskPot.slot))
 		end
 	---<
@@ -815,7 +815,9 @@ function OnCreateObj(obj)
 				end
 			end
 			if obj.name:find("Global_Item_ManaPotion.troy") then
-				Items.ManaPot.inUse = true
+				if GetDistance(obj, myHero) <= 70 then
+					Items.ManaPot.inUse = true
+				end
 			end
 			if FocusJungleNames[obj.name] then
 				table.insert(JungleFocusMobs, obj)
@@ -837,7 +839,7 @@ function OnDeleteObj(obj)
 				Items.HealthPot.inUse = false
 			end
 			if obj.name:find("Global_Item_ManaPotion.troy") then
-				Items.ManaPot.inUse = true
+				Items.ManaPot.inUse = false
 			end
 			for i, Mob in pairs(JungleMobs) do
 				if obj.name == Mob.name then
