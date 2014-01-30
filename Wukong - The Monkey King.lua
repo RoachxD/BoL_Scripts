@@ -21,6 +21,8 @@
 				- Added Tiamat and Hydra on the Items List
 				- Removed Orbwalker from Lane Clear
 				- Fixed Jungle Clear
+				- Added a Check to the Harass Option for Decoy (W) to Enable/Disable it while Harassing
+				- Addded a third Harass mode: Q+E(+W)
 			2.0.1
 				- Fixed Orbwalking in Lane Clear/Jungle Clear
 				- Improved Combo Combination
@@ -307,8 +309,9 @@ function WukongMenu()
 		---<
 		---> Harass Menu
 		WukongMenu:addSubMenu("["..myHero.charName.." - Harass Settings]", "harass")
-			WukongMenu.harass:addParam("hMode", "Harass Mode",SCRIPT_PARAM_SLICE, 1, 1, 2, 0)
+			WukongMenu.harass:addParam("hMode", "Harass Mode",SCRIPT_PARAM_SLICE, 1, 1, 3, 0)
 			WukongMenu.harass:addParam("harassKey", "Harass Hotkey (T)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("T"))
+			WukongMenu.harass:addParam("wEscape", "Use "..SkillW.name" (W) after Harass", SCRIPT_PARAM_ONOFF, true)
 			WukongMenu.harass:addParam("qharass", "Always "..SkillQ.name.." (Q)", SCRIPT_PARAM_ONOFF, true)
 			WukongMenu.harass:addParam("mTmH", "Move To Mouse", SCRIPT_PARAM_ONOFF, true)
 			WukongMenu.harass:permaShow("harassKey")
@@ -427,21 +430,36 @@ function HarassCombo()
 		if Target then
 			--- Harass Mode 1 E+Q+W ---
 			if WukongMenu.harass.hMode == 1 then
-				CastE(Target)
-				if SkillW.ready then
-					if not SkillE.ready then CastQ(Target) end
-					if not SkillQ.ready and not SkillE.ready then CastSpell(_W) end
+				if WukongMenu.harass.wEscape then
+					if SkillW.ready then
+						CastE(Target)
+						if not SkillE.ready then CastQ(Target) end
+						if not SkillQ.ready and not SkillE.ready then CastSpell(_W) end
+					end
 				end
 			end
 			--- Harass Mode 1 ---
 			--- Harass Mode 2 E+W ---
 			if WukongMenu.harass.hMode == 2 then
-				if SkillW.ready then
-					CastE(Target)
-					if not SkillE.ready then CastSpell(_W) end
+				if WukongMenu.harass.wEscape then
+					if SkillW.ready then
+						CastE(Target)
+						if not SkillE.ready then CastSpell(_W) end
+					end
 				end
 			end
 			--- Harass Mode 2 ---
+			--- Harass Mode 3 Q+E+W ---
+			if WukongMenu.harass.hMode == 3 then
+				if WukongMenu.harass.wEscape then
+					if SkillW.ready then
+						CastQ(Target)
+						if not SkillQ.ready then CastE(Target) end
+						if not SkillQ.ready and not SkillE.ready then CastSpell(_W) end
+					end
+				end
+			end
+			--- Harass Mode 3 ---
 		end
 	---<
 	--- Smart Harass ---
