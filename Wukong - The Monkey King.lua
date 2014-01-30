@@ -23,6 +23,7 @@
 				- Fixed Jungle Clear
 				- Added a Check to the Harass Option for Decoy (W) to Enable/Disable it while Harassing
 				- Addded a third Harass mode: Q+E(+W)
+				- Fixed spamming errors
 			2.0.1
 				- Fixed Orbwalking in Lane Clear/Jungle Clear
 				- Improved Combo Combination
@@ -694,7 +695,7 @@ function DamageCalculation()
  		for i=1, heroManager.iCount do
 		local enemy = heroManager:GetHero(i)
 			if ValidTarget(enemy) then
-				dfgDmg, hxgDmg, bwcDmg, iDmg, bftDmg = 0, 0, 0, 0, 0
+				dfgDmg, hxgDmg, bwcDmg, tmtDmg, hdrDmg, iDmg, bftDmg = 0, 0, 0, 0, 0
 				qDmg = (SkillQ.ready and getDmg("Q",enemy,myHero) or 0)
 				eDmg = (SkillE.ready and getDmg("E",enemy,myHero) or 0)
             	rDmg = getDmg("R",enemy,myHero)*4
