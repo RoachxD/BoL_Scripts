@@ -695,19 +695,19 @@ function DamageCalculation()
  		for i=1, heroManager.iCount do
 		local enemy = heroManager:GetHero(i)
 			if ValidTarget(enemy) then
-				dfgDmg, hxgDmg, bwcDmg, tmtDmg, hdrDmg, iDmg, bftDmg = 0, 0, 0, 0, 0
+				dfgDmg, hxgDmg, bwcDmg, tmtDmg, hdrDmg, iDmg, bftDmg = 0, 0, 0, 0, 0, 0, 0
 				qDmg = (SkillQ.ready and getDmg("Q",enemy,myHero) or 0)
 				eDmg = (SkillE.ready and getDmg("E",enemy,myHero) or 0)
             	rDmg = getDmg("R",enemy,myHero)*4
-				if dfgReady then dfgDmg = (dfgSlot and getDmg("DFG",enemy,myHero) or 0)	end
-				if bftReady then bftdmg = (bftSlot and getDmg("BLACKFIRE",enemy,myHero) or 0) end
-        	    if hxgReady then hxgDmg = (hxgSlot and getDmg("HXG",enemy,myHero) or 0) end
-            	if bwcReady then bwcDmg = (bwcSlot and getDmg("BWC",enemy,myHero) or 0) end
-				if tmtReady then tmtDmg = (tmtSlot and getDmg("TMT",enemy,myHero) or 0) end
-				if hdrReady then hdrDmg = (hdrSlot and getDmg("RSH",enemy,myHero) or 0) end
-            	if iReady then iDmg = (ignite and getDmg("IGNITE",enemy,myHero) or 0) end
-            	onspellDmg = (liandrysSlot and getDmg("LIANDRYS",enemy,myHero) or 0)+(blackfireSlot and getDmg("BLACKFIRE",enemy,myHero) or 0)
-            	itemsDmg = dfgDmg + bftDmg + hxgDmg + bwcDmg + tmtDmg + hdrDmg + iDmg + onspellDmg
+				dfgDmg = (dfgSlot and getDmg("DFG",enemy,myHero) or 0)
+				bftdmg = (bftSlot and getDmg("BLACKFIRE",enemy,myHero) or 0)
+        	    hxgDmg = (hxgSlot and getDmg("HXG",enemy,myHero) or 0)
+            	bwcDmg = (bwcSlot and getDmg("BWC",enemy,myHero) or 0)
+				tmtDmg = (tmtSlot and getDmg("TMT",enemy,myHero) or 0)
+				hdrDmg = (hdrSlot and getDmg("RSH",enemy,myHero) or 0)
+            	iDmg = (ignite and getDmg("IGNITE",enemy,myHero) or 0)
+            	onspellDmg = (liandrysSlot and getDmg("LIANDRYS",enemy,myHero) or 0)+bftDmg
+            	itemsDmg = dfgDmg + hxgDmg + bwcDmg + tmtDmg + hdrDmg + iDmg + onspellDmg
 			end
 		end
     ---<
