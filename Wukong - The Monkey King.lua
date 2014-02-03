@@ -67,6 +67,7 @@
 				- First release
 			
 --]]
+
 -- / Hero Name Check / --
 if myHero.charName ~= "MonkeyKing" then return end
 -- / Hero Name Check / --
@@ -551,7 +552,7 @@ function MixedClear()
 	--->
 		if WukongMenu.clear.JungleFarm then
 			JungleMob = GetJungleMob()
-			if JungleMob  and GetDistance(minion) < SkillE.range then
+			if ValidTarget(JungleMob) and GetDistance(JungleMob) < SkillE.range then
 				if WukongMenu.clear.clearOrbJ then
 					if TimeToAttack() then myHero:Attack(JungleMob) end
 				end
@@ -705,7 +706,7 @@ function DamageCalculation()
             	bwcDmg = (bwcSlot and getDmg("BWC",enemy,myHero) or 0)
             	iDmg = (ignite and getDmg("IGNITE",enemy,myHero) or 0)
             	onspellDmg = bftDmg
-            	itemsDmg = dfgDmg + hxgDmg + bwcDmga + iDmg + onspellDmg
+            	itemsDmg = dfgDmg + hxgDmg + bwcDmg + iDmg + onspellDmg
 			end
 		end
     ---<
