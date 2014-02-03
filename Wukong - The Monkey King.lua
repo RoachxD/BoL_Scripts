@@ -551,7 +551,7 @@ function MixedClear()
 	--->
 		if WukongMenu.clear.JungleFarm then
 			JungleMob = GetJungleMob()
-			if JungleMob then
+			if JungleMob  and GetDistance(minion) < SkillE.range then
 				if WukongMenu.clear.clearOrbJ then
 					if TimeToAttack() then myHero:Attack(JungleMob) end
 				end
@@ -695,7 +695,7 @@ function DamageCalculation()
  		for i=1, heroManager.iCount do
 		local enemy = heroManager:GetHero(i)
 			if ValidTarget(enemy) then
-				dfgDmg, hxgDmg, bwcDmg, tmtDmg, hdrDmg, iDmg, bftDmg = 0, 0, 0, 0, 0, 0, 0
+				dfgDmg, hxgDmg, bwcDmg, tmtDmg, iDmg, bftDmg = 0, 0, 0, 0, 0, 0, 0
 				qDmg = (SkillQ.ready and getDmg("Q",enemy,myHero) or 0)
 				eDmg = (SkillE.ready and getDmg("E",enemy,myHero) or 0)
             	rDmg = getDmg("R",enemy,myHero)*4
@@ -704,10 +704,9 @@ function DamageCalculation()
         	    hxgDmg = (hxgSlot and getDmg("HXG",enemy,myHero) or 0)
             	bwcDmg = (bwcSlot and getDmg("BWC",enemy,myHero) or 0)
 				tmtDmg = (tmtSlot and getDmg("TMT",enemy,myHero) or 0)
-				hdrDmg = (hdrSlot and getDmg("RSH",enemy,myHero) or 0)
             	iDmg = (ignite and getDmg("IGNITE",enemy,myHero) or 0)
-            	onspellDmg = (liandrysSlot and getDmg("LIANDRYS",enemy,myHero) or 0)+bftDmg
-            	itemsDmg = dfgDmg + hxgDmg + bwcDmg + tmtDmg + hdrDmg + iDmg + onspellDmg
+            	onspellDmg = bftDmg
+            	itemsDmg = dfgDmg + hxgDmg + bwcDmg + tmtDmg + iDmg + onspellDmg
 			end
 		end
     ---<
