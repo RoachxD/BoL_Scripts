@@ -703,10 +703,9 @@ function DamageCalculation()
 				bftdmg = (bftSlot and getDmg("BLACKFIRE",enemy,myHero) or 0)
         	    hxgDmg = (hxgSlot and getDmg("HXG",enemy,myHero) or 0)
             	bwcDmg = (bwcSlot and getDmg("BWC",enemy,myHero) or 0)
-				tmtDmg = (tmtSlot and getDmg("TMT",enemy,myHero) or 0)
             	iDmg = (ignite and getDmg("IGNITE",enemy,myHero) or 0)
             	onspellDmg = bftDmg
-            	itemsDmg = dfgDmg + hxgDmg + bwcDmg + tmtDmg + iDmg + onspellDmg
+            	itemsDmg = dfgDmg + hxgDmg + bwcDmga + iDmg + onspellDmg
 			end
 		end
     ---<
