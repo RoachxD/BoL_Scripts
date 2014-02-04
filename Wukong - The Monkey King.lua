@@ -9,12 +9,16 @@
 			 `8b8' `8d8'  ~Y8888P' YP   YD  `Y88P'  VP   V8P  Y888P
 
 
-		Script - Wukong - The Monkey King 2.0.2 by Roach
+		Script - Wukong - The Monkey King 2.0.3 by Roach
 
 		Dependency: 
 			- Nothing
 
 		Changelog:
+			2.0.3
+				- Added MEC for Ultimate
+				- Removed Escape Artist
+				- Removed Damage Calculation Draw
 			2.0.2
 				- Fixed Consumables
 				- Fixed some typo from the Autocarry Version
@@ -77,7 +81,7 @@ function OnLoad()
 	--->
 		Variables()
 		WukongMenu()
-		PrintChat("<font color='#FF0000'> >> Wukong - The Monkey King 2.0.2 Loaded <<</font>")
+		PrintChat("<font color='#FF0000'> >> Wukong - The Monkey King 2.0.3 Loaded <<</font>")
 	---<
 end
 -- / Loading Function / --
@@ -100,7 +104,6 @@ function OnTick()
 		FarmingKey =   WukongMenu.farming.farmKey
 		HarassKey =    WukongMenu.harass.harassKey
 		ClearKey =     WukongMenu.clear.clearKey
-		escapeArtistKey =  WukongMenu.misc.escapeArtistKey
 	---<
 	-- Menu Variables --
 	--->
@@ -304,7 +307,8 @@ function WukongMenu()
 		---> Combo Menu
 		WukongMenu:addSubMenu("["..myHero.charName.." - Combo Settings]", "combo")
 			WukongMenu.combo:addParam("comboKey", "Full Combo Key (X)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("X"))
-			WukongMenu.combo:addParam("stopUlt", "Stop "..SkillR.name.." (R) If Target Can Die", SCRIPT_PARAM_ONOFF, false)
+			WukongMenu.combo:addParam("mecUlt", "Use MEC for "..SkillR.name.." (R)", SCRIPT_PARAM_ONOFF, true)
+			WukongMenu.combo:addParam("amecUlt", "MEC Amount with "..SkillR.name.." (R)",SCRIPT_PARAM_SLICE, 2, 1, 5, 0)
 			WukongMenu.combo:addParam("comboItems", "Use Items with Burst", SCRIPT_PARAM_ONOFF, true)
 			WukongMenu.combo:addParam("comboOrbwalk", "Orbwalk in Combo", SCRIPT_PARAM_ONOFF, true)
 			WukongMenu.combo:permaShow("comboKey")
@@ -351,7 +355,6 @@ function WukongMenu()
 					WukongMenu.drawing.lfc:addParam("CLinfo", "Higher length = Lower FPS Drops", SCRIPT_PARAM_INFO, "")
 			end
 			WukongMenu.drawing:addParam("disableAll", "Disable All Ranges Drawing", SCRIPT_PARAM_ONOFF, false)
-			WukongMenu.drawing:addParam("drawText", "Draw Enemy Text", SCRIPT_PARAM_ONOFF, true)
 			WukongMenu.drawing:addParam("drawTargetText", "Draw Who I'm Targetting", SCRIPT_PARAM_ONOFF, true)
 			WukongMenu.drawing:addParam("drawQ", "Draw "..SkillQ.name.." (Q) Range", SCRIPT_PARAM_ONOFF, true)
 			WukongMenu.drawing:addParam("drawW", "Draw "..SkillW.name.." (W) Range", SCRIPT_PARAM_ONOFF, false)
@@ -359,7 +362,6 @@ function WukongMenu()
 		---<
 		---> Misc Menu	
 		WukongMenu:addSubMenu("["..myHero.charName.." - Misc Settings]", "misc")
-			WukongMenu.misc:addParam("escapeArtistKey", "Escape Artist Hotkey (G)", SCRIPT_PARAM_ONKEYDOWN, false, 71)
 			WukongMenu.misc:addParam("ZWItems", "Auto Zhonyas/Wooglets", SCRIPT_PARAM_ONOFF, true)
 			WukongMenu.misc:addParam("ZWHealth", "Min Health % for Zhonyas/Wooglets", SCRIPT_PARAM_SLICE, 15, 0, 100, -1)
 			WukongMenu.misc:addParam("aHP", "Auto Health Pots", SCRIPT_PARAM_ONOFF, true)
@@ -367,7 +369,6 @@ function WukongMenu()
 			WukongMenu.misc:addParam("aMP", "Auto Mana Pots", SCRIPT_PARAM_ONOFF, true)
 			WukongMenu.misc:addParam("pMana", "Min % for Mana Pots", SCRIPT_PARAM_SLICE, 35, 0, 100, -1)
 			WukongMenu.misc:addParam("uTM", "Use Tick Manager/FPS Improver (Requires Reload)",SCRIPT_PARAM_ONOFF, false)
-			WukongMenu.misc:permaShow("escapeArtistKey")
 		---<
 		---> Target Selector		
 			TargetSelector = TargetSelector(TARGET_LESS_CAST, SkillE.range, DAMAGE_MAGIC)
@@ -408,8 +409,14 @@ function FullCombo()
 				if not SkillE.ready then
 					CastQ(Target)
 				end
-				if Target.health < rDmg then
-					CastR(Target)
+				if WukongMenu.combo.mecUlt then
+					if AreaEnemyCount(myHero, SkillR.range) >=  WukongMenu.combo.amecUlt then
+						CastR(Target)
+					end
+				else
+					if Target.health < rDmg
+						CastR(Target)
+					end
 				end
 			end
 		else
@@ -694,7 +701,7 @@ function DamageCalculation()
 	--- Calculate our Damage On Enemies ---
 	--->
  		for i=1, heroManager.iCount do
-		local enemy = heroManager:GetHero(i)
+			local enemy = heroManager:GetHero(i)
 			if ValidTarget(enemy) then
 				dfgDmg, hxgDmg, bwcDmg, tmtDmg, iDmg, bftDmg = 0, 0, 0, 0, 0, 0, 0
 				qDmg = (SkillQ.ready and getDmg("Q",enemy,myHero) or 0)
@@ -748,17 +755,6 @@ end
 	end
 ---<
 --- On Animation (Setting our last Animation) ---
---- isChanneling Function (Checks if Animation is Channeling) ---
---->
-	function isChanneling(animationName)
-    	if lastAnimation == animationName then
-        	return true
-    	else
-        	return false
-    	end
-	end
----<
---- isChanneling Function (Checks if Animation is Channeling) ---
 --- Checking if Hero in Danger ---
 --->
 	function isInDanger(hero)
@@ -911,16 +907,16 @@ function OnDraw()
 	--->
 		if WukongMenu.drawing.drawText then
 			for i=1, heroManager.iCount do
-			local enemy = heroManager:GetHero(i)
-			if ValidTarget(enemy) then
-				local enemypPos = WorldToScreen(D3DXVECTOR3(enemy.x+150,enemy.maxBBox.y,enemy.z+80))
-				if OnScreen(enemypPos.x, enemypPos.y) then
-					local enemyred = enemycombo[i]<100 and math.floor(enemycombo[i]/100*255) or 255
-					local enemygreen = enemycombo[i]<100 and math.floor(255 - enemycombo[i]/100*255) or 0
-					DrawText("D:"..enemycombo[i].."%", 20, enemypPos.x, enemypPos.y, RGBA(enemyred,enemygreen,0,255))
+				local enemy = heroManager:GetHero(i)
+				if ValidTarget(enemy) then
+					local enemypPos = WorldToScreen(D3DXVECTOR3(enemy.x+150,enemy.maxBBox.y,enemy.z+80))
+					if OnScreen(enemypPos.x, enemypPos.y) then
+						local enemyred = enemycombo[i]<100 and math.floor(enemycombo[i]/100*255) or 255
+						local enemygreen = enemycombo[i]<100 and math.floor(255 - enemycombo[i]/100*255) or 0
+						DrawText("D:"..enemycombo[i].."%", 20, enemypPos.x, enemypPos.y, RGBA(enemyred,enemygreen,0,255))
+					end
 				end
 			end
-	end
 		end
 	---<
 	--- Draw Enemy Damage Text ---
@@ -1179,6 +1175,19 @@ function Checks()
 	--- Setting Cast of Ult ---
 end
 -- / Checks Function / --
+
+-- / Minimum Enclosing Circle / --
+function AreaEnemyCount(Spot, Range)
+	local count = 0
+	
+	for _, enemy in pairs(enemyHeroes) do
+		if enemy and not enemy.dead and GetDistance(Spot, enemy) <= Range then
+			count = count + 1
+		end
+	end            
+	return count
+end
+-- / Minimum Enclosing Circle / --
 
 -- / isLow Function / --
 function isLow(Name)
