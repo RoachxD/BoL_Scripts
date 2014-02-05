@@ -19,6 +19,7 @@
 				- Added MEC for Ultimate
 				- Removed Escape Artist
 				- Removed Damage Calculation Draw
+				- Added permaShow to 'mecUlt'
 			2.0.2
 				- Fixed Consumables
 				- Fixed some typo from the Autocarry Version
@@ -312,6 +313,7 @@ function WukongMenu()
 			WukongMenu.combo:addParam("comboItems", "Use Items with Burst", SCRIPT_PARAM_ONOFF, true)
 			WukongMenu.combo:addParam("comboOrbwalk", "Orbwalk in Combo", SCRIPT_PARAM_ONOFF, true)
 			WukongMenu.combo:permaShow("comboKey")
+			WukongMenu.combo:permaShow("mecUlt")
 		---<
 		---> Harass Menu
 		WukongMenu:addSubMenu("["..myHero.charName.." - Harass Settings]", "harass")
@@ -414,7 +416,7 @@ function FullCombo()
 						CastR(Target)
 					end
 				else
-					if Target.health < rDmg
+					if Target.health < rDmg then
 						CastR(Target)
 					end
 				end
