@@ -20,6 +20,9 @@
 				- Removed Escape Artist
 				- Removed Damage Calculation Draw
 				- Added permaShow to 'mecUlt'
+				- Changed TargetSelector mode to 'TARGET_LESS_CAST_PRIORITY'
+				- Removed Orbwalker from Mixed Clear
+				- Fixed Ultimate Canceling Bug
 			2.0.2
 				- Fixed Consumables
 				- Fixed some typo from the Autocarry Version
@@ -338,7 +341,6 @@ function WukongMenu()
 			WukongMenu.clear:addParam("ClearLane", "Use Skills to Clear Lane", SCRIPT_PARAM_ONOFF, true)
 			WukongMenu.clear:addParam("clearQ", "Clear with "..SkillQ.name.." (Q)", SCRIPT_PARAM_ONOFF, true)
 			WukongMenu.clear:addParam("clearE", "Clear with "..SkillE.name.." (E)", SCRIPT_PARAM_ONOFF, true)
-			WukongMenu.clear:addParam("clearOrbJ", "OrbWalk Jungle", SCRIPT_PARAM_ONOFF, true)
 		---<
 		---> KillSteal Menu
 		WukongMenu:addSubMenu("["..myHero.charName.." - KillSteal Settings]", "killsteal")
@@ -373,7 +375,7 @@ function WukongMenu()
 			WukongMenu.misc:addParam("uTM", "Use Tick Manager/FPS Improver (Requires Reload)",SCRIPT_PARAM_ONOFF, false)
 		---<
 		---> Target Selector		
-			TargetSelector = TargetSelector(TARGET_LESS_CAST, SkillE.range, DAMAGE_MAGIC)
+			TargetSelector = TargetSelector(TARGET_LESS_CAST_PRIORITY, SkillE.range, DAMAGE_MAGIC)
 			TargetSelector.name = "MonkeyKing"
 			WukongMenu:addTS(TargetSelector)
 		---<
@@ -398,32 +400,33 @@ function FullCombo()
 		if castDelay == 0 then
 			castingUlt = false
 		end
-		
-		if Target then
-			if WukongMenu.combo.comboOrbwalk then
-				OrbWalking(Target)
-			end
-			if WukongMenu.combo.comboItems then
-				UseItems(Target)
-			end
-			if not castingUlt then
-				CastE(Target)
-				if not SkillE.ready then
-					CastQ(Target)
+		if not isChanneling("Spell4") and not castingUlt then
+			if Target then
+				if WukongMenu.combo.comboOrbwalk then
+					OrbWalking(Target)
 				end
-				if WukongMenu.combo.mecUlt then
-					if AreaEnemyCount(myHero, SkillR.range) >=  WukongMenu.combo.amecUlt then
-						CastR(Target)
+				if WukongMenu.combo.comboItems then
+					UseItems(Target)
+				end
+				if not castingUlt then
+					CastE(Target)
+					if not SkillE.ready then
+						CastQ(Target)
 					end
-				else
-					if Target.health < rDmg then
-						CastR(Target)
+					if WukongMenu.combo.mecUlt then
+						if AreaEnemyCount(myHero, SkillR.range) >=  WukongMenu.combo.amecUlt then
+							CastR(Target)
+						end
+					else
+						if Target.health < rDmg then
+							CastR(Target)
+						end
 					end
 				end
-			end
-		else
-			if WukongMenu.combo.comboOrbwalk then
-				moveToCursor()
+			else
+				if WukongMenu.combo.comboOrbwalk then
+					moveToCursor()
+				end
 			end
 		end
 	---<
@@ -570,12 +573,6 @@ function MixedClear()
 				end
 				if WukongMenu.clear.clearE and SkillE.ready and GetDistance(JungleMob) <= SkillE.range then
 					CastE(JungleMob) 
-				end
-			else
-				for _, minion in pairs(enemyMinions.objects) do
-					if not ValidTarget(minion) and GetDistance(minion) > SkillE.range then
-						moveToCursor()
-					end
 				end
 			end
 		end
@@ -753,29 +750,24 @@ end
 --- On Animation (Setting our last Animation) ---
 --->
 	function OnAnimation(unit, animationName)
-    	if unit.isMe and lastAnimation ~= animationName then lastAnimation = animationName end
+    	if unit.isMe and lastAnimation ~= animationName then 
+			lastAnimation = animationName
+			PrintChat("Animation name: "..animationName.."")
+		end
 	end
 ---<
 --- On Animation (Setting our last Animation) ---
---- Checking if Hero in Danger ---
+--- isChanneling Function (Checks if Animation is Channeling) ---
 --->
-	function isInDanger(hero)
-		nEnemiesClose, nEnemiesFar = 0, 0
-		hpPercent = hero.health / hero.maxHealth
-		for _, enemy in pairs(enemies) do
-			if not enemy.dead and hero:GetDistance(enemy) <= 500 then 
-				nEnemiesClose = nEnemiesClose + 1 
-				if hpPercent < 0.5 and hpPercent < enemy.health / enemy.maxHealth then return true end
-			elseif not enemy.dead and hero:GetDistance(enemy) <= 1000 then
-				nEnemiesFar = nEnemiesFar + 1 
-			end
-		end
-		if nEnemiesClose > 1 then return true end
-		if nEnemiesClose == 1 and nEnemiesFar > 1 then return true end
-		return false
+	function isChanneling(animationName)
+    	if lastAnimation == animationName then
+        	return true
+    	else
+        	return false
+    	end
 	end
 ---<
---- Checking if Hero in Danger ---
+--- isChanneling Function (Checks if Animation is Channeling) ---
 --- Get Jungle Mob Function by Apple ---
 --->
 	function GetJungleMob()
@@ -826,6 +818,25 @@ end
 ---<
 --- Set Priorities ---
 -- / Misc Functions / --
+
+-- / On Send Packet Function / --
+function OnSendPacket(packet)
+	-- Block Packets if Channeling --
+	--->
+		for _, enemy in pairs(enemyHeroes) do
+			if isChanneling("Spell4") then
+				local packet = Packet(packet)
+				if packet:get('name') == 'S_CAST' and packet:get('sourceNetworkId') == myHero.networkID then
+					if enemy and GetDistance(enemy) < SkillR.range then
+						packet:block()
+					end
+				end
+			end
+		end
+	---<
+	--- Block Packets if Channeling --
+end
+-- / On Send Packet Function / --
 
 -- / On Create Obj Function / --
 function OnCreateObj(obj)
@@ -905,23 +916,6 @@ function OnDraw()
 		end
 	---<
 	--- Drawing Our Ranges ---
-	--- Draw Enemy Damage Text ---
-	--->
-		if WukongMenu.drawing.drawText then
-			for i=1, heroManager.iCount do
-				local enemy = heroManager:GetHero(i)
-				if ValidTarget(enemy) then
-					local enemypPos = WorldToScreen(D3DXVECTOR3(enemy.x+150,enemy.maxBBox.y,enemy.z+80))
-					if OnScreen(enemypPos.x, enemypPos.y) then
-						local enemyred = enemycombo[i]<100 and math.floor(enemycombo[i]/100*255) or 255
-						local enemygreen = enemycombo[i]<100 and math.floor(255 - enemycombo[i]/100*255) or 0
-						DrawText("D:"..enemycombo[i].."%", 20, enemypPos.x, enemypPos.y, RGBA(enemyred,enemygreen,0,255))
-					end
-				end
-			end
-		end
-	---<
-	--- Draw Enemy Damage Text ---
 	--- Draw Enemy Target ---
 	--->
 		if Target then
@@ -938,11 +932,15 @@ end
 --- Orbwalking Target ---
 --->
 	function OrbWalking(Target)
-		if TimeToAttack() and GetDistance(Target) <= myHero.range + GetDistance(myHero.minBBox) then
-			myHero:Attack(Target)
-    	elseif heroCanMove() then
-        	moveToCursor()
-    	end
+		if not isChanneling("Spell4") then
+			if TimeToAttack() and GetDistance(Target) <= myHero.range + GetDistance(myHero.minBBox) then
+				myHero:Attack(Target)
+			elseif heroCanMove() then
+				moveToCursor()
+			end
+		else
+			moveToCursor()
+		end
 	end
 ---<
 --- Orbwalking Target ---
