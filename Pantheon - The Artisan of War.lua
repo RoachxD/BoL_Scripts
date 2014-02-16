@@ -29,7 +29,7 @@
 				- No longer AutoCarry Script
 				- Rewrote everything
 				- Combo Reworked: Should be a lot smoother now
-				- Harass Reworked: Should work better and use Decoy properly
+				- Harass Reworked: Should work better
 				- Farm reworked / Uses mixed skill damages to maximize farm
 				- Lane Clear & Jungle Clear Improved / Uses new jungle table with all mobs in 5v5 / 3v3
 				- New Option to KS with Items
