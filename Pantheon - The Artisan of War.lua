@@ -11,8 +11,8 @@
 
 		Script - Pantheon - The Artisan of War 3.0 by Roach
 
-		Dependency: 
-			- Nothing
+		Dependency / Requirements: 
+			- AoE Skillshot Position
 
 		Changelog:
 			3.0
@@ -132,6 +132,8 @@ if myHero.charName ~= "Pantheon" then return end
 -- / Loading Function / --
 function OnLoad()
 	--->
+		require "AoE_Skillshot_Position"
+		
 		Variables()
 		PanthMenu()
 		PrintChat("<font color='#FF0000'> >> Pantheon - The Artisan of War 3.0 Loaded <<</font>")
