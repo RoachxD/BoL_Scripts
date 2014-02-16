@@ -468,8 +468,8 @@ function FullCombo()
 					CastE(Target)
 				end
 				if PanthMenu.combo.mecUlt then
-					if SkillR.MecPos and CountEnemyHeroInRange(SkillR.range, myHero) >= PanthMenu.combo.amecUlt then
-						CastR(Target)
+					if SkillR.MecPos and CountEnemyHeroInRange(SkillR.MecPos, myHero) >= PanthMenu.combo.amecUlt then
+						CastSpell(_R, SkillR.MecPos.x, SkillR.MecPos.z)
 					end
 				end
 			else
@@ -880,7 +880,6 @@ end
 	function OnAnimation(unit, animationName)
     	if unit.isMe and lastAnimation ~= animationName then 
 			lastAnimation = animationName
-			PrintChat("Animation name: "..animationName.."")
 		end
 	end
 ---<
@@ -1316,7 +1315,7 @@ function Checks()
 	--->
 		if GetTickCount() <= castDelay then castingE = true end
 		if SkillE.ready and not Target then castingE = false end
-		SkillR.MecPos = GetAoESpellPosition(400, Target)
+		if SkillR.ready and Target then SkillR.MecPos = GetAoESpellPosition(700, Target) end
 	---<
 	--- Setting Spells ---
 end
