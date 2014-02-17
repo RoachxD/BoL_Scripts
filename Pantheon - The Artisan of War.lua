@@ -428,7 +428,7 @@ function PanthMenu()
 			PanthMenu.misc:addParam("uTM", "Use Tick Manager/FPS Improver (Requires Reload)",SCRIPT_PARAM_ONOFF, false)
 		---<
 		---> Target Selector		
-			TargetSelector = TargetSelector(TARGET_LESS_CAST_PRIORITY, SkillR.range, DAMAGE_PHYSICAL)
+			TargetSelector = TargetSelector(TARGET_LESS_CAST_PRIORITY, SkillQ.range, DAMAGE_PHYSICAL)
 			TargetSelector.name = "Pantheon"
 			PanthMenu:addTS(TargetSelector)
 		---<
@@ -1239,14 +1239,10 @@ function Checks()
 		tsTarget = TargetSelector.target
 		if tsTarget and tsTarget.type == "obj_AI_Hero" then
 			Target = tsTarget
-			if GetDistance(Target) <= SkillQ.range then
-				TargetSelector.range = SkillQ.range
-			else
-				TargetSelector.range = SkillR.range
-			end
 		else
 			Target = nil
 		end
+		
 	---<
 	--- Updates & Checks if Target is Valid ---	
 	--- Checks and finds Ignite ---
@@ -1315,7 +1311,7 @@ function Checks()
 	--->
 		if GetTickCount() <= castDelay then castingE = true end
 		if SkillE.ready and not Target then castingE = false end
-		if SkillR.ready and Target then SkillR.MecPos = GetAoESpellPosition(700, Target) end
+		if SkillR.ready and Target then SkillR.MecPos = GetAoESpellPosition(700, Target, 350) end
 	---<
 	--- Setting Spells ---
 end
