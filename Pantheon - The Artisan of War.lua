@@ -9,12 +9,18 @@
 			88      YP   YP VP   V8P    YP    YP   YP Y88888P  `Y88P'  VP   V8P
 
 
-		Script - Pantheon - The Artisan of War 3.0 by Roach
+		Script - Pantheon - The Artisan of War 3.0.1 by Roach
 
 		Dependency / Requirements: 
 			- AoE Skillshot Position
 
 		Changelog:
+			3.0.1
+				- Fixed Ult Spamming Errors
+				- Added new Ultimate Logics
+				- Added Ultimate Delay for AoE Skillshot Position
+				- Added Tiamat / Hydra usage in the Clearing Option
+				- Removed some useless stuff
 			3.0
 				- Added MEC for Ultimate
 				- Removed Escape Artist
@@ -136,7 +142,7 @@ function OnLoad()
 		
 		Variables()
 		PanthMenu()
-		PrintChat("<font color='#FF0000'> >> Pantheon - The Artisan of War 3.0 Loaded <<</font>")
+		PrintChat("<font color='#FF0000'> >> Pantheon - The Artisan of War 3.0.1 Loaded <<</font>")
 	---<
 end
 -- / Loading Function / --
@@ -149,7 +155,7 @@ function OnTick()
 		UseConsumables()
 
 		if Target then
-			if PanthMenu.harass.qharass and not castingE then CastQ(Target) end
+			if PanthMenu.harass.qharass and not isChanneling("Spell3") then CastQ(Target) end
 			if PanthMenu.killsteal.Ignite then AutoIgnite(Target) end
 		end
 	---<
@@ -235,7 +241,6 @@ function Variables()
 	--- Misc Vars ---
 	--->
 		Items.HealthPot.inUse = false
-		castDelay, castingE = 0, false
 		gameState = GetGame()
 		if gameState.map.shortName == "twistedTreeline" then
 			TTMAP = true
@@ -428,7 +433,7 @@ function PanthMenu()
 			PanthMenu.misc:addParam("uTM", "Use Tick Manager/FPS Improver (Requires Reload)",SCRIPT_PARAM_ONOFF, false)
 		---<
 		---> Target Selector		
-			TargetSelector = TargetSelector(TARGET_LESS_CAST_PRIORITY, SkillQ.range, DAMAGE_PHYSICAL)
+			TargetSelector = TargetSelector(TARGET_LESS_CAST_PRIORITY, SkillR.range, DAMAGE_PHYSICAL)
 			TargetSelector.name = "Pantheon"
 			PanthMenu:addTS(TargetSelector)
 		---<
@@ -450,10 +455,7 @@ end
 function FullCombo()
 	--- Combo While Not Channeling --
 	--->
-		if castDelay == 0 or not isChanneling("Spell3") then
-			castingE = false
-		end
-		if not isChanneling("Spell3") and not castingE and (not isChanneling("Ult_A") and not isChanneling("Ult_B") and not isChanneling("Ult_C") and not isChanneling("Ult_D") and not isChanneling("Ult_E")) then
+		if not isChanneling("Spell3") and (not isChanneling("Ult_A") and not isChanneling("Ult_B") and not isChanneling("Ult_C") and not isChanneling("Ult_D") and not isChanneling("Ult_E")) then
 			if Target then
 				if PanthMenu.combo.comboOrbwalk then
 					OrbWalking(Target)
@@ -596,6 +598,8 @@ function MixedClear()
 				if PanthMenu.clear.clearE and SkillE.ready and GetDistance(JungleMob) <= SkillE.range then
 					CastE(JungleMob)
 				end
+				if tmtReady and GetDistance(JungleMob) <= 185 then CastSpell(tmtSlot) end
+				if hdrReady and GetDistance(JungleMob) <= 185 then CastSpell(hdrSlot) end
 			else
 				if PanthMenu.clear.clearOrbJ then
 					moveToCursor()
@@ -621,6 +625,8 @@ function MixedClear()
 					if PanthMenu.clear.clearE and SkillE.ready and GetDistance(minion) <= SkillE.range then 
 						CastE(minion)
 					end
+					if tmtReady and GetDistance(minion) <= 185 then CastSpell(tmtSlot) end
+					if hdrReady and GetDistance(minion) <= 185 then CastSpell(hdrSlot) end
 				else
 					if PanthMenu.clear.clearOrbM then
 						moveToCursor()
@@ -687,13 +693,9 @@ function CastE(enemy)
 		if ValidTarget(enemy) then 
 			if VIP_USER then
 				Packet("S_CAST", {spellId = _E, targetNetworkId = enemy.networkID}):send()
-				castDelay = GetTickCount()+75
-				castingE = true
 				return true
 			else
 				CastSpell(_E, enemy)
-				castDelay = GetTickCount()+75
-				castingE = true
 				return true
 			end
 		end
@@ -931,7 +933,7 @@ function OnSendPacket(packet)
 		for _, enemy in pairs(enemyHeroes) do
 			if isChanneling("Spell3") then
 				local packet = Packet(packet)
-				if packet:get('name') == 'S_CAST' and packet:get('sourceNetworkId') == myHero.networkID then
+				if packet:get('name') == 'S_MOVE' or packet:get('name') == 'S_CAST' and packet:get('sourceNetworkId') == myHero.networkID then
 					if enemy and GetDistance(enemy) < SkillE.range then
 						packet:block()
 					end
@@ -1215,7 +1217,7 @@ function Checks()
 	--->
 		TargetSelector:update()
 		tsTarget = TargetSelector.target
-		if tsTarget and tsTarget.type == "obj_AI_Hero" then
+		if tsTarget and tsTarget.type == "obj_AI_Hero" and GetDistance(tsTarget) <= SkillQ.range then
 			Target = tsTarget
 		else
 			Target = nil
@@ -1287,10 +1289,8 @@ function Checks()
 	--- Updates Minions ---
 	--- Setting Spells ---
 	--->
-		if GetTickCount() <= castDelay then castingE = true end
-		if SkillE.ready and not Target then castingE = false end
 		if SkillR.ready and Target then
-			SkillR.MecPos = GetAoESpellPosition(700, Target, 350)
+			SkillR.MecPos = GetAoESpellPosition(700, tsTarget, 350)
 		else
 			SkillR.MecPos = nil
 		end
