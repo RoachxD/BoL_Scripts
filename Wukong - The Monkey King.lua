@@ -16,6 +16,8 @@
 
 		Changelog:
 			2.0.3
+				- Removed some useless stuff
+				- Added Tiamat / Hydra usage in the Clearing Option
 				- Added MEC for Ultimate
 				- Removed Escape Artist
 				- Removed Damage Calculation Draw
@@ -375,7 +377,7 @@ function WukongMenu()
 			WukongMenu.misc:addParam("uTM", "Use Tick Manager/FPS Improver (Requires Reload)",SCRIPT_PARAM_ONOFF, false)
 		---<
 		---> Target Selector		
-			TargetSelector = TargetSelector(TARGET_LESS_CAST_PRIORITY, SkillE.range, DAMAGE_MAGIC)
+			TargetSelector = TargetSelector(TARGET_LESS_CAST_PRIORITY, SkillE.range, DAMAGE_PHYSICAL)
 			TargetSelector.name = "MonkeyKing"
 			WukongMenu:addTS(TargetSelector)
 		---<
@@ -397,7 +399,7 @@ end
 function FullCombo()
 	--- Combo While Not Channeling --
 	--->
-		if castDelay == 0 then
+		if castDelay == 0 or not isChanneling("Spell4") then
 			castingUlt = false
 		end
 		if not isChanneling("Spell4") and not castingUlt then
@@ -517,7 +519,7 @@ function Farm()
 						end
 					elseif qFarmKey and not eFarmKey then
 						if SkillQ.ready then
-							if minion.health <= (eMinionDmg) then
+							if minion.health <= (qMinionDmg) then
 								CastQ(minion)
 							end
 						elseif GetDistance(minion) <= myHero.range and not SkillQ.ready then
@@ -555,6 +557,8 @@ function MixedClear()
 					if WukongMenu.clear.clearE and SkillE.ready and GetDistance(minion) <= SkillE.range then
 						CastE(minion)
 					end
+					if tmtReady and GetDistance(minion) <= 185 then CastSpell(tmtSlot) end
+					if hdrReady and GetDistance(minion) <= 185 then CastSpell(hdrSlot) end
 				end
 			end
 		end
@@ -574,6 +578,8 @@ function MixedClear()
 				if WukongMenu.clear.clearE and SkillE.ready and GetDistance(JungleMob) <= SkillE.range then
 					CastE(JungleMob) 
 				end
+				if tmtReady and GetDistance(JungleMob) <= 185 then CastSpell(tmtSlot) end
+				if hdrReady and GetDistance(JungleMob) <= 185 then CastSpell(hdrSlot) end
 			end
 		end
 	---<
@@ -702,17 +708,20 @@ function DamageCalculation()
  		for i=1, heroManager.iCount do
 			local enemy = heroManager:GetHero(i)
 			if ValidTarget(enemy) then
-				dfgDmg, hxgDmg, bwcDmg, tmtDmg, iDmg, bftDmg = 0, 0, 0, 0, 0, 0, 0
-				qDmg = (SkillQ.ready and getDmg("Q",enemy,myHero) or 0)
-				eDmg = (SkillE.ready and getDmg("E",enemy,myHero) or 0)
-            	rDmg = getDmg("R",enemy,myHero)*4
-				dfgDmg = (dfgSlot and getDmg("DFG",enemy,myHero) or 0)
-				bftdmg = (bftSlot and getDmg("BLACKFIRE",enemy,myHero) or 0)
-        	    hxgDmg = (hxgSlot and getDmg("HXG",enemy,myHero) or 0)
-            	bwcDmg = (bwcSlot and getDmg("BWC",enemy,myHero) or 0)
-            	iDmg = (ignite and getDmg("IGNITE",enemy,myHero) or 0)
+				dfgDmg, bftDmg, hxgDmg, bwcDmg, tmtDmg, hdrDmg, iDmg = 0, 0, 0, 0, 0, 0, 0
+				qDmg =		(SkillQ.ready and	getDmg("Q",			enemy, myHero) or 0)
+				eDmg =		(SkillE.ready and	getDmg("E",			enemy, myHero) or 0)
+            	rDmg =							getDmg("R",			enemy, myHero) * 4
+				dfgDmg =	(dfgSlot and		getDmg("DFG",		enemy, myHero) or 0)
+				bftdmg =	(bftSlot and		getDmg("BLACKFIRE",	enemy, myHero) or 0)
+        	    hxgDmg =	(hxgSlot and		getDmg("HXG",		enemy, myHero) or 0)
+            	bwcDmg =	(bwcSlot and		getDmg("BWC",		enemy, myHero) or 0)
+				tmtDmg =	(tmtSlot and		getDmg("TIAMAT",	enemy, myHero) or 0)
+				hdrDmg =	(tmtSlot and		getDmg("HYDRA",		enemy, myHero) or 0)
+            	iDmg =		(ignite and			getDmg("IGNITE",	enemy, myHero) or 0)
+				
             	onspellDmg = bftDmg
-            	itemsDmg = dfgDmg + hxgDmg + bwcDmg + iDmg + onspellDmg
+            	itemsDmg = dfgDmg + hxgDmg + bwcDmg + tmtDmg + hdrDmg + iDmg + onspellDmg
 			end
 		end
     ---<
@@ -752,7 +761,6 @@ end
 	function OnAnimation(unit, animationName)
     	if unit.isMe and lastAnimation ~= animationName then 
 			lastAnimation = animationName
-			PrintChat("Animation name: "..animationName.."")
 		end
 	end
 ---<
@@ -961,7 +969,7 @@ end
 --- Move to Mouse ---
 --->
 	function moveToCursor()
-		if GetDistance(mousePos) then
+		if GetDistance(mousePos) > 1 or lastAnimation == "Idle1" then
 			local moveToPos = myHero + (Vector(mousePos) - myHero):normalized()*300
 			myHero:MoveTo(moveToPos.x, moveToPos.z)
     	end        
