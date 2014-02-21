@@ -532,7 +532,7 @@ function Farm()
 			local WFarmKey = PanthMenu.farming.wFarm
 			--- Minion Keys ---
 			--- Farming Minions ---
-			if ValidTarget(minion) then
+			if ValidTarget(minion) and not isChanneling("Spell3") then
 				if GetDistance(minion) <= SkillQ.range then
 					if qFarmKey and wFarmKey then
 						if SkillQ.ready and SkillW.ready then
@@ -583,9 +583,10 @@ end
 function MixedClear()
 	--- Jungle Clear ---
 	--->
-		if PanthMenu.clear.JungleFarm then
+		if PanthMenu.clear.JungleFarm and not isChanneling("Spell3") then
 			local JungleMob = GetJungleMob()
 			if JungleMob ~= nil then
+			
 				if PanthMenu.clear.clearOrbJ then
 					OrbWalking(JungleMob)
 				end
@@ -610,7 +611,7 @@ function MixedClear()
 	--- Jungle Clear ---
 	--- Lane Clear ---
 	--->
-		if PanthMenu.clear.ClearLane then
+		if PanthMenu.clear.ClearLane and not isChanneling("Spell3") then
 			for _, minion in pairs(enemyMinions.objects) do
 				if  ValidTarget(minion) then
 					if PanthMenu.clear.clearOrbM then
@@ -930,14 +931,10 @@ end
 function OnSendPacket(packet)
 	-- Block Packets if Channeling --
 	--->
-		for _, enemy in pairs(enemyHeroes) do
-			if isChanneling("Spell3") then
-				local packet = Packet(packet)
-				if packet:get('name') == 'S_MOVE' or packet:get('name') == 'S_CAST' and packet:get('sourceNetworkId') == myHero.networkID then
-					if enemy and GetDistance(enemy) < SkillE.range then
-						packet:block()
-					end
-				end
+		if isChanneling("Spell3") then
+			local packet = Packet(packet)
+			if packet:get('name') == 'S_MOVE' or packet:get('name') == 'S_CAST' and packet:get('sourceNetworkId') == myHero.networkID then
+				packet:block()
 			end
 		end
 	---<
