@@ -9,12 +9,13 @@
 			88      YP   YP VP   V8P    YP    YP   YP Y88888P  `Y88P'  VP   V8P
 
 
-		Script - Pantheon - The Artisan of War 3.0.1 by Roach
+		Script - Pantheon - The Artisan of War 3.0.2 by Roach
 
 		Dependency / Requirements: 
 			- AoE Skillshot Position
 
 		Changelog:
+			3.0.2 - Fixed Ult MEC
 			3.0.1
 				- Fixed Ult Spamming Errors
 				- Added new Ultimate Logics
@@ -470,7 +471,7 @@ function FullCombo()
 					CastE(Target)
 				end
 				if PanthMenu.combo.mecUlt then
-					if SkillR.MecPos ~= nil and CountEnemyHeroInRange(SkillR.MecPos, myHero) >= PanthMenu.combo.amecUlt then
+					if SkillR.MecPos ~= nil and CountEnemies(SkillR.MecPos, 700) >= PanthMenu.combo.amecUlt then
 						CastSpell(_R, SkillR.MecPos.x, SkillR.MecPos.z)
 					end
 				end
@@ -856,6 +857,22 @@ end
 -- / KillSteal Function / --
 
 -- / Misc Functions / --
+-- / Count Enemies in Point / --
+--->
+	function CountEnemies(point, range)
+        local ChampCount = 0
+        for j = 1, heroManager.iCount, 1 do
+            local enemyhero = heroManager:getHero(j)
+            if myHero.team ~= enemyhero.team and ValidTarget(enemyhero, SkillR.range) then
+                if GetDistance(enemyhero, point) <= range then
+                    ChampCount = ChampCount + 1
+                end
+            end
+        end            
+       	return ChampCount
+	end
+--<
+-- / Count Enemies in Point / --
 --- On Animation (Setting our last Animation) ---
 --->
 	function OnAnimation(unit, animationName)
@@ -926,6 +943,7 @@ end
 ---<
 --- Set Priorities ---
 -- / Misc Functions / --
+
 
 -- / On Send Packet Function / --
 function OnSendPacket(packet)
