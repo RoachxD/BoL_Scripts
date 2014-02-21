@@ -693,10 +693,10 @@ function CastE(enemy)
 		end
 		if ValidTarget(enemy) then 
 			if VIP_USER then
-				Packet("S_CAST", {spellId = _E, fromX = myHero.x, fromY = myHero.y, toX = enemy.x, toY =  enemy.y}):send()
+				Packet("S_CAST", {spellId = _E, fromX = myHero.x, fromY = myHero.z, toX = enemy.x, toY = enemy.z}):send()
 				return true
 			else
-				CastSpell(_E, enemy.x, enemy.y)
+				CastSpell(_E, enemy.x, enemy.z)
 				return true
 			end
 		end
