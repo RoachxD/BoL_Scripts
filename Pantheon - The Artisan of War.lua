@@ -9,19 +9,22 @@
 			88      YP   YP VP   V8P    YP    YP   YP Y88888P  `Y88P'  VP   V8P
 
 
-		Script - Pantheon - The Artisan of War 3.0.2 by Roach
+		Script - Pantheon - The Artisan of War 3.0.1 by Roach
 
 		Dependency / Requirements: 
-			- AoE Skillshot Position
+			- Nothing
 
 		Changelog:
-			3.0.2 - Fixed Ult MEC
+			3.0.2
+				- Removed MEC Ult (because many people cast Ult Manually and it was causing me some problems)
+				- Added new logics for Packets and Orbwalker regarding Ult
 			3.0.1
 				- Fixed Ult Spamming Errors
 				- Added new Ultimate Logics
 				- Added Ultimate Delay for AoE Skillshot Position
 				- Added Tiamat / Hydra usage in the Clearing Option
 				- Removed some useless stuff
+				- Removed MEC Ult (because many people cast Ult Manually and it was causing me some problems)
 			3.0
 				- Added MEC for Ultimate
 				- Removed Escape Artist
@@ -139,8 +142,6 @@ if myHero.charName ~= "Pantheon" then return end
 -- / Loading Function / --
 function OnLoad()
 	--->
-		require "AoE_Skillshot_Position"
-		
 		Variables()
 		PanthMenu()
 		PrintChat("<font color='#FF0000'> >> Pantheon - The Artisan of War 3.0.1 Loaded <<</font>")
@@ -156,7 +157,7 @@ function OnTick()
 		UseConsumables()
 
 		if Target then
-			if PanthMenu.harass.qharass and not isChanneling("Spell3") then CastQ(Target) end
+			if PanthMenu.harass.qharass and not isChanneling("Spell3") and not (isChanneling("Ult_A") and isChanneling("Ult_B") and isChanneling("Ult_C") and isChanneling("Ult_D") and isChanneling("Ult_E")) then CastQ(Target) end
 			if PanthMenu.killsteal.Ignite then AutoIgnite(Target) end
 		end
 	---<
@@ -190,10 +191,10 @@ end
 function Variables()
 	--- Skills Vars --
 	--->
-		SkillQ = {range = 600,		name = "Spear Shot",			ready = false, color = ARGB(255,178, 0 , 0 )				}
-		SkillW = {range = 600,		name = "Aegis of Zeonia",		ready = false, color = ARGB(255, 32,178,170)				}
-		SkillE = {range = 300,		name = "Heartseeker Strike",	ready = false, color = ARGB(255,128, 0 ,128)				}
-		SkillR = {range = 5500,		name = "Grand Skyfall",			ready = false								, MecPos = nil	}
+		SkillQ = {range = 600,		name = "Spear Shot",			ready = false, color = ARGB(255,178, 0 , 0 )	}
+		SkillW = {range = 600,		name = "Aegis of Zeonia",		ready = false, color = ARGB(255, 32,178,170)	}
+		SkillE = {range = 300,		name = "Heartseeker Strike",	ready = false, color = ARGB(255,128, 0 ,128)	}
+		SkillR = {range = 5500,		name = "Grand Skyfall",			ready = false									}
 	---<
 	--- Skills Vars ---
 	--- Items Vars ---
@@ -368,12 +369,9 @@ function PanthMenu()
 		---> Combo Menu
 		PanthMenu:addSubMenu("["..myHero.charName.." - Combo Settings]", "combo")
 			PanthMenu.combo:addParam("comboKey", "Full Combo Key (X)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("X"))
-			PanthMenu.combo:addParam("mecUlt", "Use MEC for "..SkillR.name.." (R)", SCRIPT_PARAM_ONOFF, true)
-			PanthMenu.combo:addParam("amecUlt", "MEC Amount with "..SkillR.name.." (R)",SCRIPT_PARAM_SLICE, 2, 1, 5, 0)
 			PanthMenu.combo:addParam("comboItems", "Use Items with Burst", SCRIPT_PARAM_ONOFF, true)
 			PanthMenu.combo:addParam("comboOrbwalk", "Orbwalk in Combo", SCRIPT_PARAM_ONOFF, true)
 			PanthMenu.combo:permaShow("comboKey")
-			PanthMenu.combo:permaShow("mecUlt")
 		---<
 		---> Harass Menu
 		PanthMenu:addSubMenu("["..myHero.charName.." - Harass Settings]", "harass")
@@ -434,7 +432,7 @@ function PanthMenu()
 			PanthMenu.misc:addParam("uTM", "Use Tick Manager/FPS Improver (Requires Reload)",SCRIPT_PARAM_ONOFF, false)
 		---<
 		---> Target Selector		
-			TargetSelector = TargetSelector(TARGET_LESS_CAST_PRIORITY, SkillR.range, DAMAGE_PHYSICAL)
+			TargetSelector = TargetSelector(TARGET_LESS_CAST_PRIORITY, SkillQ.range, DAMAGE_PHYSICAL)
 			TargetSelector.name = "Pantheon"
 			PanthMenu:addTS(TargetSelector)
 		---<
@@ -456,7 +454,7 @@ end
 function FullCombo()
 	--- Combo While Not Channeling --
 	--->
-		if not isChanneling("Spell3") and (not isChanneling("Ult_A") and not isChanneling("Ult_B") and not isChanneling("Ult_C") and not isChanneling("Ult_D") and not isChanneling("Ult_E")) then
+		if not isChanneling("Spell3") and not (isChanneling("Ult_A") and isChanneling("Ult_B") and isChanneling("Ult_C") and isChanneling("Ult_D") and isChanneling("Ult_E")) then
 			if Target then
 				if PanthMenu.combo.comboOrbwalk then
 					OrbWalking(Target)
@@ -469,11 +467,6 @@ function FullCombo()
 				CastW(Target)
 				if not Target.canMove or GetDistance(Target) < 175 then
 					CastE(Target)
-				end
-				if PanthMenu.combo.mecUlt then
-					if SkillR.MecPos ~= nil and CountEnemies(SkillR.MecPos, 700) >= PanthMenu.combo.amecUlt then
-						CastSpell(_R, SkillR.MecPos.x, SkillR.MecPos.z)
-					end
 				end
 			else
 				if PanthMenu.combo.comboOrbwalk then
@@ -533,7 +526,7 @@ function Farm()
 			local WFarmKey = PanthMenu.farming.wFarm
 			--- Minion Keys ---
 			--- Farming Minions ---
-			if ValidTarget(minion) and not isChanneling("Spell3") then
+			if ValidTarget(minion) and not isChanneling("Spell3") and not (isChanneling("Ult_A") and isChanneling("Ult_B") and isChanneling("Ult_C") and isChanneling("Ult_D") and isChanneling("Ult_E")) then
 				if GetDistance(minion) <= SkillQ.range then
 					if qFarmKey and wFarmKey then
 						if SkillQ.ready and SkillW.ready then
@@ -584,7 +577,7 @@ end
 function MixedClear()
 	--- Jungle Clear ---
 	--->
-		if PanthMenu.clear.JungleFarm and not isChanneling("Spell3") then
+		if PanthMenu.clear.JungleFarm and not isChanneling("Spell3") and not (isChanneling("Ult_A") and isChanneling("Ult_B") and isChanneling("Ult_C") and isChanneling("Ult_D") and isChanneling("Ult_E")) then
 			local JungleMob = GetJungleMob()
 			if JungleMob ~= nil then
 			
@@ -612,7 +605,7 @@ function MixedClear()
 	--- Jungle Clear ---
 	--- Lane Clear ---
 	--->
-		if PanthMenu.clear.ClearLane and not isChanneling("Spell3") then
+		if PanthMenu.clear.ClearLane and not isChanneling("Spell3") and not (isChanneling("Ult_A") and isChanneling("Ult_B") and isChanneling("Ult_C") and isChanneling("Ult_D") and isChanneling("Ult_E")) then
 			for _, minion in pairs(enemyMinions.objects) do
 				if  ValidTarget(minion) then
 					if PanthMenu.clear.clearOrbM then
@@ -857,22 +850,6 @@ end
 -- / KillSteal Function / --
 
 -- / Misc Functions / --
--- / Count Enemies in Point / --
---->
-	function CountEnemies(point, range)
-        local ChampCount = 0
-        for j = 1, heroManager.iCount, 1 do
-            local enemyhero = heroManager:getHero(j)
-            if myHero.team ~= enemyhero.team and ValidTarget(enemyhero, SkillR.range) then
-                if GetDistance(enemyhero, point) <= range then
-                    ChampCount = ChampCount + 1
-                end
-            end
-        end            
-       	return ChampCount
-	end
---<
--- / Count Enemies in Point / --
 --- On Animation (Setting our last Animation) ---
 --->
 	function OnAnimation(unit, animationName)
@@ -944,12 +921,11 @@ end
 --- Set Priorities ---
 -- / Misc Functions / --
 
-
 -- / On Send Packet Function / --
 function OnSendPacket(packet)
 	-- Block Packets if Channeling --
 	--->
-		if isChanneling("Spell3") then
+		if isChanneling("Spell3") or (isChanneling("Ult_A") or isChanneling("Ult_B") or isChanneling("Ult_C") or isChanneling("Ult_D") or isChanneling("Ult_E")) then
 			local packet = Packet(packet)
 			if packet:get('name') == 'S_MOVE' or packet:get('name') == 'S_CAST' and packet:get('sourceNetworkId') == myHero.networkID then
 				packet:block()
@@ -1066,7 +1042,7 @@ end
 --- Orbwalking Target ---
 --->
 	function OrbWalking(Target)
-		if not isChanneling("Spell3") then
+		if not isChanneling("Spell3") and not (isChanneling("Ult_A") and isChanneling("Ult_B") and isChanneling("Ult_C") and isChanneling("Ult_D") and isChanneling("Ult_E")) then
 			if TimeToAttack() and GetDistance(Target) <= myHero.range + GetDistance(myHero.minBBox) then
 				myHero:Attack(Target)
 			elseif heroCanMove() then
@@ -1232,7 +1208,7 @@ function Checks()
 	--->
 		TargetSelector:update()
 		tsTarget = TargetSelector.target
-		if tsTarget and tsTarget.type == "obj_AI_Hero" and GetDistance(tsTarget) <= SkillQ.range then
+		if tsTarget and tsTarget.type == "obj_AI_Hero" then
 			Target = tsTarget
 		else
 			Target = nil
@@ -1274,7 +1250,6 @@ function Checks()
 		SkillQ.ready = (myHero:CanUseSpell(_Q) == READY)
 		SkillW.ready = (myHero:CanUseSpell(_W) == READY)
 		SkillE.ready = (myHero:CanUseSpell(_E) == READY)
-		SkillR.ready = (myHero:CanUseSpell(_R) == READY)
 		iReady = (ignite ~= nil and myHero:CanUseSpell(ignite) == READY)
 	---<
 	--- Checks if Active Items are Ready ---
@@ -1302,15 +1277,6 @@ function Checks()
 		enemyMinions:update()
 	---<
 	--- Updates Minions ---
-	--- Setting Spells ---
-	--->
-		if SkillR.ready and Target then
-			SkillR.MecPos = GetAoESpellPosition(700, tsTarget, 350)
-		else
-			SkillR.MecPos = nil
-		end
-	---<
-	--- Setting Spells ---
 end
 -- / Checks Function / --
 
