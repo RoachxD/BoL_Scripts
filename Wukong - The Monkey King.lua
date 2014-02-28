@@ -416,11 +416,11 @@ function FullCombo()
 						CastQ(Target)
 					end
 					if WukongMenu.combo.mecUlt then
-						if AreaEnemyCount(myHero, SkillR.range) >=  WukongMenu.combo.amecUlt then
+						if CountEnemyHeroInRange(SkillR.range) >=  WukongMenu.combo.amecUlt then
 							CastR(Target)
 						end
 					else
-						if Target.health < rDmg then
+						if Target.health < rDmg and GetDistance(Target) <= SkillR.range then
 							CastR(Target)
 						end
 					end
@@ -1183,19 +1183,6 @@ function Checks()
 	--- Setting Cast of Ult ---
 end
 -- / Checks Function / --
-
--- / Minimum Enclosing Circle / --
-function AreaEnemyCount(Spot, Range)
-	local count = 0
-	
-	for _, enemy in pairs(enemyHeroes) do
-		if enemy and not enemy.dead and GetDistance(Spot, enemy) <= Range then
-			count = count + 1
-		end
-	end            
-	return count
-end
--- / Minimum Enclosing Circle / --
 
 -- / isLow Function / --
 function isLow(Name)
