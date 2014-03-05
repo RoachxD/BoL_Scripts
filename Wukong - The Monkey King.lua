@@ -1,3 +1,4 @@
+local version = "2.04"
 --[[
 
 
@@ -9,12 +10,16 @@
 			 `8b8' `8d8'  ~Y8888P' YP   YD  `Y88P'  VP   V8P  Y888P
 
 
-		Script - Wukong - The Monkey King 2.0.3 by Roach
+		Script - Wukong - The Monkey King 2.0.4 by Roach
 
 		Dependency: 
 			- Nothing
 
 		Changelog:
+			2.0.4
+				- Added Mana Check for Farming
+				- Added Mana Check for Mixed Clear
+				- Added Auto-Updater
 			2.0.3
 				- Removed some useless stuff
 				- Added Tiamat / Hydra usage in the Clearing Option
@@ -82,12 +87,46 @@
 if myHero.charName ~= "MonkeyKing" then return end
 -- / Hero Name Check / --
 
+-- / Auto-Update Function / --
+local autoupdateenabled = true
+local UPDATE_SCRIPT_NAME = "Wukong - The Monkey King"
+local UPDATE_HOST = "raw.github.com"
+local UPDATE_PATH = "/RoachxD/BoL_Scripts/master/Wukong%20-%20The%20Monkey%20King.lua"
+local UPDATE_FILE_PATH = SCRIPT_PATH..GetCurrentEnv().FILE_NAME
+local UPDATE_URL = "https://"..UPDATE_HOST..UPDATE_PATH
+
+local ServerData
+if autoupdateenabled then
+	GetAsyncWebResult(UPDATE_HOST, UPDATE_PATH, function(d) ServerData = d end)
+	function update()
+		if ServerData ~= nil then
+			local ServerVersion
+			local send, tmp, sstart = nil, string.find(ServerData, "local version = \"")
+			if sstart then
+				send, tmp = string.find(ServerData, "\"", sstart+1)
+			end
+			if send then
+				ServerVersion = tonumber(string.sub(ServerData, sstart+1, send-1))
+			end
+
+			if ServerVersion ~= nil and tonumber(ServerVersion) ~= nil and tonumber(ServerVersion) > tonumber(version) then
+				DownloadFile(UPDATE_URL.."?nocache"..myHero.charName..os.clock(), UPDATE_FILE_PATH, function () print("<font color=\"#FF0000\"> >> "..UPDATE_SCRIPT_NAME..": successfully updated. Reload (double F9) Please. ("..version.." => "..ServerVersion..")</font>") end)     
+			elseif ServerVersion then
+				print("<font color=\"#FF0000\"> >> "..UPDATE_SCRIPT_NAME..": You have got the latest version: "..ServerVersion.."</font>")
+			end		
+			ServerData = nil
+		end
+	end
+	AddTickCallback(update)
+end
+-- / Auto-Update Function / --
+
 -- / Loading Function / --
 function OnLoad()
 	--->
 		Variables()
 		WukongMenu()
-		PrintChat("<font color='#FF0000'> >> Wukong - The Monkey King 2.0.3 Loaded <<</font>")
+		PrintChat("<font color='#FF0000'> >> "..UPDATE_SCRIPT_NAME.." 2.0.4 Loaded <<</font>")
 	---<
 end
 -- / Loading Function / --
@@ -119,10 +158,10 @@ function OnTick()
 		if HarassKey then
 			HarassCombo()
 		end
-		if FarmingKey and not ComboKey then
+		if FarmingKey and not ComboKey and (WukongMenu.farming.Mana / 100) >= (myHero.mana / myHero.maxMana) then
 			Farm()
 		end
-		if ClearKey then
+		if ClearKey and (WukongMenu.clear.Mana / 100) >= (myHero.mana / myHero.maxMana) then
 			MixedClear()
 		end	
 		if WukongMenu.killsteal.smartKS then KillSteal() end
@@ -186,7 +225,7 @@ function Variables()
 	--- Misc Vars ---
 	--->
 		Items.HealthPot.inUse = false
-		castDelay, castingUlt = 0, false
+		castingUlt = 0, false
 		gameState = GetGame()
 		if gameState.map.shortName == "twistedTreeline" then
 			TTMAP = true
@@ -332,6 +371,7 @@ function WukongMenu()
 		---> Farming Menu
 		WukongMenu:addSubMenu("["..myHero.charName.." - Farming Settings]", "farming")
 			WukongMenu.farming:addParam("farmKey", "Farming ON/Off (Z)", SCRIPT_PARAM_ONKEYTOGGLE, true, GetKey("Z"))
+			WukongMenu.farming:addParam("Mana", "Min Mana to Farm", SCRIPT_PARAM_SLICE, 35, 0, 100, -1)
 			WukongMenu.farming:addParam("qFarm", "Farm with "..SkillQ.name.." (Q)", SCRIPT_PARAM_ONOFF, true)
 			WukongMenu.farming:addParam("eFarm", "Farm with "..SkillE.name.." (E)", SCRIPT_PARAM_ONOFF, false)
 			WukongMenu.farming:permaShow("farmKey")
@@ -339,6 +379,7 @@ function WukongMenu()
 		---> Clear Menu		
 		WukongMenu:addSubMenu("["..myHero.charName.." - Clear Settings]", "clear")
 			WukongMenu.clear:addParam("clearKey", "Jungle/Lane Clear Key (V)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("V"))
+			WukongMenu.clear:addParam("Mana", "Min Mana to Jungle/Lane Clear", SCRIPT_PARAM_SLICE, 35, 0, 100, -1)
 			WukongMenu.clear:addParam("JungleFarm", "Use Skills to Farm Jungle", SCRIPT_PARAM_ONOFF, true)
 			WukongMenu.clear:addParam("ClearLane", "Use Skills to Clear Lane", SCRIPT_PARAM_ONOFF, true)
 			WukongMenu.clear:addParam("clearQ", "Clear with "..SkillQ.name.." (Q)", SCRIPT_PARAM_ONOFF, true)
@@ -399,7 +440,7 @@ end
 function FullCombo()
 	--- Combo While Not Channeling --
 	--->
-		if castDelay == 0 or not isChanneling("Spell4") then
+		if not isChanneling("Spell4") then
 			castingUlt = false
 		end
 		if not isChanneling("Spell4") and not castingUlt then
@@ -636,8 +677,7 @@ function CastR(enemy)
 			return false
 		end
 		if ValidTarget(enemy) then
-			CastSpell(_R) 
-			castDelay = GetTickCount()+400
+			CastSpell(_R)
 			castingUlt = true
 		end
 	---<
@@ -1177,7 +1217,6 @@ function Checks()
 	--- Updates Minions ---
 	--- Setting Cast of Ult ---
 	--->
-		if GetTickCount() <= castDelay then castingUlt = true end
 		if SkillQ.ready and SkillW.ready and SkillE.ready and not Target then castingUlt = false end
 	---<
 	--- Setting Cast of Ult ---
