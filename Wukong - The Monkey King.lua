@@ -1,4 +1,4 @@
-local version = "2.04"
+local version = "2.041"
 --[[
 
 
@@ -20,6 +20,10 @@ local version = "2.04"
 				- Added Mana Check for Farming
 				- Added Mana Check for Mixed Clear
 				- Added Auto-Updater
+				- Added Smart Combo: Q-AA-E-AA / E-AA-Q-AA
+				- Added Smart Clear: Q-AA-E-AA / E-AA-Q-AA
+				- Fixed MEC Ult Bug
+				- Improved Ult functionality
 			2.0.3
 				- Removed some useless stuff
 				- Added Tiamat / Hydra usage in the Clearing Option
@@ -110,9 +114,9 @@ if autoupdateenabled then
 			end
 
 			if ServerVersion ~= nil and tonumber(ServerVersion) ~= nil and tonumber(ServerVersion) > tonumber(version) then
-				DownloadFile(UPDATE_URL.."?nocache"..myHero.charName..os.clock(), UPDATE_FILE_PATH, function () print("<font color=\"#FF0000\"> >> "..UPDATE_SCRIPT_NAME..": successfully updated. Reload (double F9) Please. ("..version.." => "..ServerVersion..")</font>") end)     
+				DownloadFile(UPDATE_URL.."?nocache"..myHero.charName..os.clock(), UPDATE_FILE_PATH, function () print("<font color=\"#FF0000\"> >> "..UPDATE_SCRIPT_NAME..": successfully updated. Reload (double F9) Please.</font>") end)     
 			elseif ServerVersion then
-				print("<font color=\"#FF0000\"> >> "..UPDATE_SCRIPT_NAME..": You have got the latest version: "..ServerVersion.."</font>")
+				print("<font color=\"#FF0000\"> >> "..UPDATE_SCRIPT_NAME..": You have got the latest version of the script.</font>")
 			end		
 			ServerData = nil
 		end
@@ -139,7 +143,7 @@ function OnTick()
 		UseConsumables()
 
 		if Target then
-			if WukongMenu.harass.qharass and not castingUlt then CastQ(Target) end
+			if WukongMenu.harass.qharass and not SkillR.castingUlt then CastQ(Target) end
 			if WukongMenu.killsteal.Ignite then AutoIgnite(Target) end
 		end
 	---<
@@ -173,10 +177,10 @@ end
 function Variables()
 	--- Skills Vars --
 	--->
-		SkillQ = {range = 300,		name = "Crushing Blow",	ready = false, color = ARGB(255,178, 0 , 0 ), mana = myHero:GetSpellData(_Q).mana}
-		SkillW = {range = 125,		name = "Decoy",			ready = false, color = ARGB(255, 32,178,170)									 }
-		SkillE = {range = 625,		name = "Nimbus Strike",	ready = false, color = ARGB(255,128, 0 ,128), mana = myHero:GetSpellData(_E).mana}
-		SkillR = {range = 162.5,	name = "Cyclone",		ready = false								, mana = myHero:GetSpellData(_R).mana}
+		SkillQ = {range = 300,		name = "Crushing Blow",	ready = false, 						color = ARGB(255,178, 0 , 0 ),	mana = myHero:GetSpellData(_Q).mana	}
+		SkillW = {range = 125,		name = "Decoy",			ready = false, 						color = ARGB(255, 32,178,170)									 	}
+		SkillE = {range = 625,		name = "Nimbus Strike",	ready = false, 						color = ARGB(255,128, 0 ,128),	mana = myHero:GetSpellData(_E).mana	}
+		SkillR = {range = 162.5,	name = "Cyclone",		ready = false, castingUlt = false,									mana = myHero:GetSpellData(_R).mana	}
 	---<
 	--- Skills Vars ---
 	--- Items Vars ---
@@ -225,7 +229,8 @@ function Variables()
 	--- Misc Vars ---
 	--->
 		Items.HealthPot.inUse = false
-		castingUlt = 0, false
+		SkillR.castingUlt = false
+		attackCast = false
 		gameState = GetGame()
 		if gameState.map.shortName == "twistedTreeline" then
 			TTMAP = true
@@ -355,6 +360,7 @@ function WukongMenu()
 			WukongMenu.combo:addParam("mecUlt", "Use MEC for "..SkillR.name.." (R)", SCRIPT_PARAM_ONOFF, true)
 			WukongMenu.combo:addParam("amecUlt", "MEC Amount with "..SkillR.name.." (R)",SCRIPT_PARAM_SLICE, 2, 1, 5, 0)
 			WukongMenu.combo:addParam("comboItems", "Use Items with Burst", SCRIPT_PARAM_ONOFF, true)
+			WukongMenu.combo:addParam("smartCombo", "Use Smart Combo", SCRIPT_PARAM_ONOFF, true)
 			WukongMenu.combo:addParam("comboOrbwalk", "Orbwalk in Combo", SCRIPT_PARAM_ONOFF, true)
 			WukongMenu.combo:permaShow("comboKey")
 			WukongMenu.combo:permaShow("mecUlt")
@@ -382,8 +388,11 @@ function WukongMenu()
 			WukongMenu.clear:addParam("Mana", "Min Mana to Jungle/Lane Clear", SCRIPT_PARAM_SLICE, 35, 0, 100, -1)
 			WukongMenu.clear:addParam("JungleFarm", "Use Skills to Farm Jungle", SCRIPT_PARAM_ONOFF, true)
 			WukongMenu.clear:addParam("ClearLane", "Use Skills to Clear Lane", SCRIPT_PARAM_ONOFF, true)
+			WukongMenu.clear:addParam("smartClear", "Use Smart Clear", SCRIPT_PARAM_ONOFF, true)
 			WukongMenu.clear:addParam("clearQ", "Clear with "..SkillQ.name.." (Q)", SCRIPT_PARAM_ONOFF, true)
 			WukongMenu.clear:addParam("clearE", "Clear with "..SkillE.name.." (E)", SCRIPT_PARAM_ONOFF, true)
+			WukongMenu.clear:addParam("clearOrbM", "OrbWalk Lane Clear", SCRIPT_PARAM_ONOFF, true)
+			WukongMenu.clear:addParam("clearOrbJ", "OrbWalk Jungle Clear", SCRIPT_PARAM_ONOFF, true)
 		---<
 		---> KillSteal Menu
 		WukongMenu:addSubMenu("["..myHero.charName.." - KillSteal Settings]", "killsteal")
@@ -441,9 +450,9 @@ function FullCombo()
 	--- Combo While Not Channeling --
 	--->
 		if not isChanneling("Spell4") then
-			castingUlt = false
+			SkillR.castingUlt = false
 		end
-		if not isChanneling("Spell4") and not castingUlt then
+		if not isChanneling("Spell4") and not SkillR.castingUlt then
 			if Target then
 				if WukongMenu.combo.comboOrbwalk then
 					OrbWalking(Target)
@@ -451,16 +460,12 @@ function FullCombo()
 				if WukongMenu.combo.comboItems then
 					UseItems(Target)
 				end
-				if not castingUlt then
+				if not SkillR.castingUlt and ((not attackCast and WukongMenu.combo.smartCombo and GetDistance(Target) <= myHero.range) or not WukongMenu.combo.smartCombo) then
 					CastE(Target)
 					if not SkillE.ready then
 						CastQ(Target)
 					end
-					if WukongMenu.combo.mecUlt then
-						if CountEnemyHeroInRange(SkillR.range) >=  WukongMenu.combo.amecUlt then
-							CastR(Target)
-						end
-					else
+					if not WukongMenu.combo.mecUlt then
 						if Target.health < rDmg and GetDistance(Target) <= SkillR.range then
 							CastR(Target)
 						end
@@ -586,45 +591,59 @@ end
 
 -- / Clear Function / --
 function MixedClear()
+	--- Jungle Clear ---
+	--->
+		if WukongMenu.clear.JungleFarm then
+			local JungleMob = GetJungleMob()
+			if JungleMob ~= nil then
+				if WukongMenu.clear.clearOrbJ then
+					OrbWalking(JungleMob)
+				end
+				if (not attackCast and WukongMenu.clear.smartClear and GetDistance(JungleMob) <= myHero.range) or not WukongMenu.clear.smartClear then
+					if WukongMenu.clear.clearQ and SkillQ.ready and GetDistance(JungleMob) <= SkillQ.range then
+						CastQ(JungleMob)
+					end
+					if WukongMenu.clear.clearE and SkillE.ready and GetDistance(JungleMob) <= SkillE.range then
+						CastE(JungleMob)
+					end
+				end
+				if tmtReady and GetDistance(JungleMob) <= 185 then CastSpell(tmtSlot) end
+				if hdrReady and GetDistance(JungleMob) <= 185 then CastSpell(hdrSlot) end
+			else
+				if WukongMenu.clear.clearOrbJ then
+					moveToCursor()
+				end
+			end
+		end
+	---<
+	--- Jungle Clear ---
 	--- Lane Clear ---
 	--->
 		if WukongMenu.clear.ClearLane then
 			for _, minion in pairs(enemyMinions.objects) do
-				if ValidTarget(minion) and GetDistance(minion) < SkillE.range then
-						if TimeToAttack() then myHero:Attack(minion) end
-					if WukongMenu.clear.clearQ and SkillQ.ready and GetDistance(minion) <= SkillQ.range then
-						CastQ(minion)
+				if  ValidTarget(minion) then
+					if WukongMenu.clear.clearOrbM then
+						OrbWalking(minion)
 					end
-					if WukongMenu.clear.clearE and SkillE.ready and GetDistance(minion) <= SkillE.range then
-						CastE(minion)
+					if (not attackCast and WukongMenu.clear.smartClear and GetDistance(minion) <= myHero.range) or not WukongMenu.clear.smartClear then
+						if WukongMenu.clear.clearQ and SkillQ.ready and GetDistance(minion) <= SkillQ.range then
+							CastQ(minion)
+						end
+						if WukongMenu.clear.clearE and SkillE.ready and GetDistance(minion) <= SkillE.range then 
+							CastE(minion)
+						end
 					end
 					if tmtReady and GetDistance(minion) <= 185 then CastSpell(tmtSlot) end
 					if hdrReady and GetDistance(minion) <= 185 then CastSpell(hdrSlot) end
+				else
+					if WukongMenu.clear.clearOrbM then
+						moveToCursor()
+					end
 				end
 			end
 		end
 	---<
 	--- Lane Clear ---
-	--- Jungle Clear ---
-	--->
-		if WukongMenu.clear.JungleFarm then
-			JungleMob = GetJungleMob()
-			if ValidTarget(JungleMob) and GetDistance(JungleMob) < SkillE.range then
-				if WukongMenu.clear.clearOrbJ then
-					if TimeToAttack() then myHero:Attack(JungleMob) end
-				end
-				if WukongMenu.clear.clearQ and SkillQ.ready and GetDistance(JungleMob) <= SkillQ.range then
-					CastQ(JungleMob)
-				end
-				if WukongMenu.clear.clearE and SkillE.ready and GetDistance(JungleMob) <= SkillE.range then
-					CastE(JungleMob) 
-				end
-				if tmtReady and GetDistance(JungleMob) <= 185 then CastSpell(tmtSlot) end
-				if hdrReady and GetDistance(JungleMob) <= 185 then CastSpell(hdrSlot) end
-			end
-		end
-	---<
-	--- Jungle Clear ---
 end
 -- / Clear Function / --
 
@@ -632,7 +651,7 @@ end
 function CastQ(enemy)
 	--- Dynamic Q Cast ---
 	--->
-		if not SkillQ.ready or (GetDistance(enemy) > SkillQ.range) then
+		if (not SkillQ.ready or (GetDistance(enemy) > SkillQ.range)) and ((not attackCast and WukongMenu.combo.smartCombo) or not WukongMenu.combo.smartCombo) then
 			return false
 		end
 		if ValidTarget(enemy) then 
@@ -651,7 +670,7 @@ end
 function CastE(enemy)
 	--- Dynamic E Cast ---
 	--->
-		if not SkillE.ready or (GetDistance(enemy) > SkillE.range) then
+		if (not SkillE.ready or (GetDistance(enemy) > SkillE.range)) and ((not attackCast and WukongMenu.combo.smartCombo) or not WukongMenu.combo.smartCombo) then
 			return false
 		end
 		if ValidTarget(enemy) then 
@@ -678,7 +697,7 @@ function CastR(enemy)
 		end
 		if ValidTarget(enemy) then
 			CastSpell(_R)
-			castingUlt = true
+			SkillR.castingUlt = true
 		end
 	---<
 	--- Dymanic R Cast --
@@ -801,6 +820,11 @@ end
 	function OnAnimation(unit, animationName)
     	if unit.isMe and lastAnimation ~= animationName then 
 			lastAnimation = animationName
+			if (animationName == "Crit" or animationName == "Spell1") and not attackCast then
+				attackCast = true
+			elseif animationName:find("Attack") and attackCast then
+				attackCast = false
+			end
 		end
 	end
 ---<
@@ -1029,6 +1053,9 @@ end
 					lastAttack = GetTickCount() - GetLatency()/2
 					lastWindUpTime = spell.windUpTime*1000
 					lastAttackCD = spell.animationTime*1000
+					if (not spell.name:find("MonkeyKingDoubleAttack") and not spell.name:find("MonkeyKingQAttack")) and attackCast then
+						attackCast = false
+					end
 				end
 			end
 		---<
@@ -1217,7 +1244,41 @@ function Checks()
 	--- Updates Minions ---
 	--- Setting Cast of Ult ---
 	--->
-		if SkillQ.ready and SkillW.ready and SkillE.ready and not Target then castingUlt = false end
+		if SkillR.ready then SkillR.castingUlt = false end
+		if WukongMenu.combo.mecUlt then
+			if CountEnemyHeroInRange(SkillR.range) >=  WukongMenu.combo.amecUlt then
+				CastR(Target)
+			end
+		end
+		if isChanneling("Spell4") or SkillR.castingUlt then
+			if AutoCarry then 
+				if AutoCarry.MainMenu ~= nil then
+						if AutoCarry.CanAttack ~= nil then
+							_G.AutoCarry.CanAttack = false
+						end
+				elseif AutoCarry.Keys ~= nil then
+					if AutoCarry.MyHero ~= nil then
+						_G.AutoCarry.MyHero:AttacksEnabled(false)
+					end
+				end
+			elseif MMA_Loaded then
+				_G.MMA_AttackAvailable = false
+			end
+		else
+			if AutoCarry then 
+				if AutoCarry.MainMenu ~= nil then
+						if AutoCarry.CanAttack ~= nil then
+							_G.AutoCarry.CanAttack = true
+						end
+				elseif AutoCarry.Keys ~= nil then
+					if AutoCarry.MyHero ~= nil then
+						_G.AutoCarry.MyHero:AttacksEnabled(true)
+					end
+				end
+			elseif MMA_Loaded then
+				_G.MMA_AttackAvailable = true
+			end
+		end
 	---<
 	--- Setting Cast of Ult ---
 end
