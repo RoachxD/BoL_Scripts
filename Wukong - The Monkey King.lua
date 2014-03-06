@@ -1,4 +1,4 @@
-local version = "2.044"
+local version = "2.045"
 --[[
 
 
@@ -613,6 +613,9 @@ function MixedClear()
 				if tmtReady and GetDistance(JungleMob) <= 185 then CastSpell(tmtSlot) end
 				if hdrReady and GetDistance(JungleMob) <= 185 then CastSpell(hdrSlot) end
 			else
+				if attackCast then
+					attackCast = false
+				end
 				if WukongMenu.clear.clearOrbJ then
 					moveToCursor()
 				end
@@ -639,6 +642,9 @@ function MixedClear()
 					if tmtReady and GetDistance(minion) <= 185 then CastSpell(tmtSlot) end
 					if hdrReady and GetDistance(minion) <= 185 then CastSpell(hdrSlot) end
 				else
+					if attackCast then
+						attackCast = false
+					end
 					if WukongMenu.clear.clearOrbM then
 						moveToCursor()
 					end
@@ -654,14 +660,16 @@ end
 function CastQ(enemy)
 	--- Dynamic Q Cast ---
 	--->
-		if (not SkillQ.ready or (GetDistance(enemy) > SkillQ.range)) or (attackCast and WukongMenu.combo.smartCombo) then
+		if (not SkillQ.ready or (GetDistance(enemy) > SkillQ.range)) then
 			return false
 		end
-		if ValidTarget(enemy) then 
-			CastSpell(_Q)
-			myHero:Attack(enemy)
-			
-			return true
+		if (not attackCast and WukongMenu.combo.smartCombo) or not WukongMenu.combo.smartCombo then
+			if ValidTarget(enemy) then 
+				CastSpell(_Q)
+				myHero:Attack(enemy)
+				
+				return true
+			end
 		end
 		return false
 	---<
@@ -673,16 +681,18 @@ end
 function CastE(enemy)
 	--- Dynamic E Cast ---
 	--->
-		if (not SkillE.ready or (GetDistance(enemy) > SkillE.range)) or (attackCast and WukongMenu.combo.smartCombo) then
+		if (not SkillE.ready or (GetDistance(enemy) > SkillE.range)) then
 			return false
 		end
-		if ValidTarget(enemy) then 
-			if VIP_USER then
-				Packet("S_CAST", {spellId = _E, targetNetworkId = enemy.networkID}):send()
-				return true
-			else
-				CastSpell(_E, enemy)
-				return true
+		if (not attackCast and WukongMenu.combo.smartCombo) or not WukongMenu.combo.smartCombo then
+			if ValidTarget(enemy) then 
+				if VIP_USER then
+					Packet("S_CAST", {spellId = _E, targetNetworkId = enemy.networkID}):send()
+					return true
+				else
+					CastSpell(_E, enemy)
+					return true
+				end
 			end
 		end
 		return false
