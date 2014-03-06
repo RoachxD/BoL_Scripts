@@ -1,4 +1,4 @@
-local version = "2.042"
+local version = "2.043"
 --[[
 
 
@@ -452,7 +452,7 @@ function FullCombo()
 		if not isChanneling("Spell4") then
 			SkillR.castingUlt = false
 		end
-		if not Target then
+		if not Target and attackCast then
 			attackCast = false
 		end
 		if not isChanneling("Spell4") and not SkillR.castingUlt then
@@ -654,7 +654,7 @@ end
 function CastQ(enemy)
 	--- Dynamic Q Cast ---
 	--->
-		if (not SkillQ.ready or (GetDistance(enemy) > SkillQ.range)) and ((not attackCast and WukongMenu.combo.smartCombo) or not WukongMenu.combo.smartCombo) then
+		if (not SkillQ.ready or (GetDistance(enemy) > SkillQ.range)) and (attackCast and WukongMenu.combo.smartCombo) then
 			return false
 		end
 		if ValidTarget(enemy) then 
@@ -673,7 +673,7 @@ end
 function CastE(enemy)
 	--- Dynamic E Cast ---
 	--->
-		if (not SkillE.ready or (GetDistance(enemy) > SkillE.range)) and ((not attackCast and WukongMenu.combo.smartCombo) or not WukongMenu.combo.smartCombo) then
+		if (not SkillE.ready or (GetDistance(enemy) > SkillE.range)) and (attackCast and WukongMenu.combo.smartCombo) then
 			return false
 		end
 		if ValidTarget(enemy) then 
