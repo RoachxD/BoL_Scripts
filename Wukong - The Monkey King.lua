@@ -1,4 +1,4 @@
-local version = "2.041"
+local version = "2.042"
 --[[
 
 
@@ -452,6 +452,9 @@ function FullCombo()
 		if not isChanneling("Spell4") then
 			SkillR.castingUlt = false
 		end
+		if not Target then
+			attackCast = false
+		end
 		if not isChanneling("Spell4") and not SkillR.castingUlt then
 			if Target then
 				if WukongMenu.combo.comboOrbwalk then
@@ -460,7 +463,7 @@ function FullCombo()
 				if WukongMenu.combo.comboItems then
 					UseItems(Target)
 				end
-				if not SkillR.castingUlt and ((not attackCast and WukongMenu.combo.smartCombo and GetDistance(Target) <= myHero.range) or not WukongMenu.combo.smartCombo) then
+				if not SkillR.castingUlt and ((not attackCast and WukongMenu.combo.smartCombo) or not WukongMenu.combo.smartCombo) then
 					CastE(Target)
 					if not SkillE.ready then
 						CastQ(Target)
@@ -599,7 +602,7 @@ function MixedClear()
 				if WukongMenu.clear.clearOrbJ then
 					OrbWalking(JungleMob)
 				end
-				if (not attackCast and WukongMenu.clear.smartClear and GetDistance(JungleMob) <= myHero.range) or not WukongMenu.clear.smartClear then
+				if (not attackCast and WukongMenu.clear.smartClear) or not WukongMenu.clear.smartClear then
 					if WukongMenu.clear.clearQ and SkillQ.ready and GetDistance(JungleMob) <= SkillQ.range then
 						CastQ(JungleMob)
 					end
@@ -625,7 +628,7 @@ function MixedClear()
 					if WukongMenu.clear.clearOrbM then
 						OrbWalking(minion)
 					end
-					if (not attackCast and WukongMenu.clear.smartClear and GetDistance(minion) <= myHero.range) or not WukongMenu.clear.smartClear then
+					if (not attackCast and WukongMenu.clear.smartClear) or not WukongMenu.clear.smartClear then
 						if WukongMenu.clear.clearQ and SkillQ.ready and GetDistance(minion) <= SkillQ.range then
 							CastQ(minion)
 						end
