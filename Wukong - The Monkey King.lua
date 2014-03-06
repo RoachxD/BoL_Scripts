@@ -1,4 +1,4 @@
-local version = "2.043"
+local version = "2.044"
 --[[
 
 
@@ -654,7 +654,7 @@ end
 function CastQ(enemy)
 	--- Dynamic Q Cast ---
 	--->
-		if (not SkillQ.ready or (GetDistance(enemy) > SkillQ.range)) and (attackCast and WukongMenu.combo.smartCombo) then
+		if (not SkillQ.ready or (GetDistance(enemy) > SkillQ.range)) or (attackCast and WukongMenu.combo.smartCombo) then
 			return false
 		end
 		if ValidTarget(enemy) then 
@@ -673,7 +673,7 @@ end
 function CastE(enemy)
 	--- Dynamic E Cast ---
 	--->
-		if (not SkillE.ready or (GetDistance(enemy) > SkillE.range)) and (attackCast and WukongMenu.combo.smartCombo) then
+		if (not SkillE.ready or (GetDistance(enemy) > SkillE.range)) or (attackCast and WukongMenu.combo.smartCombo) then
 			return false
 		end
 		if ValidTarget(enemy) then 
