@@ -1,4 +1,4 @@
-local version = "2.045"
+local version = "2.05"
 --[[
 
 
@@ -10,12 +10,17 @@ local version = "2.045"
 			 `8b8' `8d8'  ~Y8888P' YP   YD  `Y88P'  VP   V8P  Y888P
 
 
-		Script - Wukong - The Monkey King 2.0.4 by Roach
+		Script - Wukong - The Monkey King 2.0.5 by Roach
 
 		Dependency: 
 			- Nothing
 
 		Changelog:
+			2.0.5
+				- Added Auto-Decoy Spells
+				- Fixed Ult not Casting
+				- Fixed Harass Mode
+				- Added Orbwalker to Harass
 			2.0.4
 				- Added Mana Check for Farming
 				- Added Mana Check for Mixed Clear
@@ -130,7 +135,7 @@ function OnLoad()
 	--->
 		Variables()
 		WukongMenu()
-		PrintChat("<font color='#FF0000'> >> "..UPDATE_SCRIPT_NAME.." 2.0.4 Loaded <<</font>")
+		PrintChat("<font color='#FF0000'> >> "..UPDATE_SCRIPT_NAME.." 2.0.5 Loaded <<</font>")
 	---<
 end
 -- / Loading Function / --
@@ -181,6 +186,73 @@ function Variables()
 		SkillW = {range = 125,		name = "Decoy",			ready = false, 						color = ARGB(255, 32,178,170)									 	}
 		SkillE = {range = 625,		name = "Nimbus Strike",	ready = false, 						color = ARGB(255,128, 0 ,128),	mana = myHero:GetSpellData(_E).mana	}
 		SkillR = {range = 162.5,	name = "Cyclone",		ready = false, castingUlt = false,									mana = myHero:GetSpellData(_R).mana	}
+		Decoy =
+		{
+			spellList = 
+			{
+				{charName = "Taric", 		spellName = "Dazzle", 					missileName = "Dazzle_mis.troy", 				radius = 0, 	delay = nil, 	spellType = "Stun / Snare" 		},
+				{charName = "Sion", 		spellName = "CrypticGaze", 				missileName = "CrypticGaze_mis.troy",	 		radius = 0, 	delay = nil, 	spellType = "Stun / Snare" 		},
+				{charName = "Leona",		spellName = "LeonaSolarFlare",			missileName = nil, 								radius = 350, 	delay = 0, 		spellType = "Stun / Snare"		},
+				{charName = "Pantheon", 	spellName = "Pantheon_LeapBash", 		missileName = nil, 								radius = 0, 	delay = 125, 	spellType = "Stun / Snare" 		},
+				{charName = "Renekton", 	spellName = "RenektonPreExecute",		missileName = nil, 								radius = 0,		delay = 0, 		spellType = "Stun / Snare" 		},
+				{charName = "Darius", 		spellName = "DariusAxeGrabCone", 		missileName = nil, 								radius = 550, 	delay = 0, 		spellType = "Stun / Snare"		},
+				{charName = "Annie", 		spellName = "InfernalGuardian", 		missileName = nil, 								radius = 250,	delay = 0, 		spellType = "Stun / Snare"		},
+				{charName = "Amumu", 		spellName = "CurseoftheSadMummy", 		missileName = nil, 								radius = 550,	delay = 0, 		spellType = "Stun / Snare"		},
+				{charName = "Diana", 		spellName = "DianaVortex", 				missileName = nil, 								radius = 250, 	delay = 0, 		spellType = "Stun / Snare"		},
+				{charName = "Riven", 		spellName = "RivenMartyr", 				missileName = nil, 								radius = 125, 	delay = 0, 		spellType = "Stun / Snare" 		},
+				{charName = "Orianna",		spellName = "OrianaDetonateCommand", 	missileName = nil, 								radius = 325, 	delay = 0, 		spellType = "Stun / Snare"		},
+				{charName = "TwistedFate", 	spellName = "PickaCard_yellow_mis.troy",missileName = nil, 								radius = 0, 	delay = 0, 		spellType = "Stun / Snare" 		},
+				{charName = "Irelia", 		spellName = "IreliaEquilibriumStrike", 	missileName = nil, 								radius = 0, 	delay = 200, 	spellType = "Stun / Snare" 		},
+				{charName = "Maokai", 		spellName = "MaokaiUnstableGrowth", 	missileName = nil, 								radius = 0, 	delay = 0, 		spellType = "Stun / Snare" 		},
+				{charName = "Ryze", 		spellName = "RunePrison", 				missileName = nil, 								radius = 0, 	delay = 0, 		spellType = "Stun / Snare" 		},
+				{charName = "Tristana", 	spellName = "BusterShot",				missileName = "BusterShot_mis.troy", 			radius = 0, 	delay = nil, 	spellType = "Knockback" 		},
+				{charName = "Gragas", 		spellName = "GragasExplosiveCask", 		missileName = nil, 								radius = 200, 	delay = 0, 		spellType = "Knockback"			},
+				{charName = "Alistar", 		spellName = "Headbutt", 				missileName = nil, 								radius = 0, 	delay = 200,	spellType = "Knockback" 		},
+				{charName = "LeeSin", 		spellName = "BlindMonkRKick", 			missileName = nil, 								radius = 188, 	delay = 200, 	spellType = "Knockback" 		},
+				{charName = "Janna", 		spellName = "ReapTheWhirlwind", 		missileName = nil, 								radius = 363, 	delay = 0, 		spellType = "Knockback" 		},
+				{charName = "Poppy", 		spellName = "PoppyHeroicCharge", 		missileName = nil, 								radius = 0, 	delay = 200, 	spellType = "Knockback" 		},
+				{charName = "Vayne", 		spellName = "VayneCondemn", 			missileName = nil, 								radius = 0, 	delay = 200, 	spellType = "Knockback" 		},
+				{charName = "Skarner", 		spellName = "SkarnerImpale", 			missileName = nil, 								radius = 0, 	delay = 0,		spellType = "Suppress" 			},
+				{charName = "Malzahar", 	spellName = "AlZaharNetherGrasp", 		missileName = nil, 								radius = 0, 	delay = 0, 		spellType = "Suppress"  		},
+				{charName = "Warwick", 		spellName = "InfiniteDuress", 			missileName = nil, 								radius = 0, 	delay = 0, 		spellType = "Suppress"  		},
+				{charName = "Urgot", 		spellName = "UrgotSwap2", 				missileName = nil, 								radius = 0, 	delay = 0, 		spellType = "Suppress" 			},
+				{charName = "Malphite", 	spellName = "UFSlash", 					missileName = nil, 								radius = 163, 	delay = 200, 	spellType = "Knockup" 			},
+				{charName = "Alistar", 		spellName = "Pulverize", 				missileName = nil, 								radius = 183, 	delay = 0, 		spellType = "Knockup" 			},
+				{charName = "Vi", 			spellName = "ViR", 						missileName = nil, 								radius = 0, 	delay = 200, 	spellType = "Knockup" 			},
+				{charName = "FiddleSticks", spellName = "Terrify", 					missileName = nil, 								radius = 0, 	delay = 0, 		spellType = "Fear" 	 			},
+				{charName = "Nunu", 		spellName = "IceBlast", 				missileName = "yeti_iceBlast_mis.troy", 		radius = 0, 	delay = nil, 	spellType = "Slow" 				},
+				{charName = "Malphite", 	spellName = "SeismicShard", 			missileName = "SeismicShard_mis.troy", 			radius = 0, 	delay = nil, 	spellType = "Slow" 				},
+				{charName = "JarvanIV", 	spellName = "JarvanIVGoldenAegis", 		missileName = nil, 								radius = 300, 	delay = 0, 		spellType = "Slow"				},
+				{charName = "XinZhao", 		spellName = "XenZhaoSweep", 			missileName = nil, 								radius = 0, 	delay = 150, 	spellType = "Slow"				},
+				{charName = "Rengar", 		spellName = "RengarE", 					missileName = "missing_instant.troy", 			radius = 0, 	delay = nil, 	spellType = "Slow" 				},
+				{charName = "Shaco", 		spellName = "TwoShivPoison", 			missileName = "JesterDagger.troy", 				radius = 0,		delay = nil,	spellType = "Slow" 				},
+				{charName = "LeBlanc", 		spellName = "LeblancChaosOrb", 			missileName = "leBlanc_ChaosOrb_mis.troy", 		radius = 0, 	delay = nil,	spellType = "Silence" 			},
+				{charName = "Kassadin", 	spellName = "NullLance", 				missileName = "Null_Lance_mis.troy", 			radius = 0, 	delay = nil,	spellType = "Silence" 			},
+				{charName = "FiddleSticks", spellName = "FiddlesticksDarkWind", 	missileName = "DarkWind_mis.troy", 				radius = 0, 	delay = nil, 	spellType = "Silence"			},
+				{charName = "Talon", 		spellName = "TalonCutthroat", 			missileName = nil, 								radius = 0, 	delay = 0, 		spellType = "Silence" 	 		},
+				{charName = "Rammus", 		spellName = "PuncturingTaunt", 			missileName = nil, 								radius = 0, 	delay = 0,		spellType = "Taunt" 			},
+				{charName = "Shen", 		spellName = "ShenShadowDash", 			missileName = nil, 								radius = 100,	delay = 0, 		spellType = "Taunt" 			},
+				{charName = "Galio", 		spellName = "GalioIdolOfDurand", 		missileName = nil, 								radius = 600, 	delay = 0, 		spellType = "Taunt" 			},
+				{charName = "Teemo", 		spellName = "BlindingDart", 			missileName = "BlindShot_mis.troy", 			radius = 0, 	delay = nil, 	spellType = "Blind" 			},
+				{charName = "Veigar", 		spellName = "VeigarPrimordialBurst", 	missileName = "permission_mana_flare_mis.troy", radius = 0, 	delay = nil, 	spellType = "Massive Damage"	},
+				{charName = nil, 			spellName = "DeathfireGrasp", 			missileName = "missile", 						radius = 0, 	delay = nil, 	spellType = "Massive Damage"	},
+				{charName = "Lux", 			spellName = "LuxMaliceCannon", 			missileName = nil, 								radius = 0, 	delay = 250, 	spellType = "Massive Damage"	},
+				{charName = "Vladimir", 	spellName = "VladimirHemoplague", 		missileName = nil, 								radius = 175, 	delay = 0, 		spellType = "Massive Damage"	},
+				{charName = "XinZhao", 		spellName = "XenZhaoParry", 			missileName = nil, 								radius = 187.5, delay = 0, 		spellType = "Massive Damage"	},
+				{charName = "Graves", 		spellName = "GravesChargeShot", 		missileName = nil, 								radius = 0, 	delay = 200, 	spellType = "Massive Damage"	},
+				{charName = "Garen", 		spellName = "GarenJustice", 			missileName = nil, 								radius = 0, 	delay = 250, 	spellType = "Massive Damage"	},
+				{charName = "Evelynn", 		spellName = "EvelynnR", 				missileName = nil, 								radius = 250, 	delay = 0, 		spellType = "Massive Damage"	},
+				{charName = "Darius", 		spellName = "DariusExecute", 			missileName = nil, 								radius = 0, 	delay = 300, 	spellType = "Massive Damage"	},
+				{charName = "Zed", 			spellName = "ZedUlt", 					missileName = "Zed_R_Dash.troy", 				radius = 0, 	delay = nil, 	spellType = "Massive Damage"	}
+			},
+			targetedDistanceBuffer = 75 * 75,
+			spellCastTick = 0,
+			minDelay = 0,
+			maxDelay = 2000,
+			particleFound,
+			spellParticle = {valid = false}
+			maxParticleDistance = 250 * 250
+		}
 	---<
 	--- Skills Vars ---
 	--- Items Vars ---
@@ -344,6 +416,7 @@ function Variables()
 			end
 		end
 		for i = 1, heroManager.iCount do enemycombo[i] = 0 end
+		decoyClean()
 	---<
 	--- Tables ---
 end
@@ -371,7 +444,7 @@ function WukongMenu()
 			WukongMenu.harass:addParam("harassKey", "Harass Hotkey (T)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("T"))
 			WukongMenu.harass:addParam("wEscape", "Use "..SkillW.name.." (W) after Harass", SCRIPT_PARAM_ONOFF, true)
 			WukongMenu.harass:addParam("qharass", "Always "..SkillQ.name.." (Q)", SCRIPT_PARAM_ONOFF, true)
-			WukongMenu.harass:addParam("mTmH", "Move To Mouse", SCRIPT_PARAM_ONOFF, true)
+			WukongMenu.harass:addParam("harassOrbwalk", "Orbwalk in Harass", SCRIPT_PARAM_ONOFF, true)
 			WukongMenu.harass:permaShow("harassKey")
 		---<
 		---> Farming Menu
@@ -393,6 +466,20 @@ function WukongMenu()
 			WukongMenu.clear:addParam("clearE", "Clear with "..SkillE.name.." (E)", SCRIPT_PARAM_ONOFF, true)
 			WukongMenu.clear:addParam("clearOrbM", "OrbWalk Lane Clear", SCRIPT_PARAM_ONOFF, true)
 			WukongMenu.clear:addParam("clearOrbJ", "OrbWalk Jungle Clear", SCRIPT_PARAM_ONOFF, true)
+		---<
+		---> Decoy Menu
+		WukongMenu:addSubMenu("["..myHero.charName.." - Decoy Settings]", "decoy")
+			WukongMenu.decoy:addParam("enableDecoy", "Enable Auto "..SkillW.name.." (W)", SCRIPT_PARAM_ONOFF, true)
+			WukongMenu.decoy:addParam("StunSnare", "Use "..SkillW.name.." (W) against Stun / Snare", SCRIPT_PARAM_ONOFF, true)
+			WukongMenu.decoy:addParam("Knockback", "Use "..SkillW.name.." (W) against Knockback", SCRIPT_PARAM_ONOFF, true)
+			WukongMenu.decoy:addParam("Knockup", "Use "..SkillW.name.." (W) against Knockup", SCRIPT_PARAM_ONOFF, true)
+			WukongMenu.decoy:addParam("Fear", "Use "..SkillW.name.." (W) against Fear", SCRIPT_PARAM_ONOFF, true)
+			WukongMenu.decoy:addParam("Slow", "Use "..SkillW.name.." (W) against Slow", SCRIPT_PARAM_ONOFF, true)
+			WukongMenu.decoy:addParam("Silence", "Use "..SkillW.name.." (W) against Silence", SCRIPT_PARAM_ONOFF, true)
+			WukongMenu.decoy:addParam("Taunt", "Use "..SkillW.name.." (W) against Taunt", SCRIPT_PARAM_ONOFF, true)
+			WukongMenu.decoy:addParam("Blind", "Use "..SkillW.name.." (W) against Blind", SCRIPT_PARAM_ONOFF, true)
+			WukongMenu.decoy:addParam("MassiveDamage", "Use "..SkillW.name.." (W) against Mass Damage", SCRIPT_PARAM_ONOFF, true)
+			WukongMenu.decoy:permaShow("enableDecoy")
 		---<
 		---> KillSteal Menu
 		WukongMenu:addSubMenu("["..myHero.charName.." - KillSteal Settings]", "killsteal")
@@ -469,7 +556,7 @@ function FullCombo()
 						CastQ(Target)
 					end
 					if not WukongMenu.combo.mecUlt then
-						if Target.health < rDmg and GetDistance(Target) <= SkillR.range then
+						if GetDistance(Target) <= SkillR.range then
 							CastR(Target)
 						end
 					end
@@ -489,8 +576,8 @@ end
 function HarassCombo()
 	--- Smart Harass --
 	--->
-		if WukongMenu.harass.mTmH then
-			moveToCursor()
+		if WukongMenu.harass.harassOrbwalk then
+			OrbWalking(Target)
 		end
 		if Target then
 			--- Harass Mode 1 E+Q+W ---
@@ -943,6 +1030,10 @@ function OnCreateObj(obj)
 			elseif JungleMobNames[obj.name] then
         		table.insert(JungleMobs, obj)
 			end
+			if not Decoy.spellParticle.valid and obj.team ~= player.team and obj.name == Decoy.particleFound then
+				Decoy.spellParticle = obj
+				Decoy.particleFound = nil
+			end
 		end
 	---<
 	--- All of Our Objects (CREATE) --
@@ -1055,11 +1146,13 @@ end
 --- Move to Mouse ---
 --- On Process Spell ---
 --->
-	function OnProcessSpell(unit,spell)
+	function OnProcessSpell(unit, spell)
 		--- Tick Manager Check ---
 		--->
 			if not TManager.onSpell:isReady() and WukongMenu.misc.uTM then return end
 		---<
+		--- Tick Manager Check ---
+		--- Orbwalker Checks ---
 		--->
 			if unit.isMe then
 				if spell.name:find("Attack") then
@@ -1072,6 +1165,26 @@ end
 				end
 			end
 		---<
+		--- Orbwalker Checks ---
+		--- Decoy Checks ---
+		--->
+			if WukongMenu.decoy.enableDecoy then
+				if unit.team ~= player.team and string.find(spell.name, "Basic") == nil then
+					avoidSpell, spellRadius, spellDelay, particleName = spellInfo(spell)
+					if avoidSpell then
+						if affectsMe(spell, spellRadius) then
+							if particleName then
+								Decoy.particleFound = particleName
+							else
+								Decoy.spellCastTick = GetTickCount()
+								Decoy.minDelay = spellDelay
+							end
+						end
+					end
+				end
+			end
+		---<
+		--- Decoy Checks ---
 	end
 ---<
 --- On Process Spell ---
@@ -1294,8 +1407,111 @@ function Checks()
 		end
 	---<
 	--- Setting Cast of Ult ---
+	--- Setting Auto-Decoy ---
+	--->
+		if (GetTickCount() - Decoy.spellCastTick >= Decoy.minDelay and GetTickCount() - Decoy.spellCastTick <= Decoy.maxDelay) or (Decoy.spellParticle.valid and GetDistanceSqr(Decoy.spellParticle) <= Decoy.maxParticleDistance) and SkillW.ready then 
+			CastSpell(_W, mousePos.x, mousePos.z) 
+		end
+	---<
+	--- Setting Auto-Decoy ---
 end
 -- / Checks Function / --
+
+-- / isEnemy Function / --
+function isEnemy(charName)
+	local onEnemyTeam = false
+	local hero
+	local i = 1
+	
+	while i <= heroManager.iCount and not onEnemyTeam do
+		hero = heroManager:GetHero(i)
+		if hero.team ~= player.team and hero.charName == charName then onEnemyTeam = true end
+		i = i + 1
+	end
+		
+	return onEnemyTeam
+end
+-- / isEnemy Function / --
+
+-- / decoyClean Function / --
+function decoyClean()
+	local i = 1
+	
+	while i <= #Decoy.spellList do
+		if not isEnemy(Decoy.spellList[i].charName) then
+			table.remove(Decoy.spellList, i)
+		else 
+			i = i + 1 
+		end
+	end
+end
+-- / decoyClean Function / --
+
+-- / checkType Function / --
+function checkType(spellType)
+	local typeEnabled = false
+	
+	if spellType == "Stun / Snare" then
+		typeEnabled = WukongMenu.decoy.StunSnare
+	elseif spellType == "Knockback" then
+		typeEnabled = WukongMenu.decoy.Knockback
+	elseif spellType == "Knockup" then
+		typeEnabled = WukongMenu.decoy.Knockup
+	elseif spellType == "Fear" then
+		typeEnabled = WukongMenu.decoy.Fear
+	elseif spellType == "Slow" then
+		typeEnabled = WukongMenu.decoy.Slow
+	elseif spellType == "Silence" then
+		typeEnabled = WukongMenu.decoy.Silence
+	elseif spellType == "Taunt" then
+		typeEnabled = WukongMenu.decoy.Taunt
+	elseif spellType == "Blind" then
+		typeEnabled = WukongMenu.decoy.Blind
+	elseif spellType == "Massive Damage" then
+		typeEnabled = WukongMenu.decoy.MassiveDamage
+	end
+	
+	return typeEnabled
+end
+-- / checkType Function / --
+
+-- / spellInfo Function / --
+function spellInfo(spell)
+	local detected = false
+	local avoidSpell = false
+	local radius
+	local spellDelay
+	local particleName
+	local i = 1
+	
+	while i <= #Decoy.spellList and not detected do
+		if Decoy.spellList[i].spellName == spell.name then
+			detected = true
+			radius = Decoy.spellList[i].radius
+			spellDelay = Decoy.spellList[i].delay
+			particleName = Decoy.spellList[i].missileName
+			avoidSpell = checkType(Decoy.spellList[i].spellType)
+		end
+		i = i + 1
+	end
+	
+	return avoidSpell, radius, spellDelay, particleName
+end
+-- / spellInfo Function / --
+
+-- / affectsMe Function / --
+function affectsMe(spell, spellRadius)
+	local willAffectMe
+	
+	if spellRadius == 0 then
+		willAffectMe = GetDistanceSqr(spell.endPos) <= Decoy.targetedDistanceBuffer
+	else
+		willAffectMe = GetDistanceSqr(spell.endPos) <= spellRadius*spellRadius
+	end
+	
+	return willAffectMe
+end
+-- / affectsMe Function / --
 
 -- / isLow Function / --
 function isLow(Name)
