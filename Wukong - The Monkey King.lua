@@ -1,4 +1,4 @@
-local version = "2.05"
+local version = "2.051"
 --[[
 
 
@@ -250,7 +250,7 @@ function Variables()
 			minDelay = 0,
 			maxDelay = 2000,
 			particleFound,
-			spellParticle = {valid = false}
+			spellParticle = {valid = false},
 			maxParticleDistance = 250 * 250
 		}
 	---<
