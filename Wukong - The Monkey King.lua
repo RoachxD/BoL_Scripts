@@ -1,4 +1,4 @@
-local version = "2.054"
+local version = "2.055"
 --[[
 
 
@@ -583,10 +583,10 @@ end
 function HarassCombo()
 	--- Smart Harass --
 	--->
-		if WukongMenu.harass.harassOrbwalk then
-			OrbWalking(Target)
-		end
 		if Target then
+			if WukongMenu.harass.harassOrbwalk then
+				OrbWalking(Target)
+			end
 			--- Harass Mode 1 E+Q+W ---
 			if WukongMenu.harass.hMode == 1 then
 				if WukongMenu.harass.wEscape then
@@ -619,6 +619,10 @@ function HarassCombo()
 				end
 			end
 			--- Harass Mode 3 ---
+		else
+			if WukongMenu.harass.harassOrbwalk then
+				moveToCursor()
+			end
 		end
 	---<
 	--- Smart Harass ---
