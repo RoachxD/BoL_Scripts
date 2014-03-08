@@ -1,3 +1,4 @@
+local version = "3.02"
 --[[
 
 
@@ -9,7 +10,7 @@
 			88      YP   YP VP   V8P    YP    YP   YP Y88888P  `Y88P'  VP   V8P
 
 
-		Script - Pantheon - The Artisan of War 3.0.1 by Roach
+		Script - Pantheon - The Artisan of War 3.0.2 by Roach
 
 		Dependency / Requirements: 
 			- Nothing
@@ -18,6 +19,12 @@
 			3.0.2
 				- Removed MEC Ult (because many people cast Ult Manually and it was causing me some problems)
 				- Added new logics for Packets and Orbwalker regarding Ult
+				- Fixed Harass Combo
+				- Added Mana Check for Farming
+				- Added Mana Check for Mixed Clear
+				- Added Last Hitter
+				- Added Orbwalker to Harass
+				- Added Auto-Updater
 			3.0.1
 				- Fixed Ult Spamming Errors
 				- Added new Ultimate Logics
@@ -139,12 +146,46 @@
 if myHero.charName ~= "Pantheon" then return end
 -- / Hero Name Check / --
 
+-- / Auto-Update Function / --
+local autoupdateenabled = true
+local UPDATE_SCRIPT_NAME = "Pantheon - The Artisan of War"
+local UPDATE_HOST = "raw.github.com"
+local UPDATE_PATH = "/RoachxD/BoL_Scripts/master/Pantheon%20-%20The%20Artisan%20of%20War.lua"
+local UPDATE_FILE_PATH = SCRIPT_PATH..GetCurrentEnv().FILE_NAME
+local UPDATE_URL = "https://"..UPDATE_HOST..UPDATE_PATH
+
+local ServerData
+if autoupdateenabled then
+	GetAsyncWebResult(UPDATE_HOST, UPDATE_PATH, function(d) ServerData = d end)
+	function update()
+		if ServerData ~= nil then
+			local ServerVersion
+			local send, tmp, sstart = nil, string.find(ServerData, "local version = \"")
+			if sstart then
+				send, tmp = string.find(ServerData, "\"", sstart+1)
+			end
+			if send then
+				ServerVersion = tonumber(string.sub(ServerData, sstart+1, send-1))
+			end
+
+			if ServerVersion ~= nil and tonumber(ServerVersion) ~= nil and tonumber(ServerVersion) > tonumber(version) then
+				DownloadFile(UPDATE_URL.."?nocache"..myHero.charName..os.clock(), UPDATE_FILE_PATH, function () print("<font color=\"#FF0000\"> >> "..UPDATE_SCRIPT_NAME..": successfully updated. Reload (double F9) Please.</font>") end)     
+			elseif ServerVersion then
+				print("<font color=\"#FF0000\"> >> "..UPDATE_SCRIPT_NAME..": You have got the latest version of the script.</font>")
+			end		
+			ServerData = nil
+		end
+	end
+	AddTickCallback(update)
+end
+-- / Auto-Update Function / --
+
 -- / Loading Function / --
 function OnLoad()
 	--->
 		Variables()
 		PanthMenu()
-		PrintChat("<font color='#FF0000'> >> Pantheon - The Artisan of War 3.0.1 Loaded <<</font>")
+		PrintChat("<font color='#FF0000'> >> Pantheon - The Artisan of War 3.0.2 Loaded <<</font>")
 	---<
 end
 -- / Loading Function / --
@@ -163,10 +204,11 @@ function OnTick()
 	---<
 	-- Menu Variables --
 	--->
-		ComboKey =     PanthMenu.combo.comboKey
-		FarmingKey =   PanthMenu.farming.farmKey
-		HarassKey =    PanthMenu.harass.harassKey
-		ClearKey =     PanthMenu.clear.clearKey
+		ComboKey	=	PanthMenu.combo.comboKey
+		FarmingKey	=	PanthMenu.farming.farmKey
+		HarassKey	=	PanthMenu.harass.harassKey
+		ClearKey	=	PanthMenu.clear.clearKey
+		LastHitKey	=	PanthMenu.farming.lastHit
 	---<
 	-- Menu Variables --
 	--->
@@ -176,10 +218,13 @@ function OnTick()
 		if HarassKey then
 			HarassCombo()
 		end
-		if FarmingKey and not ComboKey then
+		if LastHitKey then
+			lastHit()
+		end
+		if FarmingKey and not ComboKey and not LastHitKey and (PanthMenu.farming.Mana / 100) >= (myHero.mana / myHero.maxMana) then
 			Farm()
 		end
-		if ClearKey then
+		if ClearKey and (PanthMenu.clear.Mana / 100) >= (myHero.mana / myHero.maxMana) then
 			MixedClear()
 		end	
 		if PanthMenu.killsteal.smartKS then KillSteal() end
@@ -378,12 +423,14 @@ function PanthMenu()
 			PanthMenu.harass:addParam("hMode", "Harass Mode",SCRIPT_PARAM_SLICE, 1, 1, 2, 0)
 			PanthMenu.harass:addParam("harassKey", "Harass Hotkey (T)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("T"))
 			PanthMenu.harass:addParam("qharass", "Always "..SkillQ.name.." (Q)", SCRIPT_PARAM_ONOFF, true)
-			PanthMenu.harass:addParam("mTmH", "Move To Mouse", SCRIPT_PARAM_ONOFF, true)
+			PanthMenu.harass:addParam("harassOrbwalk", "Orbwalk in Harass", SCRIPT_PARAM_ONOFF, true)
 			PanthMenu.harass:permaShow("harassKey")
 		---<
 		---> Farming Menu
 		PanthMenu:addSubMenu("["..myHero.charName.." - Farming Settings]", "farming")
 			PanthMenu.farming:addParam("farmKey", "Farming ON/Off (Z)", SCRIPT_PARAM_ONKEYTOGGLE, true, GetKey("Z"))
+			PanthMenu.farming:addParam("lastHit", "Auto Last Hit on Hold", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("C"))
+			PanthMenu.farming:addParam("Mana", "Min Mana to Farm", SCRIPT_PARAM_SLICE, 35, 0, 100, -1)
 			PanthMenu.farming:addParam("qFarm", "Farm with "..SkillQ.name.." (Q)", SCRIPT_PARAM_ONOFF, true)
 			PanthMenu.farming:addParam("wFarm", "Farm with "..SkillE.name.." (W)", SCRIPT_PARAM_ONOFF, false)
 			PanthMenu.farming:permaShow("farmKey")
@@ -391,6 +438,7 @@ function PanthMenu()
 		---> Clear Menu		
 		PanthMenu:addSubMenu("["..myHero.charName.." - Clear Settings]", "clear")
 			PanthMenu.clear:addParam("clearKey", "Jungle/Lane Clear Key (V)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("V"))
+			PanthMenu.clear:addParam("Mana", "Min Mana to Jungle/Lane Clear", SCRIPT_PARAM_SLICE, 35, 0, 100, -1)
 			PanthMenu.clear:addParam("JungleFarm", "Use Skills to Farm Jungle", SCRIPT_PARAM_ONOFF, true)
 			PanthMenu.clear:addParam("ClearLane", "Use Skills to Clear Lane", SCRIPT_PARAM_ONOFF, true)
 			PanthMenu.clear:addParam("clearQ", "Clear with "..SkillQ.name.." (Q)", SCRIPT_PARAM_ONOFF, true)
@@ -483,29 +531,29 @@ end
 function HarassCombo()
 	--- Smart Harass --
 	--->
-		if PanthMenu.harass.mTmH then
-			moveToCursor()
-		end
 		if Target then
+			if PanthMenu.harass.harassOrbwalk then
+				OrbWalking(Target)
+			end
 			--- Harass Mode 1 Q ---
 			if PanthMenu.harass.hMode == 1 then
-				if PanthMenu.harass.wEscape then
-					if SkillQ.ready then
-						CastQ(Target)
-					end
+				if SkillQ.ready then
+					CastQ(Target)
 				end
 			end
 			--- Harass Mode 1 ---
 			--- Harass Mode 2 W+E ---
 			if PanthMenu.harass.hMode == 2 then
-				if PanthMenu.harass.wEscape then
-					if SkillW.ready then
-						CastW(Target)
-						if not SkillW.ready then CastE(Target) end
-					end
+				if SkillW.ready then
+					CastW(Target)
+					if not SkillW.ready then CastE(Target) end
 				end
 			end
 			--- Harass Mode 2 ---
+		else
+			if PanthMenu.harass.harassOrbwalk then
+				moveToCursor()
+			end
 		end
 	---<
 	--- Smart Harass ---
@@ -572,6 +620,25 @@ function Farm()
 	---<
 end
 -- / Farm Function / --
+
+-- / Last Hit Function / --
+local nextTick = 0
+function lastHit()
+	enemyMinions:update()
+	if GetTickCount() > nextTick then
+		myHero:MoveTo(mousePos.x, mousePos.z)
+	end						
+	for index, minion in pairs(enemyMinions.objects) do
+		if ValidTarget(minion) then
+			local aaMinionDmg = getDmg("AD",minion,myHero)
+			if minion.health <= aaMinionDmg and GetDistance(minion) <= (myHero.range + SkillE.range) and GetTickCount() > nextTick then
+				myHero:Attack(minion)
+				nextTick = GetTickCount() + 450
+			end
+		end		 
+	end
+end
+-- / Last Hit Function / --
 
 -- / Clear Function / --
 function MixedClear()
