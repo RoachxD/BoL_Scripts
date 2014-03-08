@@ -1,4 +1,4 @@
-local version = "2.052"
+local version = "2.053"
 --[[
 
 
@@ -22,6 +22,7 @@ local version = "2.052"
 				- Fixed Harass Mode
 				- Added Orbwalker to Harass
 				- Fixed Farming Bug
+				- Added Last Hitter
 			2.0.4
 				- Added Mana Check for Farming
 				- Added Mana Check for Mixed Clear
@@ -155,10 +156,11 @@ function OnTick()
 	---<
 	-- Menu Variables --
 	--->
-		ComboKey =     WukongMenu.combo.comboKey
-		FarmingKey =   WukongMenu.farming.farmKey
-		HarassKey =    WukongMenu.harass.harassKey
-		ClearKey =     WukongMenu.clear.clearKey
+		ComboKey	=	WukongMenu.combo.comboKey
+		FarmingKey	=	WukongMenu.farming.farmKey
+		HarassKey	=	WukongMenu.harass.harassKey
+		ClearKey	=	WukongMenu.clear.clearKey
+		LastHitKey	=	WukongMenu.farming.lastHit
 	---<
 	-- Menu Variables --
 	--->
@@ -168,7 +170,10 @@ function OnTick()
 		if HarassKey then
 			HarassCombo()
 		end
-		if FarmingKey and not ComboKey and (WukongMenu.farming.Mana / 100) >= (myHero.mana / myHero.maxMana) then
+		if LastHitKey then
+			lastHit()
+		end
+		if FarmingKey and not ComboKey and not LastHitKey and (WukongMenu.farming.Mana / 100) >= (myHero.mana / myHero.maxMana) then
 			Farm()
 		end
 		if ClearKey and (WukongMenu.clear.Mana / 100) >= (myHero.mana / myHero.maxMana) then
@@ -451,6 +456,7 @@ function WukongMenu()
 		---> Farming Menu
 		WukongMenu:addSubMenu("["..myHero.charName.." - Farming Settings]", "farming")
 			WukongMenu.farming:addParam("farmKey", "Farming ON/Off (Z)", SCRIPT_PARAM_ONKEYTOGGLE, true, GetKey("Z"))
+			WukongMenu.farming:addParam("lastHit", "Auto Last Hit on Hold", SCRIPT_PARAM_ONKEYTOGGLE, true, GetKey("C"))
 			WukongMenu.farming:addParam("Mana", "Min Mana to Farm", SCRIPT_PARAM_SLICE, 35, 0, 100, -1)
 			WukongMenu.farming:addParam("qFarm", "Farm with "..SkillQ.name.." (Q)", SCRIPT_PARAM_ONOFF, true)
 			WukongMenu.farming:addParam("eFarm", "Farm with "..SkillE.name.." (E)", SCRIPT_PARAM_ONOFF, false)
@@ -679,6 +685,22 @@ function Farm()
 	---<
 end
 -- / Farm Function / --
+
+-- / Last Hit Function / --
+function lastHit()
+	if heroCanMove() then
+		moveToCursor()
+	end						
+	for index, minion in pairs(enemyMinions.objects) do
+		if minion and minion.dead == false then
+			local aaMinionDmg = getDmg("AD",minion,myHero)
+			if minion and minion.health <= aaMinionDmg and TimeToAttack() and GetDistance(Target) <= myHero.range + GetDistance(myHero.minBBox) then
+				myHero:Attack(minion)
+			end
+		end		 
+	end
+end
+-- / Last Hit Function / --
 
 -- / Clear Function / --
 function MixedClear()
