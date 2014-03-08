@@ -1,4 +1,4 @@
-local version = "2.053"
+local version = "2.054"
 --[[
 
 
@@ -22,7 +22,7 @@ local version = "2.053"
 				- Fixed Harass Mode
 				- Added Orbwalker to Harass
 				- Fixed Farming Bug
-				- Added Last-Hitter
+				- Added Last Hitter
 			2.0.4
 				- Added Mana Check for Farming
 				- Added Mana Check for Mixed Clear
@@ -456,7 +456,7 @@ function WukongMenu()
 		---> Farming Menu
 		WukongMenu:addSubMenu("["..myHero.charName.." - Farming Settings]", "farming")
 			WukongMenu.farming:addParam("farmKey", "Farming ON/Off (Z)", SCRIPT_PARAM_ONKEYTOGGLE, true, GetKey("Z"))
-			WukongMenu.farming:addParam("lastHit", "Auto Last Hit on Hold", SCRIPT_PARAM_ONKEYTOGGLE, true, GetKey("C"))
+			WukongMenu.farming:addParam("lastHit", "Auto Last Hit on Hold", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("C"))
 			WukongMenu.farming:addParam("Mana", "Min Mana to Farm", SCRIPT_PARAM_SLICE, 35, 0, 100, -1)
 			WukongMenu.farming:addParam("qFarm", "Farm with "..SkillQ.name.." (Q)", SCRIPT_PARAM_ONOFF, true)
 			WukongMenu.farming:addParam("eFarm", "Farm with "..SkillE.name.." (E)", SCRIPT_PARAM_ONOFF, false)
@@ -687,15 +687,18 @@ end
 -- / Farm Function / --
 
 -- / Last Hit Function / --
+local nextTick = 0
 function lastHit()
-	if heroCanMove() then
-		moveToCursor()
+	enemyMinions:update()
+	if GetTickCount() > nextTick then
+		myHero:MoveTo(mousePos.x, mousePos.z)
 	end						
 	for index, minion in pairs(enemyMinions.objects) do
-		if minion and minion.dead == false then
+		if ValidTarget(minion) then
 			local aaMinionDmg = getDmg("AD",minion,myHero)
-			if minion and minion.health <= aaMinionDmg and TimeToAttack() and GetDistance(Target) <= myHero.range + GetDistance(myHero.minBBox) then
+			if minion.health <= aaMinionDmg and GetDistance(minion) <= (myHero.range + SkillE.range) and GetTickCount() > nextTick then
 				myHero:Attack(minion)
+				nextTick = GetTickCount() + 450
 			end
 		end		 
 	end
