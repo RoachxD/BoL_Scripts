@@ -1,4 +1,4 @@
-local version = "2.051"
+local version = "2.052"
 --[[
 
 
@@ -21,6 +21,7 @@ local version = "2.051"
 				- Fixed Ult not Casting
 				- Fixed Harass Mode
 				- Added Orbwalker to Harass
+				- Fixed Farming Bug
 			2.0.4
 				- Added Mana Check for Farming
 				- Added Mana Check for Mixed Clear
@@ -634,7 +635,7 @@ function Farm()
 			--- Farming Minions ---
 			if ValidTarget(minion) then
 				if GetDistance(minion) <= SkillQ.range then
-					if qFarmKey and wFarmKey then
+					if qFarmKey and eFarmKey then
 						if SkillQ.ready and SkillE.ready then
 							if minion.health <= (eMinionDmg + qMinionDmg) and minion.health > qMinionDmg then
 								CastE(minion)
