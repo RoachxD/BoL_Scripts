@@ -22,7 +22,7 @@ local version = "2.053"
 				- Fixed Harass Mode
 				- Added Orbwalker to Harass
 				- Fixed Farming Bug
-				- Added Last Hitter
+				- Added Last-Hitter
 			2.0.4
 				- Added Mana Check for Farming
 				- Added Mana Check for Mixed Clear
