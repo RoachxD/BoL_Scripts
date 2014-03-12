@@ -1,4 +1,4 @@
-local version = "2.055"
+local version = "2.056"
 --[[
 
 
@@ -173,12 +173,12 @@ function OnTick()
 		if LastHitKey then
 			lastHit()
 		end
-		if FarmingKey and not ComboKey and not LastHitKey and (WukongMenu.farming.Mana / 100) >= (myHero.mana / myHero.maxMana) then
+		if FarmingKey and not ComboKey and not LastHitKey and (WukongMenu.farming.Mana / 100) <= (myHero.mana / myHero.maxMana) then
 			Farm()
 		end
-		if ClearKey and (WukongMenu.clear.Mana / 100) >= (myHero.mana / myHero.maxMana) then
+		if ClearKey and (WukongMenu.clear.Mana / 100) <= (myHero.mana / myHero.maxMana) then
 			MixedClear()
-		end	
+		end
 		if WukongMenu.killsteal.smartKS then KillSteal() end
 	---<
 end
