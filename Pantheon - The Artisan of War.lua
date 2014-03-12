@@ -1,4 +1,4 @@
-local version = "3.02"
+local version = "3.021"
 --[[
 
 
@@ -221,10 +221,10 @@ function OnTick()
 		if LastHitKey then
 			lastHit()
 		end
-		if FarmingKey and not ComboKey and not LastHitKey and (PanthMenu.farming.Mana / 100) >= (myHero.mana / myHero.maxMana) then
+		if FarmingKey and not ComboKey and not LastHitKey and (PanthMenu.farming.Mana / 100) < (myHero.mana / myHero.maxMana) then
 			Farm()
 		end
-		if ClearKey and (PanthMenu.clear.Mana / 100) >= (myHero.mana / myHero.maxMana) then
+		if ClearKey and (PanthMenu.clear.Mana / 100) < (myHero.mana / myHero.maxMana) then
 			MixedClear()
 		end	
 		if PanthMenu.killsteal.smartKS then KillSteal() end
