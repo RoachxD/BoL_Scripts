@@ -1,4 +1,4 @@
-local version = "3.021"
+local version = "3.022"
 --[[
 
 
@@ -25,6 +25,7 @@ local version = "3.021"
 				- Added Last Hitter
 				- Added Orbwalker to Harass
 				- Added Auto-Updater
+				- Added Anti-E / Anti-Ult Breaking for MMA / SAC
 			3.0.1
 				- Fixed Ult Spamming Errors
 				- Added new Ultimate Logics
@@ -1344,6 +1345,45 @@ function Checks()
 		enemyMinions:update()
 	---<
 	--- Updates Minions ---
+	--- Setting Cast of E ---
+	--->
+		if isChanneling("Spell3") or (isChanneling("Ult_A") or isChanneling("Ult_B") or isChanneling("Ult_C") or isChanneling("Ult_D") or isChanneling("Ult_E")) then
+			if AutoCarry then 
+				if AutoCarry.MainMenu ~= nil then
+						if AutoCarry.CanAttack ~= nil then
+							_G.AutoCarry.CanAttack = false
+							_G.AutoCarry.CanMove = false
+						end
+				elseif AutoCarry.Keys ~= nil then
+					if AutoCarry.MyHero ~= nil then
+						_G.AutoCarry.MyHero:MovementEnabled(false)
+						_G.AutoCarry.MyHero:AttacksEnabled(false)
+					end
+				end
+			elseif MMA_Loaded then
+				_G.MMA_AttackAvailable = false
+				_G.MMA_AbleToMove = false
+			end
+		else
+			if AutoCarry then 
+				if AutoCarry.MainMenu ~= nil then
+						if AutoCarry.CanAttack ~= nil then
+							_G.AutoCarry.CanAttack = true
+							_G.AutoCarry.CanMove = true
+						end
+				elseif AutoCarry.Keys ~= nil then
+					if AutoCarry.MyHero ~= nil then
+						_G.AutoCarry.MyHero:MovementEnabled(true)
+						_G.AutoCarry.MyHero:AttacksEnabled(true)
+					end
+				end
+			elseif MMA_Loaded then
+				_G.MMA_AttackAvailable = true
+				_G.MMA_AbleToMove = true
+			end
+		end
+	---<
+	--- Setting Cast of E ---
 end
 -- / Checks Function / --
 
