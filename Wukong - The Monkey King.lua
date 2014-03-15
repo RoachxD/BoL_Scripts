@@ -1,4 +1,4 @@
-local version = "2.056"
+local version = "2.057"
 --[[
 
 
@@ -23,6 +23,7 @@ local version = "2.056"
 				- Added Orbwalker to Harass
 				- Fixed Farming Bug
 				- Added Last Hitter
+				- Fixed Auto-Updater
 			2.0.4
 				- Added Mana Check for Farming
 				- Added Mana Check for Mixed Clear
@@ -102,7 +103,7 @@ if myHero.charName ~= "MonkeyKing" then return end
 local autoupdateenabled = true
 local UPDATE_SCRIPT_NAME = "Wukong - The Monkey King"
 local UPDATE_HOST = "raw.github.com"
-local UPDATE_PATH = "/RoachxD/BoL_Scripts/master/Wukong%20-%20The%20Monkey%20King.lua"
+local UPDATE_PATH = "/RoachxD/BoL_Scripts/master/Wukong%20-%20The%20Monkey%20King.lua?chunk="..math.random(1, 1000)
 local UPDATE_FILE_PATH = SCRIPT_PATH..GetCurrentEnv().FILE_NAME
 local UPDATE_URL = "https://"..UPDATE_HOST..UPDATE_PATH
 
