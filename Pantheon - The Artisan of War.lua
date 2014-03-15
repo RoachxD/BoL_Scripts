@@ -1,4 +1,4 @@
-local version = "3.022"
+local version = "3.023"
 --[[
 
 
@@ -26,6 +26,7 @@ local version = "3.022"
 				- Added Orbwalker to Harass
 				- Added Auto-Updater
 				- Added Anti-E / Anti-Ult Breaking for MMA / SAC
+				- Fixed Auto-Updater
 			3.0.1
 				- Fixed Ult Spamming Errors
 				- Added new Ultimate Logics
@@ -151,7 +152,7 @@ if myHero.charName ~= "Pantheon" then return end
 local autoupdateenabled = true
 local UPDATE_SCRIPT_NAME = "Pantheon - The Artisan of War"
 local UPDATE_HOST = "raw.github.com"
-local UPDATE_PATH = "/RoachxD/BoL_Scripts/master/Pantheon%20-%20The%20Artisan%20of%20War.lua"
+local UPDATE_PATH = "/RoachxD/BoL_Scripts/master/Pantheon%20-%20The%20Artisan%20of%20War.lua?chunk="..math.random(1, 1000)
 local UPDATE_FILE_PATH = SCRIPT_PATH..GetCurrentEnv().FILE_NAME
 local UPDATE_URL = "https://"..UPDATE_HOST..UPDATE_PATH
 
