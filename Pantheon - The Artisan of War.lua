@@ -1,4 +1,4 @@
-local version = "3.023"
+local version = "3.024"
 --[[
 
 
@@ -27,6 +27,8 @@ local version = "3.023"
 				- Added Auto-Updater
 				- Added Anti-E / Anti-Ult Breaking for MMA / SAC
 				- Fixed Auto-Updater
+				- Fixed MMA Blocking Issues for Free Users
+				- Added Support for MMA Target Selector
 			3.0.1
 				- Fixed Ult Spamming Errors
 				- Added new Ultimate Logics
@@ -1275,8 +1277,7 @@ function Checks()
 	end
 	--- Updates & Checks if Target is Valid ---
 	--->
-		TargetSelector:update()
-		tsTarget = TargetSelector.target
+		tsTarget = GetTarget()
 		if tsTarget and tsTarget.type == "obj_AI_Hero" then
 			Target = tsTarget
 		else
@@ -1349,36 +1350,36 @@ function Checks()
 	--- Setting Cast of E ---
 	--->
 		if isChanneling("Spell3") or (isChanneling("Ult_A") or isChanneling("Ult_B") or isChanneling("Ult_C") or isChanneling("Ult_D") or isChanneling("Ult_E")) then
-			if AutoCarry then 
-				if AutoCarry.MainMenu ~= nil then
+			if _G.AutoCarry then 
+				if _G.AutoCarry.MainMenu ~= nil then
 						if AutoCarry.CanAttack ~= nil then
 							_G.AutoCarry.CanAttack = false
 							_G.AutoCarry.CanMove = false
 						end
-				elseif AutoCarry.Keys ~= nil then
-					if AutoCarry.MyHero ~= nil then
+				elseif _G.AutoCarry.Keys ~= nil then
+					if _G.AutoCarry.MyHero ~= nil then
 						_G.AutoCarry.MyHero:MovementEnabled(false)
 						_G.AutoCarry.MyHero:AttacksEnabled(false)
 					end
 				end
-			elseif MMA_Loaded then
+			elseif _G.MMA_Loaded then
 				_G.MMA_AttackAvailable = false
 				_G.MMA_AbleToMove = false
 			end
 		else
-			if AutoCarry then 
-				if AutoCarry.MainMenu ~= nil then
-						if AutoCarry.CanAttack ~= nil then
+			if _G.AutoCarry then 
+				if _G.AutoCarry.MainMenu ~= nil then
+						if _G.AutoCarry.CanAttack ~= nil then
 							_G.AutoCarry.CanAttack = true
 							_G.AutoCarry.CanMove = true
 						end
-				elseif AutoCarry.Keys ~= nil then
-					if AutoCarry.MyHero ~= nil then
+				elseif _G.AutoCarry.Keys ~= nil then
+					if _G.AutoCarry.MyHero ~= nil then
 						_G.AutoCarry.MyHero:MovementEnabled(true)
 						_G.AutoCarry.MyHero:AttacksEnabled(true)
 					end
 				end
-			elseif MMA_Loaded then
+			elseif _G.MMA_Loaded then
 				_G.MMA_AttackAvailable = true
 				_G.MMA_AbleToMove = true
 			end
@@ -1425,3 +1426,12 @@ function isLow(Name)
 	--- Check Potions MP ---
 end
 -- / isLow Function / --
+
+-- / GetTarget Function / --
+function GetTarget()
+    if _G.MMA_Target ~= nil and _G.MMA_Target.type:lower() == "obj_ai_hero" then return _G.MMA_Target end
+	
+    TargetSelector:update()
+    return TargetSelector.target
+end
+-- / GetTarget Function / --
