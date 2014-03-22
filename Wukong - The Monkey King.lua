@@ -1,4 +1,4 @@
-local version = "2.057"
+local version = "2.06"
 --[[
 
 
@@ -10,12 +10,19 @@ local version = "2.057"
 			 `8b8' `8d8'  ~Y8888P' YP   YD  `Y88P'  VP   V8P  Y888P
 
 
-		Script - Wukong - The Monkey King 2.0.5 by Roach
+		Script - Wukong - The Monkey King 2.0.6 by Roach
 
 		Dependency: 
 			- Nothing
 
 		Changelog:
+			2.0.6
+				- Added Support for SAC and MMA Target Selector
+				- Added Summoner Spells as an Exception at Blocking Packets while Wukong is Channeling Ult (VIP USERS)
+				- Changed Harass Menu
+				- Indented better the Script
+				- Fixed Harass Bug while not Using W to Escape
+				- Improved Orbwalker
 			2.0.5
 				- Added Auto-Decoy Spells
 				- Fixed Ult not Casting
@@ -122,7 +129,7 @@ if autoupdateenabled then
 			end
 
 			if ServerVersion ~= nil and tonumber(ServerVersion) ~= nil and tonumber(ServerVersion) > tonumber(version) then
-				DownloadFile(UPDATE_URL.."?nocache"..myHero.charName..os.clock(), UPDATE_FILE_PATH, function () print("<font color=\"#FF0000\"> >> "..UPDATE_SCRIPT_NAME..": successfully updated. Reload (double F9) Please.</font>") end)     
+				DownloadFile(UPDATE_URL.."?nocache"..myHero.charName..os.clock(), UPDATE_FILE_PATH, function () print("<font color=\"#FF0000\"> >> "..UPDATE_SCRIPT_NAME..": successfully updated. Reload (double F9) Please.</font>") end)
 			elseif ServerVersion then
 				print("<font color=\"#FF0000\"> >> "..UPDATE_SCRIPT_NAME..": You have got the latest version of the script.</font>")
 			end		
@@ -138,7 +145,7 @@ function OnLoad()
 	--->
 		Variables()
 		WukongMenu()
-		PrintChat("<font color='#FF0000'> >> "..UPDATE_SCRIPT_NAME.." 2.0.5 Loaded <<</font>")
+		PrintChat("<font color='#FF0000'> >> "..UPDATE_SCRIPT_NAME.." 2.0.6 Loaded <<</font>")
 	---<
 end
 -- / Loading Function / --
@@ -329,27 +336,27 @@ function Variables()
 		JungleMobs = {}
 		JungleFocusMobs = {}
 		priorityTable = {
-	    	AP = {
-	        	"Annie", "Ahri", "Akali", "Anivia", "Annie", "Brand", "Cassiopeia", "Diana", "Evelynn", "FiddleSticks", "Fizz", "Gragas", "Heimerdinger", "Karthus",
-	        	"Kassadin", "Katarina", "Kayle", "Kennen", "Leblanc", "Lissandra", "Lux", "Malzahar", "Mordekaiser", "Morgana", "Nidalee", "Orianna",
-	        	"Ryze", "Sion", "Swain", "Syndra", "Teemo", "TwistedFate", "Veigar", "Viktor", "Vladimir", "Xerath", "Ziggs", "Zyra",
-	        },
-	    	Support = {
-	        	"Alistar", "Blitzcrank", "Janna", "Karma", "Leona", "Lulu", "Nami", "Nunu", "Sona", "Soraka", "Taric", "Thresh", "Zilean",
-	        },
-	    	Tank = {
-	        	"Amumu", "Chogath", "DrMundo", "Galio", "Hecarim", "Malphite", "Maokai", "Nasus", "Rammus", "Sejuani", "Nautilus", "Shen", "Singed", "Skarner", "Volibear",
-	        	"Warwick", "Yorick", "Zac",
-	        },
-	    	AD_Carry = {
-	        	"Ashe", "Caitlyn", "Corki", "Draven", "Ezreal", "Graves", "Jayce", "Jinx", "KogMaw", "Lucian", "MasterYi", "MissFortune", "Pantheon", "Quinn", "Shaco", "Sivir",
-	        	"Talon","Tryndamere", "Tristana", "Twitch", "Urgot", "Varus", "Vayne", "Yasuo","Zed", 
-	        },
-	    	Bruiser = {
-	        	"Aatrox", "Darius", "Elise", "Fiora", "Gangplank", "Garen", "Irelia", "JarvanIV", "Jax", "Khazix", "LeeSin", "Nocturne", "Olaf", "Poppy",
-	        	"Renekton", "Rengar", "Riven", "Rumble", "Shyvana", "Trundle", "Udyr", "Vi", "MonkeyKing", "XinZhao",
-	        },
-        }
+			AP = {
+				"Annie", "Ahri", "Akali", "Anivia", "Annie", "Brand", "Cassiopeia", "Diana", "Evelynn", "FiddleSticks", "Fizz", "Gragas", "Heimerdinger", "Karthus",
+				"Kassadin", "Katarina", "Kayle", "Kennen", "Leblanc", "Lissandra", "Lux", "Malzahar", "Mordekaiser", "Morgana", "Nidalee", "Orianna",
+				"Ryze", "Sion", "Swain", "Syndra", "Teemo", "TwistedFate", "Veigar", "Viktor", "Vladimir", "Xerath", "Ziggs", "Zyra",
+			},
+			Support = {
+				"Alistar", "Blitzcrank", "Janna", "Karma", "Leona", "Lulu", "Nami", "Nunu", "Sona", "Soraka", "Taric", "Thresh", "Zilean",
+			},
+			Tank = {
+				"Amumu", "Chogath", "DrMundo", "Galio", "Hecarim", "Malphite", "Maokai", "Nasus", "Rammus", "Sejuani", "Nautilus", "Shen", "Singed", "Skarner", "Volibear",
+				"Warwick", "Yorick", "Zac",
+			},
+			AD_Carry = {
+				"Ashe", "Caitlyn", "Corki", "Draven", "Ezreal", "Graves", "Jayce", "Jinx", "KogMaw", "Lucian", "MasterYi", "MissFortune", "Pantheon", "Quinn", "Shaco", "Sivir",
+				"Talon","Tryndamere", "Tristana", "Twitch", "Urgot", "Varus", "Vayne", "Yasuo","Zed", 
+			},
+			Bruiser = {
+				"Aatrox", "Darius", "Elise", "Fiora", "Gangplank", "Garen", "Irelia", "JarvanIV", "Jax", "Khazix", "LeeSin", "Nocturne", "Olaf", "Poppy",
+				"Renekton", "Rengar", "Riven", "Rumble", "Shyvana", "Trundle", "Udyr", "Vi", "MonkeyKing", "XinZhao",
+			},
+		}
 		if TTMAP then --
 			FocusJungleNames = {
 				["TT_NWraith1.1.1"] = true,
@@ -447,7 +454,7 @@ function WukongMenu()
 		---<
 		---> Harass Menu
 		WukongMenu:addSubMenu("["..myHero.charName.." - Harass Settings]", "harass")
-			WukongMenu.harass:addParam("hMode", "Harass Mode",SCRIPT_PARAM_SLICE, 1, 1, 3, 0)
+			WukongMenu.harass:addParam("hMode", "Harass Mode", SCRIPT_PARAM_LIST, 1, { "E+Q+W", "E+W", "Q+E+W" })
 			WukongMenu.harass:addParam("harassKey", "Harass Hotkey (T)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("T"))
 			WukongMenu.harass:addParam("wEscape", "Use "..SkillW.name.." (W) after Harass", SCRIPT_PARAM_ONOFF, true)
 			WukongMenu.harass:addParam("qharass", "Always "..SkillQ.name.." (Q)", SCRIPT_PARAM_ONOFF, true)
@@ -528,13 +535,13 @@ function WukongMenu()
 		---<
 		---> Arrange Priorities
 			if heroManager.iCount < 10 then -- borrowed from Sidas Auto Carry, modified to 3v3
-       			PrintChat(" >> Too few champions to arrange priority")
+	   			PrintChat(" >> Too few champions to arrange priority")
 			elseif heroManager.iCount == 6 and TTMAP then
 				ArrangeTTPriorities()
-    		else
-        		ArrangePriorities()
-    		end
-    	---<
+			else
+				ArrangePriorities()
+			end
+		---<
 	---<
 	--- Main Menu ---
 end
@@ -596,6 +603,9 @@ function HarassCombo()
 						if not SkillE.ready then CastQ(Target) end
 						if not SkillQ.ready and not SkillE.ready then CastSpell(_W) end
 					end
+				else
+					CastE(Target)
+					if not SkillE.ready then CastQ(Target) end
 				end
 			end
 			--- Harass Mode 1 ---
@@ -606,6 +616,8 @@ function HarassCombo()
 						CastE(Target)
 						if not SkillE.ready then CastSpell(_W) end
 					end
+				else
+					CastE(Target)
 				end
 			end
 			--- Harass Mode 2 ---
@@ -617,6 +629,9 @@ function HarassCombo()
 						if not SkillQ.ready then CastE(Target) end
 						if not SkillQ.ready and not SkillE.ready then CastSpell(_W) end
 					end
+				else
+					CastQ(Target)
+					if not SkillQ.ready then CastE(Target) end
 				end
 			end
 			--- Harass Mode 3 ---
@@ -901,21 +916,21 @@ function DamageCalculation()
 				dfgDmg, bftDmg, hxgDmg, bwcDmg, tmtDmg, hdrDmg, iDmg = 0, 0, 0, 0, 0, 0, 0
 				qDmg =		(SkillQ.ready and	getDmg("Q",			enemy, myHero) or 0)
 				eDmg =		(SkillE.ready and	getDmg("E",			enemy, myHero) or 0)
-            	rDmg =							getDmg("R",			enemy, myHero) * 4
+				rDmg =							getDmg("R",			enemy, myHero) * 4
 				dfgDmg =	(dfgSlot and		getDmg("DFG",		enemy, myHero) or 0)
 				bftdmg =	(bftSlot and		getDmg("BLACKFIRE",	enemy, myHero) or 0)
-        	    hxgDmg =	(hxgSlot and		getDmg("HXG",		enemy, myHero) or 0)
-            	bwcDmg =	(bwcSlot and		getDmg("BWC",		enemy, myHero) or 0)
+				hxgDmg =	(hxgSlot and		getDmg("HXG",		enemy, myHero) or 0)
+				bwcDmg =	(bwcSlot and		getDmg("BWC",		enemy, myHero) or 0)
 				tmtDmg =	(tmtSlot and		getDmg("TIAMAT",	enemy, myHero) or 0)
 				hdrDmg =	(tmtSlot and		getDmg("HYDRA",		enemy, myHero) or 0)
-            	iDmg =		(ignite and			getDmg("IGNITE",	enemy, myHero) or 0)
+				iDmg =		(ignite and			getDmg("IGNITE",	enemy, myHero) or 0)
 				
-            	onspellDmg = bftDmg
-            	itemsDmg = dfgDmg + hxgDmg + bwcDmg + tmtDmg + hdrDmg + iDmg + onspellDmg
+				onspellDmg = bftDmg
+				itemsDmg = dfgDmg + hxgDmg + bwcDmg + tmtDmg + hdrDmg + iDmg + onspellDmg
 			end
 		end
-    ---<
-    --- Calculate our Damage On Enemies ---
+	---<
+	--- Calculate our Damage On Enemies ---
 end
 -- / Damage Calculation Function / --
 
@@ -949,7 +964,7 @@ end
 --- On Animation (Setting our last Animation) ---
 --->
 	function OnAnimation(unit, animationName)
-    	if unit.isMe and lastAnimation ~= animationName then 
+		if unit.isMe and lastAnimation ~= animationName then 
 			lastAnimation = animationName
 			if (animationName == "Crit" or animationName == "Spell1") and not attackCast then
 				attackCast = true
@@ -963,11 +978,11 @@ end
 --- isChanneling Function (Checks if Animation is Channeling) ---
 --->
 	function isChanneling(animationName)
-    	if lastAnimation == animationName then
-        	return true
-    	else
-        	return false
-    	end
+		if lastAnimation == animationName then
+			return true
+		else
+			return false
+		end
 	end
 ---<
 --- isChanneling Function (Checks if Animation is Channeling) ---
@@ -986,13 +1001,13 @@ end
 --- Arrange Priorities 5v5 ---
 --->
 	function ArrangePriorities()
-    	for i, enemy in pairs(enemyHeroes) do
-        	SetPriority(priorityTable.AD_Carry, enemy, 1)
-        	SetPriority(priorityTable.AP, enemy, 2)
-        	SetPriority(priorityTable.Support, enemy, 3)
-        	SetPriority(priorityTable.Bruiser, enemy, 4)
-        	SetPriority(priorityTable.Tank, enemy, 5)
-    	end
+		for i, enemy in pairs(enemyHeroes) do
+			SetPriority(priorityTable.AD_Carry, enemy, 1)
+			SetPriority(priorityTable.AP, enemy, 2)
+			SetPriority(priorityTable.Support, enemy, 3)
+			SetPriority(priorityTable.Bruiser, enemy, 4)
+			SetPriority(priorityTable.Tank, enemy, 5)
+		end
 	end
 ---<
 --- Arrange Priorities 5v5 ---
@@ -1001,10 +1016,10 @@ end
 	function ArrangeTTPriorities()
 		for i, enemy in pairs(enemyHeroes) do
 			SetPriority(priorityTable.AD_Carry, enemy, 1)
-        	SetPriority(priorityTable.AP, enemy, 1)
-        	SetPriority(priorityTable.Support, enemy, 2)
-        	SetPriority(priorityTable.Bruiser, enemy, 2)
-        	SetPriority(priorityTable.Tank, enemy, 3)
+			SetPriority(priorityTable.AP, enemy, 1)
+			SetPriority(priorityTable.Support, enemy, 2)
+			SetPriority(priorityTable.Bruiser, enemy, 2)
+			SetPriority(priorityTable.Tank, enemy, 3)
 		end
 	end
 ---<
@@ -1012,11 +1027,11 @@ end
 --- Set Priorities ---
 --->
 	function SetPriority(table, hero, priority)
-    	for i=1, #table, 1 do
-        	if hero.charName:find(table[i]) ~= nil then
-            	TS_SetHeroPriority(priority, hero.charName)
-        	end
-    	end
+		for i=1, #table, 1 do
+			if hero.charName:find(table[i]) ~= nil then
+				TS_SetHeroPriority(priority, hero.charName)
+			end
+		end
 	end
 ---<
 --- Set Priorities ---
@@ -1029,7 +1044,7 @@ function OnSendPacket(packet)
 		for _, enemy in pairs(enemyHeroes) do
 			if isChanneling("Spell4") then
 				local packet = Packet(packet)
-				if packet:get('name') == 'S_CAST' and packet:get('sourceNetworkId') == myHero.networkID then
+				if packet:get('name') == 'S_CAST' and (packet:get('spellId') ~= SUMMONER_1 and packet:get('spellId') ~= SUMMONER_2) and packet:get('sourceNetworkId') == myHero.networkID then
 					if enemy and GetDistance(enemy) < SkillR.range then
 						packet:block()
 					end
@@ -1059,7 +1074,7 @@ function OnCreateObj(obj)
 			if FocusJungleNames[obj.name] then
 				table.insert(JungleFocusMobs, obj)
 			elseif JungleMobNames[obj.name] then
-        		table.insert(JungleMobs, obj)
+				table.insert(JungleMobs, obj)
 			end
 			if not Decoy.spellParticle.valid and obj.team ~= player.team and obj.name == Decoy.particleFound then
 				Decoy.spellParticle = obj
@@ -1154,14 +1169,14 @@ end
 --- Check When Its Time To Attack ---
 --->
 	function TimeToAttack()
-    	return (GetTickCount() + GetLatency()/2 > lastAttack + lastAttackCD)
+		return (GetTickCount() + GetLatency()*0.5 > lastAttack + lastAttackCD)
 	end
 ---<
 --- Check When Its Time To Attack ---
 --- Prevent AA Canceling ---
 --->
 	function heroCanMove()
-		return (GetTickCount() + GetLatency()/2 > lastAttack + lastWindUpTime + 20)
+		return (GetTickCount() + GetLatency()*0.5 > lastAttack + lastWindUpTime + 20)
 	end
 ---<
 --- Prevent AA Canceling ---
@@ -1170,8 +1185,12 @@ end
 	function moveToCursor()
 		if GetDistance(mousePos) > 1 or lastAnimation == "Idle1" then
 			local moveToPos = myHero + (Vector(mousePos) - myHero):normalized()*300
-			myHero:MoveTo(moveToPos.x, moveToPos.z)
-    	end        
+			if not VIP_USER then
+				myHero:MoveTo(moveToPos.x, moveToPos.z)
+			else
+				Packet('S_MOVE', {x = moveToPos.x, y = moveToPos.z}):send()
+			end
+		end
 	end
 ---<
 --- Move to Mouse ---
@@ -1329,7 +1348,7 @@ function Checks()
 	--- Updates & Checks if Target is Valid ---
 	--->
 		TargetSelector:update()
-		tsTarget = TargetSelector.target
+		tsTarget = GetTarget()
 		if tsTarget and tsTarget.type == "obj_AI_Hero" then
 			Target = tsTarget
 		else
@@ -1405,35 +1424,6 @@ function Checks()
 		if WukongMenu.combo.mecUlt then
 			if CountEnemyHeroInRange(SkillR.range) >=  WukongMenu.combo.amecUlt then
 				CastR(Target)
-			end
-		end
-		if isChanneling("Spell4") or SkillR.castingUlt then
-			if AutoCarry then 
-				if AutoCarry.MainMenu ~= nil then
-						if AutoCarry.CanAttack ~= nil then
-							_G.AutoCarry.CanAttack = false
-						end
-				elseif AutoCarry.Keys ~= nil then
-					if AutoCarry.MyHero ~= nil then
-						_G.AutoCarry.MyHero:AttacksEnabled(false)
-					end
-				end
-			elseif MMA_Loaded then
-				_G.MMA_AttackAvailable = false
-			end
-		else
-			if AutoCarry then 
-				if AutoCarry.MainMenu ~= nil then
-						if AutoCarry.CanAttack ~= nil then
-							_G.AutoCarry.CanAttack = true
-						end
-				elseif AutoCarry.Keys ~= nil then
-					if AutoCarry.MyHero ~= nil then
-						_G.AutoCarry.MyHero:AttacksEnabled(true)
-					end
-				end
-			elseif MMA_Loaded then
-				_G.MMA_AttackAvailable = true
 			end
 		end
 	---<
@@ -1581,3 +1571,14 @@ function isLow(Name)
 	--- Check Potions MP ---
 end
 -- / isLow Function / --
+
+-- / GetTarget Function / --
+function GetTarget()
+	TargetSelector:update()
+
+	if _G.MMA_Target ~= nil and _G.MMA_Target.type:lower() == "obj_ai_hero" then return _G.MMA_Target end
+	if _G.AutoCarry and _G.AutoCarry.Crosshair and _G.AutoCarry.Attack_Crosshair and _G.AutoCarry.Attack_Crosshair.target and _G.AutoCarry.Attack_Crosshair.target.type == myHero.type then return _G.AutoCarry.Attack_Crosshair.target end
+
+	return TargetSelector.target
+end
+-- / GetTarget Function / --
