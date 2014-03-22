@@ -1,4 +1,4 @@
-local version = "3.024"
+local version = "3.03"
 --[[
 
 
@@ -10,12 +10,18 @@ local version = "3.024"
 			88      YP   YP VP   V8P    YP    YP   YP Y88888P  `Y88P'  VP   V8P
 
 
-		Script - Pantheon - The Artisan of War 3.0.2 by Roach
+		Script - Pantheon - The Artisan of War 3.0.3 by Roach
 
 		Dependency / Requirements: 
 			- Nothing
 
 		Changelog:
+			3.0.3
+				- Added Support for SAC Target Selector
+				- Fixed MMA Breaking E / Ult Channeling
+				- Added Summoner Spells as an Exception at Blocking Packets while Panth is Channeling E / Ult (VIP USERS)
+				- Changed Harass Menu
+				- Indented better the Script
 			3.0.2
 				- Removed MEC Ult (because many people cast Ult Manually and it was causing me some problems)
 				- Added new logics for Packets and Orbwalker regarding Ult
@@ -173,7 +179,7 @@ if autoupdateenabled then
 			end
 
 			if ServerVersion ~= nil and tonumber(ServerVersion) ~= nil and tonumber(ServerVersion) > tonumber(version) then
-				DownloadFile(UPDATE_URL.."?nocache"..myHero.charName..os.clock(), UPDATE_FILE_PATH, function () print("<font color=\"#FF0000\"> >> "..UPDATE_SCRIPT_NAME..": successfully updated. Reload (double F9) Please.</font>") end)     
+				DownloadFile(UPDATE_URL.."?nocache"..myHero.charName..os.clock(), UPDATE_FILE_PATH, function () print("<font color=\"#FF0000\"> >> "..UPDATE_SCRIPT_NAME..": successfully updated. Reload (double F9) Please.</font>") end)
 			elseif ServerVersion then
 				print("<font color=\"#FF0000\"> >> "..UPDATE_SCRIPT_NAME..": You have got the latest version of the script.</font>")
 			end		
@@ -189,7 +195,7 @@ function OnLoad()
 	--->
 		Variables()
 		PanthMenu()
-		PrintChat("<font color='#FF0000'> >> Pantheon - The Artisan of War 3.0.2 Loaded <<</font>")
+		PrintChat("<font color='#FF0000'> >> Pantheon - The Artisan of War 3.0.3 Loaded <<</font>")
 	---<
 end
 -- / Loading Function / --
@@ -311,27 +317,27 @@ function Variables()
 		JungleMobs = {}
 		JungleFocusMobs = {}
 		priorityTable = {
-	    	AP = {
-	        	"Annie", "Ahri", "Akali", "Anivia", "Annie", "Brand", "Cassiopeia", "Diana", "Evelynn", "FiddleSticks", "Fizz", "Gragas", "Heimerdinger", "Karthus",
-	        	"Kassadin", "Katarina", "Kayle", "Kennen", "Leblanc", "Lissandra", "Lux", "Malzahar", "Mordekaiser", "Morgana", "Nidalee", "Orianna",
-	        	"Ryze", "Sion", "Swain", "Syndra", "Teemo", "TwistedFate", "Veigar", "Viktor", "Vladimir", "Xerath", "Ziggs", "Zyra",
-	        },
-	    	Support = {
-	        	"Alistar", "Blitzcrank", "Janna", "Karma", "Leona", "Lulu", "Nami", "Nunu", "Sona", "Soraka", "Taric", "Thresh", "Zilean",
-	        },
-	    	Tank = {
-	        	"Amumu", "Chogath", "DrMundo", "Galio", "Hecarim", "Malphite", "Maokai", "Nasus", "Rammus", "Sejuani", "Nautilus", "Shen", "Singed", "Skarner", "Volibear",
-	        	"Warwick", "Yorick", "Zac",
-	        },
-	    	AD_Carry = {
-	        	"Ashe", "Caitlyn", "Corki", "Draven", "Ezreal", "Graves", "Jayce", "Jinx", "KogMaw", "Lucian", "MasterYi", "MissFortune", "Pantheon", "Quinn", "Shaco", "Sivir",
-	        	"Talon","Tryndamere", "Tristana", "Twitch", "Urgot", "Varus", "Vayne", "Yasuo","Zed", 
-	        },
-	    	Bruiser = {
-	        	"Aatrox", "Darius", "Elise", "Fiora", "Gangplank", "Garen", "Irelia", "JarvanIV", "Jax", "Khazix", "LeeSin", "Nocturne", "Olaf", "Poppy",
-	        	"Renekton", "Rengar", "Riven", "Rumble", "Shyvana", "Trundle", "Udyr", "Vi", "MonkeyKing", "XinZhao",
-	        },
-        }
+			AP = {
+				"Annie", "Ahri", "Akali", "Anivia", "Annie", "Brand", "Cassiopeia", "Diana", "Evelynn", "FiddleSticks", "Fizz", "Gragas", "Heimerdinger", "Karthus",
+				"Kassadin", "Katarina", "Kayle", "Kennen", "Leblanc", "Lissandra", "Lux", "Malzahar", "Mordekaiser", "Morgana", "Nidalee", "Orianna",
+				"Ryze", "Sion", "Swain", "Syndra", "Teemo", "TwistedFate", "Veigar", "Viktor", "Vladimir", "Xerath", "Ziggs", "Zyra",
+			},
+			Support = {
+				"Alistar", "Blitzcrank", "Janna", "Karma", "Leona", "Lulu", "Nami", "Nunu", "Sona", "Soraka", "Taric", "Thresh", "Zilean",
+			},
+			Tank = {
+				"Amumu", "Chogath", "DrMundo", "Galio", "Hecarim", "Malphite", "Maokai", "Nasus", "Rammus", "Sejuani", "Nautilus", "Shen", "Singed", "Skarner", "Volibear",
+				"Warwick", "Yorick", "Zac",
+			},
+			AD_Carry = {
+				"Ashe", "Caitlyn", "Corki", "Draven", "Ezreal", "Graves", "Jayce", "Jinx", "KogMaw", "Lucian", "MasterYi", "MissFortune", "Pantheon", "Quinn", "Shaco", "Sivir",
+				"Talon","Tryndamere", "Tristana", "Twitch", "Urgot", "Varus", "Vayne", "Yasuo","Zed", 
+			},
+			Bruiser = {
+				"Aatrox", "Darius", "Elise", "Fiora", "Gangplank", "Garen", "Irelia", "JarvanIV", "Jax", "Khazix", "LeeSin", "Nocturne", "Olaf", "Poppy",
+				"Renekton", "Rengar", "Riven", "Rumble", "Shyvana", "Trundle", "Udyr", "Vi", "MonkeyKing", "XinZhao",
+			},
+		}
 		if TTMAP then --
 			FocusJungleNames = {
 				["TT_NWraith1.1.1"] = true,
@@ -424,7 +430,7 @@ function PanthMenu()
 		---<
 		---> Harass Menu
 		PanthMenu:addSubMenu("["..myHero.charName.." - Harass Settings]", "harass")
-			PanthMenu.harass:addParam("hMode", "Harass Mode",SCRIPT_PARAM_SLICE, 1, 1, 2, 0)
+			PanthMenu.harass:addParam("hMode", "Harass Mode", SCRIPT_PARAM_LIST, 1, { "Q", "W+E" })
 			PanthMenu.harass:addParam("harassKey", "Harass Hotkey (T)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("T"))
 			PanthMenu.harass:addParam("qharass", "Always "..SkillQ.name.." (Q)", SCRIPT_PARAM_ONOFF, true)
 			PanthMenu.harass:addParam("harassOrbwalk", "Orbwalk in Harass", SCRIPT_PARAM_ONOFF, true)
@@ -490,13 +496,13 @@ function PanthMenu()
 		---<
 		---> Arrange Priorities
 			if heroManager.iCount < 10 then -- borrowed from Sidas Auto Carry, modified to 3v3
-       			PrintChat(" >> Too few champions to arrange priority")
+	   			PrintChat(" >> Too few champions to arrange priority")
 			elseif heroManager.iCount == 6 and TTMAP then
 				ArrangeTTPriorities()
-    		else
-        		ArrangePriorities()
-    		end
-    	---<
+			else
+				ArrangePriorities()
+			end
+		---<
 	---<
 	--- Main Menu ---
 end
@@ -838,23 +844,23 @@ function DamageCalculation()
 				qDmg =		(SkillQ.ready and	getDmg("Q",			enemy, myHero)		or 0)
 				wDmg =		(SkillW.ready and	getDmg("W",			enemy, myHero)		or 0)
 				eDmg =		(SkillE.ready and	getDmg("E",			enemy, myHero, 3)	or 0)
-            	rDmg =		(SkillR.ready and	getDmg("R",			enemy, myHero)		or 0)
+				rDmg =		(SkillR.ready and	getDmg("R",			enemy, myHero)		or 0)
 				dfgDmg =	(dfgSlot and		getDmg("DFG",		enemy, myHero)		or 0)
 				bftdmg =	(bftSlot and		getDmg("BLACKFIRE",	enemy, myHero)		or 0)
-        	    hxgDmg =	(hxgSlot and		getDmg("HXG",		enemy, myHero)		or 0)
-            	bwcDmg =	(bwcSlot and		getDmg("BWC",		enemy, myHero)		or 0)
+				hxgDmg =	(hxgSlot and		getDmg("HXG",		enemy, myHero)		or 0)
+				bwcDmg =	(bwcSlot and		getDmg("BWC",		enemy, myHero)		or 0)
 				tmtDmg =	(tmtSlot and		getDmg("TIAMAT",	enemy, myHero)		or 0)
 				hdrDmg =	(tmtSlot and		getDmg("HYDRA",		enemy, myHero)		or 0)
-            	iDmg =		(ignite and			getDmg("IGNITE",	enemy, myHero)		or 0)
+				iDmg =		(ignite and			getDmg("IGNITE",	enemy, myHero)		or 0)
 				
-            	onspellDmg = bftDmg
-            	itemsDmg = dfgDmg + hxgDmg + bwcDmg + tmtDmg + hdrDmg + iDmg + onspellDmg
-    ---<
-    --- Calculate our Damage On Enemies ---
-    --- Setting KillText Color & Text ---
-    --->
-    			if enemy.health > (qDmg + eDmg + wDmg + itemsDmg) then
-    				KillText[i] = 1
+				onspellDmg = bftDmg
+				itemsDmg = dfgDmg + hxgDmg + bwcDmg + tmtDmg + hdrDmg + iDmg + onspellDmg
+	---<
+	--- Calculate our Damage On Enemies ---
+	--- Setting KillText Color & Text ---
+	--->
+				if enemy.health > (qDmg + eDmg + wDmg + itemsDmg) then
+					KillText[i] = 1
 				elseif enemy.health <= qDmg then
 					if SkillQ.ready then
 						KillText[i] = 2
@@ -924,7 +930,7 @@ end
 --- On Animation (Setting our last Animation) ---
 --->
 	function OnAnimation(unit, animationName)
-    	if unit.isMe and lastAnimation ~= animationName then 
+		if unit.isMe and lastAnimation ~= animationName then 
 			lastAnimation = animationName
 		end
 	end
@@ -933,11 +939,11 @@ end
 --- isChanneling Function (Checks if Animation is Channeling) ---
 --->
 	function isChanneling(animationName)
-    	if lastAnimation == animationName then
-        	return true
-    	else
-        	return false
-    	end
+		if lastAnimation == animationName then
+			return true
+		else
+			return false
+		end
 	end
 ---<
 --- isChanneling Function (Checks if Animation is Channeling) ---
@@ -956,13 +962,13 @@ end
 --- Arrange Priorities 5v5 ---
 --->
 	function ArrangePriorities()
-    	for i, enemy in pairs(enemyHeroes) do
-        	SetPriority(priorityTable.AD_Carry, enemy, 1)
-        	SetPriority(priorityTable.AP, enemy, 2)
-        	SetPriority(priorityTable.Support, enemy, 3)
-        	SetPriority(priorityTable.Bruiser, enemy, 4)
-        	SetPriority(priorityTable.Tank, enemy, 5)
-    	end
+		for i, enemy in pairs(enemyHeroes) do
+			SetPriority(priorityTable.AD_Carry, enemy, 1)
+			SetPriority(priorityTable.AP, enemy, 2)
+			SetPriority(priorityTable.Support, enemy, 3)
+			SetPriority(priorityTable.Bruiser, enemy, 4)
+			SetPriority(priorityTable.Tank, enemy, 5)
+		end
 	end
 ---<
 --- Arrange Priorities 5v5 ---
@@ -971,10 +977,10 @@ end
 	function ArrangeTTPriorities()
 		for i, enemy in pairs(enemyHeroes) do
 			SetPriority(priorityTable.AD_Carry, enemy, 1)
-        	SetPriority(priorityTable.AP, enemy, 1)
-        	SetPriority(priorityTable.Support, enemy, 2)
-        	SetPriority(priorityTable.Bruiser, enemy, 2)
-        	SetPriority(priorityTable.Tank, enemy, 3)
+			SetPriority(priorityTable.AP, enemy, 1)
+			SetPriority(priorityTable.Support, enemy, 2)
+			SetPriority(priorityTable.Bruiser, enemy, 2)
+			SetPriority(priorityTable.Tank, enemy, 3)
 		end
 	end
 ---<
@@ -982,11 +988,11 @@ end
 --- Set Priorities ---
 --->
 	function SetPriority(table, hero, priority)
-    	for i=1, #table, 1 do
-        	if hero.charName:find(table[i]) ~= nil then
-            	TS_SetHeroPriority(priority, hero.charName)
-        	end
-    	end
+		for i=1, #table, 1 do
+			if hero.charName:find(table[i]) ~= nil then
+				TS_SetHeroPriority(priority, hero.charName)
+			end
+		end
 	end
 ---<
 --- Set Priorities ---
@@ -998,7 +1004,7 @@ function OnSendPacket(packet)
 	--->
 		if isChanneling("Spell3") or (isChanneling("Ult_A") or isChanneling("Ult_B") or isChanneling("Ult_C") or isChanneling("Ult_D") or isChanneling("Ult_E")) then
 			local packet = Packet(packet)
-			if packet:get('name') == 'S_MOVE' or packet:get('name') == 'S_CAST' and packet:get('sourceNetworkId') == myHero.networkID then
+			if packet:get('name') == 'S_MOVE' or packet:get('name') == 'S_CAST' and (packet:get('spellId') ~= SUMMONER_1 and packet:get('spellId') ~= SUMMONER_2) and packet:get('sourceNetworkId') == myHero.networkID then
 				packet:block()
 			end
 		end
@@ -1025,7 +1031,7 @@ function OnCreateObj(obj)
 			if FocusJungleNames[obj.name] then
 				table.insert(JungleFocusMobs, obj)
 			elseif JungleMobNames[obj.name] then
-        		table.insert(JungleMobs, obj)
+				table.insert(JungleMobs, obj)
 			end
 		end
 	---<
@@ -1096,9 +1102,9 @@ function OnDraw()
 	--- Draw Enemy Target ---
 		if PanthMenu.drawing.drawText then
 			for i = 1, heroManager.iCount do
-        		local enemy = heroManager:GetHero(i)
-        		if ValidTarget(enemy) then
-        			local barPos = WorldToScreen(D3DXVECTOR3(enemy.x, enemy.y, enemy.z)) --(Credit to Zikkah)
+				local enemy = heroManager:GetHero(i)
+				if ValidTarget(enemy) then
+					local barPos = WorldToScreen(D3DXVECTOR3(enemy.x, enemy.y, enemy.z)) --(Credit to Zikkah)
 					local PosX = barPos.x - 35
 					local PosY = barPos.y - 10
 					
@@ -1128,7 +1134,7 @@ end
 --- Check When Its Time To Attack ---
 --->
 	function TimeToAttack()
-    	return (GetTickCount() + GetLatency()/2 > lastAttack + lastAttackCD)
+		return (GetTickCount() + GetLatency()/2 > lastAttack + lastAttackCD)
 	end
 ---<
 --- Check When Its Time To Attack ---
@@ -1145,7 +1151,7 @@ end
 		if GetDistance(mousePos) > 1 or lastAnimation == "Idle1" then
 			local moveToPos = myHero + (Vector(mousePos) - myHero):normalized()*300
 			myHero:MoveTo(moveToPos.x, moveToPos.z)
-    	end        
+		end		
 	end
 ---<
 --- Move to Mouse ---
@@ -1363,8 +1369,7 @@ function Checks()
 					end
 				end
 			elseif _G.MMA_Loaded then
-				_G.MMA_AttackAvailable = false
-				_G.MMA_AbleToMove = false
+				_G.MMA_Orbwalker = false
 			end
 		else
 			if _G.AutoCarry then 
@@ -1379,9 +1384,6 @@ function Checks()
 						_G.AutoCarry.MyHero:AttacksEnabled(true)
 					end
 				end
-			elseif _G.MMA_Loaded then
-				_G.MMA_AttackAvailable = true
-				_G.MMA_AbleToMove = true
 			end
 		end
 	---<
@@ -1429,9 +1431,11 @@ end
 
 -- / GetTarget Function / --
 function GetTarget()
-    if _G.MMA_Target ~= nil and _G.MMA_Target.type:lower() == "obj_ai_hero" then return _G.MMA_Target end
-	
-    TargetSelector:update()
-    return TargetSelector.target
+	TargetSelector:update()
+
+	if _G.MMA_Target ~= nil and _G.MMA_Target.type:lower() == "obj_ai_hero" then return _G.MMA_Target end
+	if _G.AutoCarry and _G.AutoCarry.Crosshair and _G.AutoCarry.Attack_Crosshair and _G.AutoCarry.Attack_Crosshair.target and _G.AutoCarry.Attack_Crosshair.target.type == myHero.type then return _G.AutoCarry.Attack_Crosshair.target end
+
+	return TargetSelector.target
 end
 -- / GetTarget Function / --
