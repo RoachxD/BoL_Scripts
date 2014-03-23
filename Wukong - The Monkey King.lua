@@ -1,4 +1,4 @@
-local version = "2.06"
+local version = "2.061"
 --[[
 
 
@@ -23,6 +23,7 @@ local version = "2.06"
 				- Indented better the Script
 				- Fixed Harass Bug while not Using W to Escape
 				- Improved Orbwalker
+				- Improved Decoy Escape
 			2.0.5
 				- Added Auto-Decoy Spells
 				- Fixed Ult not Casting
@@ -99,7 +100,7 @@ local version = "2.06"
 				- Added Animation Check
 			1.0.1
 				- First release
-			
+
 --]]
 
 -- / Hero Name Check / --
@@ -1222,7 +1223,7 @@ end
 				if unit.team ~= player.team and string.find(spell.name, "Basic") == nil then
 					avoidSpell, spellRadius, spellDelay, particleName = spellInfo(spell)
 					if avoidSpell then
-						if affectsMe(spell, spellRadius) then
+						if affectsMe(spell, spellRadius) or spell.target == myHero then
 							if particleName then
 								Decoy.particleFound = particleName
 							else
