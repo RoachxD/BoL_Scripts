@@ -1,4 +1,4 @@
-local version = "0.01"
+local version = "0.02"
 --[[
 
 
@@ -16,6 +16,7 @@ local version = "0.01"
 			- Nothing
 
 		Changelog:
+			0.02 - Fixed Ult Breaking
 			0.01 - First Release
 
 ]]
@@ -61,10 +62,10 @@ end
 local Config = nil
 local lastAnimation = nil
 local VP = VPrediction()
-local SkillQ = { speed = 2000, range =  650, bRange = 550, delay = 0.290, width =   0, ready = false }
-local SkillW = { 																	   ready = false }
-local SkillE = { speed =  500, range = 	800, 			   delay = 0.333, width = 400, ready = false }
-local SkillR = { speed =  775, range = 1400, 			   delay = 0.261, width = 100, ready = false } 
+local SkillQ = { speed = 2000, range =  650, bRange = 550, delay = 0.290, width =   0, ready = false			   }
+local SkillW = { 																	   ready = false			   }
+local SkillE = { speed =  500, range = 	800, 			   delay = 0.333, width = 400, ready = false			   }
+local SkillR = { speed =  775, range = 1400, 			   delay = 0.261, width = 100, ready = false, buff = false } 
 
 -- / OnLoad Function / --
 function OnLoad()
@@ -197,15 +198,9 @@ function OnTick()
 end
 -- / OnTick Function / --
 
--- / OnAnimation Function / --
-function OnAnimation(unit, animationName)
-	if unit.isMe and lastAnimation ~= animationName then lastAnimation = animationName end
-end
--- / OnAnimation Function / --
-
 -- / Combo Function / --
 function Combo(Target)
-	if lastAnimation ~= "Spell4" then
+	if not SkillR.buff then
 		if SkillQ.ready and Config.ComboSub.useQ and not isLowMana('Combo') then
 			CastQ(Target)
 		end
@@ -231,7 +226,7 @@ end
 
 -- / Harass Function / --
 function Harass(Target)
-	if lastAnimation ~= "Spell4" then
+	if not SkillR.buff then
 		if SkillQ.ready and Config.HarassSub.useQ and not isLowMana('Harass') then
 			CastQ(Target)
 		end
@@ -335,7 +330,7 @@ end
 
 -- / Farm Function / --
 function Farm()
-	if lastAnimation ~= "Spell4" then
+	if not SkillR.buff then
 		if Config.FarmSub.useE then
 			FarmE()
 		end
@@ -360,7 +355,7 @@ end
 
 -- / KillSteal Function / --
 function KillSteal()
-	if lastAnimation ~= "Spell4" then
+	if not SkillR.buff then
 		local Enemies = GetEnemyHeroes()
 		for i, enemy in pairs(Enemies) do
 			if ValidTarget(enemy) and not enemy.dead and GetDistance(enemy) < 1400 then
@@ -396,6 +391,22 @@ function OnDraw()
 end
 -- / OnDraw Function / --
 
+-- / OnGainBuff Function / --
+function OnGainBuff(unit, buff)
+	if unit.isMe and buff.name == "missfortunebulletsound" then
+		SkillR.buff = true
+	end
+end
+-- / OnGainBuff Function / --
+
+-- / OnLoseBuff Function / --
+function OnLoseBuff(unit, buff)
+	if unit.isMe and buff.name == "missfortunebulletsound" then
+		SkillR.buff = false
+	end
+end
+-- / OnLoseBuff Function / --
+
 -- / Check Function / --
 function Check()
 	---> Check Minions Update
@@ -416,7 +427,7 @@ function Check()
 		SkillR.ready = (myHero:CanUseSpell(_R) == READY)
 	---<
 	---> Set up Ult
-		if lastAnimation == "Spell4" then
+		if SkillR.buff then
 			if _G.AutoCarry then 
 				if _G.AutoCarry.MainMenu ~= nil then
 						if _G.AutoCarry.CanAttack ~= nil then
@@ -430,7 +441,10 @@ function Check()
 					end
 				end
 			elseif _G.MMA_Loaded then
-				_G.MMA_Orbwalker = false
+				_G.MMA_Orbwalker	= false
+				_G.MMA_HybridMode	= false
+				_G.MMA_LaneClear	= false
+				_G.MMA_LastHit		= false
 			end
 		else
 			if _G.AutoCarry then 
