@@ -652,7 +652,7 @@ end
 
 -- / GetClosestBetween Function / --
 function GetClosestBetween(point, target1, target2)
-	if GetDistance(point, target1) > GetDistance(point, target2) then return target2 end
+	if GetDistance(point, target1) > GetDistance(point, target2) then return target2
 	else return target1 end
 end
 -- / GetClosestBetween Function / --
