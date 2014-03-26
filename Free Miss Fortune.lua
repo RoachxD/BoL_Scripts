@@ -1,4 +1,4 @@
-local version = "0.03"
+local version = "0.04"
 --[[
 
 
@@ -10,12 +10,13 @@ local version = "0.03"
 			YP      88   YD Y88888P Y88888P      YP  YP  YP Y888888P `8888Y' `8888Y'      YP       `Y88P'  88   YD    YP    ~Y8888P' VP   V8P Y88888P 
 
 
-		Script - Free Miss Fortune 0.03 by Roach
+		Script - Free Miss Fortune 0.04 by Roach
 
 		Dependency: 
 			- Nothing
 
 		Changelog:
+			0.04 - Fixed Bouncing Q Casting
 			0.03 - Improved Bouncing Q
 				 - Improved Bouncing Q Logics
 			0.02 - Fixed Ult Breaking
@@ -269,7 +270,7 @@ function CastbQ(Target)
 			if minion ~= nil and GetDistance(minion) <= SkillQ.range then
 				if Target ~= nil and GetDistance(minion, Target) <= (SkillQ.range - 150) and GetQVectorAngle(minion, Target) <= 35 and SkillQ.ready then
 					for i, bminion in ipairs(EnemyMinions.objects) do
-						if GetClosestBetween(Target, bminion) == Target and bminion ~= minion then
+						if GetClosestBetween(minion, Target, bminion) == Target and bminion ~= minion then
 							Packet("S_CAST", {spellId = _Q, targetNetworkId = minion.networkID}):send()
 						end
 					end
@@ -649,7 +650,9 @@ function GetQVectorAngle(Target, bTarget)
 end
 -- / GetQVectorAngle Function / --
 
-function GetClosestBetween(target1, target2)
-	if GetDistance(target1) > GetDistance(target2) then return target2 end
+-- / GetClosestBetween Function / --
+function GetClosestBetween(point, target1, target2)
+	if GetDistance(point, target1) > GetDistance(point, target2) then return target2 end
 	else return target1 end
 end
+-- / GetClosestBetween Function / --
