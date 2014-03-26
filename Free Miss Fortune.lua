@@ -1,4 +1,4 @@
-local version = "0.02"
+local version = "0.03"
 --[[
 
 
@@ -10,12 +10,14 @@ local version = "0.02"
 			YP      88   YD Y88888P Y88888P      YP  YP  YP Y888888P `8888Y' `8888Y'      YP       `Y88P'  88   YD    YP    ~Y8888P' VP   V8P Y88888P 
 
 
-		Script - Free Miss Fortune 0.01 by Roach
+		Script - Free Miss Fortune 0.03 by Roach
 
 		Dependency: 
 			- Nothing
 
 		Changelog:
+			0.03 - Improved Bouncing Q
+				 - Improved Bouncing Q Logics
 			0.02 - Fixed Ult Breaking
 			0.01 - First Release
 
@@ -201,12 +203,12 @@ end
 -- / Combo Function / --
 function Combo(Target)
 	if not SkillR.buff then
-		if SkillQ.ready and Config.ComboSub.useQ and not isLowMana('Combo') then
-			CastQ(Target)
-		end
-
-		if SkillQ.ready and Config.ComboSub.usebQ and not isLowMana('Combo') then
-			CastbQ(Target)
+		for i, minion in ipairs(EnemyMinions.objects) do
+			if GetDistance(minion) <= SkillQ.range and GetDistance(Target, minion) < (SkillQ.range - 150) and GetQVectorAngle(minion, Target) <= 35 and SkillQ.ready and Config.HarassSub.usebQ and not isLowMana('Combo') then
+				CastbQ(Target)
+			elseif (GetDistance(Target, minion) > (SkillQ.range - 150) or not GetQVectorAngle(minion, Target) <= 35) and SkillQ.ready and Config.HarassSub.useQ and not isLowMana('Combo') then
+				CastQ(Target)
+			end
 		end
 
 		if SkillW.ready and Config.ComboSub.useW and not isLowMana('Combo') then
@@ -227,12 +229,12 @@ end
 -- / Harass Function / --
 function Harass(Target)
 	if not SkillR.buff then
-		if SkillQ.ready and Config.HarassSub.useQ and not isLowMana('Harass') then
-			CastQ(Target)
-		end
-
-		if SkillQ.ready and Config.HarassSub.usebQ and not isLowMana('Harass') then
-			CastbQ(Target)
+		for i, minion in ipairs(EnemyMinions.objects) do
+			if GetDistance(minion) <= SkillQ.range and GetDistance(Target, minion) < (SkillQ.range - 150) and GetQVectorAngle(minion, Target) <= 35 and SkillQ.ready and Config.HarassSub.usebQ and not isLowMana('Harass') then
+				CastbQ(Target)
+			elseif (GetDistance(Target, minion) > (SkillQ.range - 150) or not GetQVectorAngle(minion, Target) <= 35) and SkillQ.ready and Config.HarassSub.useQ and not isLowMana('Harass') then
+				CastQ(Target)
+			end
 		end
 
 		if SkillW.ready and Config.HarassSub.useW and not isLowMana('Harass') then
@@ -265,9 +267,12 @@ function CastbQ(Target)
 	---> Minion Q Cast
 		for i, minion in ipairs(EnemyMinions.objects) do
 			if minion ~= nil and GetDistance(minion) <= SkillQ.range then
-				local QAngle = GetQVectorAngle(minion, Target)
-				if Target ~= nil and GetDistance(minion, Target) <= (SkillQ.range - 150) and QAngle <= 35 and SkillQ.ready then
-					Packet("S_CAST", {spellId = _Q, targetNetworkId = minion.networkID}):send()
+				if Target ~= nil and GetDistance(minion, Target) <= (SkillQ.range - 150) and GetQVectorAngle(minion, Target) <= 35 and SkillQ.ready then
+					for i, bminion in ipairs(EnemyMinions.objects) do
+						if GetClosestBetween(Target, bminion) == Target and bminion ~= minion then
+							Packet("S_CAST", {spellId = _Q, targetNetworkId = minion.networkID}):send()
+						end
+					end
 				end
 			end
 		end
@@ -641,4 +646,10 @@ function GetQVectorAngle(Target, bTarget)
 	local VectorToTarget = Vector(bTarget) - Vector(Target)
 	
 	return (VectorToTarget:angle(VectorToEnemy) / 57)
+end
+-- / GetQVectorAngle Function / --
+
+function GetClosestBetween(target1, target2)
+	if GetDistance(target1) > GetDistance(target2) then return target2 end
+	else return target1 end
 end
