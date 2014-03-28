@@ -1,4 +1,4 @@
-local version = "0.04"
+local version = "0.05"
 --[[
 
 
@@ -16,6 +16,7 @@ local version = "0.04"
 			- Nothing
 
 		Changelog:
+			0.05 - Fixed Spamming Errors
 			0.04 - Fixed Bouncing Q Casting
 			0.03 - Improved Bouncing Q
 				 - Improved Bouncing Q Logics
@@ -205,9 +206,9 @@ end
 function Combo(Target)
 	if not SkillR.buff then
 		for i, minion in ipairs(EnemyMinions.objects) do
-			if GetDistance(minion) <= SkillQ.range and GetDistance(Target, minion) < (SkillQ.range - 150) and GetQVectorAngle(minion, Target) <= 35 and SkillQ.ready and Config.HarassSub.usebQ and not isLowMana('Combo') then
+			if GetDistance(minion) <= SkillQ.range and GetDistance(Target, minion) < (SkillQ.range - 150) and GetQVectorAngle(minion, Target) <= 35 and SkillQ.ready and Config.ComboSub.usebQ and not isLowMana('Combo') then
 				CastbQ(Target)
-			elseif (GetDistance(Target, minion) > (SkillQ.range - 150) or not GetQVectorAngle(minion, Target) <= 35) and SkillQ.ready and Config.HarassSub.useQ and not isLowMana('Combo') then
+			elseif (GetDistance(Target, minion) > (SkillQ.range - 150) or not GetQVectorAngle(minion, Target) > 35) and SkillQ.ready and Config.ComboSub.useQ and not isLowMana('Combo') then
 				CastQ(Target)
 			end
 		end
@@ -646,7 +647,7 @@ function GetQVectorAngle(Target, bTarget)
 	local VectorToEnemy = Vector(Target) - Vector(myHero)
 	local VectorToTarget = Vector(bTarget) - Vector(Target)
 	
-	return (VectorToTarget:angle(VectorToEnemy) / 57)
+	return (VectorToTarget:angle(VectorToEnemy) * 57)
 end
 -- / GetQVectorAngle Function / --
 
