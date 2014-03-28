@@ -271,7 +271,7 @@ function CastbQ(Target)
 			if minion ~= nil and GetDistance(minion) <= SkillQ.range then
 				if Target ~= nil and GetDistance(minion, Target) <= (SkillQ.range - 150) and GetQVectorAngle(minion, Target) <= 35 and SkillQ.ready then
 					for i, bminion in ipairs(EnemyMinions.objects) do
-						if GetClosestBetween(minion, Target, bminion) == Target and bminion ~= minion then
+						if GetDistance(minion, Target) < GetDistance(minion, bminion) and bminion ~= minion then
 							Packet("S_CAST", {spellId = _Q, targetNetworkId = minion.networkID}):send()
 						end
 					end
@@ -650,10 +650,3 @@ function GetQVectorAngle(Target, bTarget)
 	return (VectorToTarget:angle(VectorToEnemy) * 57)
 end
 -- / GetQVectorAngle Function / --
-
--- / GetClosestBetween Function / --
-function GetClosestBetween(point, target1, target2)
-	if GetDistance(point, target1) > GetDistance(point, target2) then return target2
-	else return target1 end
-end
--- / GetClosestBetween Function / --
