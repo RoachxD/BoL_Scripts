@@ -208,7 +208,7 @@ function Combo(Target)
 		for i, minion in ipairs(EnemyMinions.objects) do
 			if GetDistance(minion) <= SkillQ.range and GetDistance(Target, minion) < (SkillQ.range - 150) and GetQVectorAngle(minion, Target) <= 35 and SkillQ.ready and Config.ComboSub.usebQ and not isLowMana('Combo') then
 				CastbQ(Target)
-			elseif (GetDistance(Target, minion) > (SkillQ.range - 150) or not GetQVectorAngle(minion, Target) > 35) and SkillQ.ready and Config.ComboSub.useQ and not isLowMana('Combo') then
+			elseif (GetDistance(Target, minion) > (SkillQ.range - 150) or GetQVectorAngle(minion, Target) > 35) and SkillQ.ready and Config.ComboSub.useQ and not isLowMana('Combo') then
 				CastQ(Target)
 			end
 		end
@@ -270,11 +270,12 @@ function CastbQ(Target)
 		for i, minion in ipairs(EnemyMinions.objects) do
 			if minion ~= nil and GetDistance(minion) <= SkillQ.range then
 				if Target ~= nil and GetDistance(minion, Target) <= (SkillQ.range - 150) and GetQVectorAngle(minion, Target) <= 35 and SkillQ.ready then
-					for i, bminion in ipairs(EnemyMinions.objects) do
-						if GetDistance(minion, Target) < GetDistance(minion, bminion) and bminion ~= minion then
+					PrintChat(GetQVectorAngle(minion, Target))
+					--for i, bminion in ipairs(EnemyMinions.objects) do
+						--if GetDistance(minion, Target) < GetDistance(minion, bminion) and bminion ~= minion then
 							Packet("S_CAST", {spellId = _Q, targetNetworkId = minion.networkID}):send()
-						end
-					end
+						--end
+					--end
 				end
 			end
 		end
@@ -647,6 +648,6 @@ function GetQVectorAngle(Target, bTarget)
 	local VectorToEnemy = Vector(Target) - Vector(myHero)
 	local VectorToTarget = Vector(bTarget) - Vector(Target)
 	
-	return (VectorToTarget:angle(VectorToEnemy) * 57)
+	return (VectorToTarget:angle(VectorToEnemy) * (180/math.pi))
 end
 -- / GetQVectorAngle Function / --
