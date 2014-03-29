@@ -1,4 +1,4 @@
-local version = "0.05"
+local version = "0.06"
 --[[
 
 
@@ -270,7 +270,6 @@ function CastbQ(Target)
 		for i, minion in ipairs(EnemyMinions.objects) do
 			if minion ~= nil and GetDistance(minion) <= SkillQ.range then
 				if Target ~= nil and GetDistance(minion, Target) <= (SkillQ.range - 150) and GetQVectorAngle(minion, Target) <= 35 and SkillQ.ready then
-					PrintChat(GetQVectorAngle(minion, Target))
 					--for i, bminion in ipairs(EnemyMinions.objects) do
 						--if GetDistance(minion, Target) < GetDistance(minion, bminion) and bminion ~= minion then
 							Packet("S_CAST", {spellId = _Q, targetNetworkId = minion.networkID}):send()
@@ -648,6 +647,6 @@ function GetQVectorAngle(Target, bTarget)
 	local VectorToEnemy = Vector(Target) - Vector(myHero)
 	local VectorToTarget = Vector(bTarget) - Vector(Target)
 	
-	return (VectorToTarget:angle(VectorToEnemy) * (180/math.pi))
+	return (VectorToTarget:angle(VectorToEnemy) / (180/math.pi))
 end
 -- / GetQVectorAngle Function / --
