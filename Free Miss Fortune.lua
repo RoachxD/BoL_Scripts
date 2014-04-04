@@ -1,4 +1,4 @@
-local version = "0.06"
+local version = "0.07"
 --[[
 
 
@@ -10,18 +10,34 @@ local version = "0.06"
 			YP      88   YD Y88888P Y88888P      YP  YP  YP Y888888P `8888Y' `8888Y'      YP       `Y88P'  88   YD    YP    ~Y8888P' VP   V8P Y88888P 
 
 
-		Script - Free Miss Fortune 0.04 by Roach
+		Script - Free Miss Fortune 0.07 by Roach
 
 		Dependency: 
 			- Nothing
 
 		Changelog:
-			0.05 - Fixed Spamming Errors
-			0.04 - Fixed Bouncing Q Casting
-			0.03 - Improved Bouncing Q
-				 - Improved Bouncing Q Logics
-			0.02 - Fixed Ult Breaking
-			0.01 - First Release
+			0.07
+				- Updated the Script after the Rework
+				- Improved Bouncing Q Maths (Thanks to Honda for the Input)
+			
+			0.06
+				- Hopefully improved Bouncing Q
+
+			0.05
+				- Fixed Spamming Errors
+			
+			0.04
+				- Fixed Bouncing Q Casting
+			
+			0.03
+				- Improved Bouncing Q
+				- Improved Bouncing Q Logics
+			
+			0.02
+				- Fixed Ult Breaking
+			
+			0.01
+				- First Release
 
 ]]
 
@@ -206,9 +222,9 @@ end
 function Combo(Target)
 	if not SkillR.buff then
 		for i, minion in ipairs(EnemyMinions.objects) do
-			if GetDistance(minion) <= SkillQ.range and GetDistance(Target, minion) < (SkillQ.range - 150) and GetQVectorAngle(minion, Target) <= 35 and SkillQ.ready and Config.ComboSub.usebQ and not isLowMana('Combo') then
+			if GetQPriorities(minion, Target) and SkillQ.ready and Config.ComboSub.usebQ and not isLowMana('Combo') then
 				CastbQ(Target)
-			elseif (GetDistance(Target, minion) > (SkillQ.range - 150) or GetQVectorAngle(minion, Target) > 35) and SkillQ.ready and Config.ComboSub.useQ and not isLowMana('Combo') then
+			elseif not GetQPriorities(minion, Target) and SkillQ.ready and Config.ComboSub.useQ and not isLowMana('Combo') then
 				CastQ(Target)
 			end
 		end
@@ -268,24 +284,11 @@ end
 function CastbQ(Target)
 	---> Minion Q Cast
 		for i, minion in ipairs(EnemyMinions.objects) do
-			if minion ~= nil and GetDistance(minion) <= SkillQ.range then
-				if Target ~= nil and GetDistance(minion, Target) <= (SkillQ.range - 150) and GetQVectorAngle(minion, Target) <= 35 and SkillQ.ready then
-					--for i, bminion in ipairs(EnemyMinions.objects) do
-						--if GetDistance(minion, Target) < GetDistance(minion, bminion) and bminion ~= minion then
-							Packet("S_CAST", {spellId = _Q, targetNetworkId = minion.networkID}):send()
-						--end
-					--end
-				end
-			end
-		end
-	---<
-	---> Champ Q Cast
-		local Enemies = GetEnemyHeroes()
-		for i, enemy in pairs(Enemies) do
-			if enemy ~= nil and GetDistance(enemy) <= SkillQ.range and Target ~= enemy then
-				local QAngle = GetQVectorAngle(enemy, Target)
-				if Target ~= nil and GetDistance(enemy, Target) <= (SkillQ.range - 150) and QAngle <= 35 and SkillQ.ready then
-					Packet("S_CAST", {spellId = _Q, targetNetworkId = enemy.networkID}):send()
+			if Target ~= nil and ValidTarget(Target) and SkillQ.ready then
+				if GetDistance(Target, minion) <= 500 then
+					if GetQPriorities(minion, Target) then
+						Packet("S_CAST", {spellId = _Q, targetNetworkId = minion.networkID}):send()
+					end
 				end
 			end
 		end
@@ -364,7 +367,7 @@ end
 function KillSteal()
 	if not SkillR.buff then
 		local Enemies = GetEnemyHeroes()
-		for i, enemy in pairs(Enemies) do
+		for _, enemy in pairs(Enemies) do
 			if ValidTarget(enemy) and not enemy.dead and GetDistance(enemy) < 1400 then
 				if getDmg("Q", enemy, myHero) > enemy.health and  Config.KS.useQ then
 					CastQ(enemy)
@@ -384,16 +387,12 @@ function OnDraw()
 		DrawCircle3D(myHero.x, myHero.y, myHero.z, SkillQ.range, 1,  ARGB(255, 0, 255, 255))
 	end
 
-	if Config.Draw.DrawW then
-		DrawCircle3D(myHero.x, myHero.y, myHero.z, WRange, 1,  ARGB(255, 0, 255, 255))
-	end
-
 	if Config.Draw.DrawE then
 		DrawCircle3D(myHero.x, myHero.y, myHero.z, SkillE.range, 1,  ARGB(255, 0, 255, 255))
 	end
 
 	if Config.Draw.DrawR then
-		DrawCircle3D(myHero.x, myHero.y, myHero.z, RRange, 1,  ARGB(255, 0, 255, 255))
+		DrawCircle3D(myHero.x, myHero.y, myHero.z, SkillR.range, 1,  ARGB(255, 0, 255, 255))
 	end
 end
 -- / OnDraw Function / --
@@ -413,6 +412,20 @@ function OnLoseBuff(unit, buff)
 	end
 end
 -- / OnLoseBuff Function / --
+
+-- / On Send Packet Function / --
+function OnSendPacket(p)
+	-- Block Packets if Channeling --
+	--->
+		if SkillR.buff then
+			if (p.header == S_MOVE or p.header == S_CAST) and (p:get('spellId') ~= SUMMONER_1 and p:get('spellId') ~= SUMMONER_2) then
+				p:Block()
+			end
+		end
+	---<
+	--- Block Packets if Channeling --
+end
+-- / On Send Packet Function / --
 
 -- / Check Function / --
 function Check()
@@ -526,7 +539,7 @@ end
 -- / CheckDashes Function / --
 function CheckDashes()
 	local Enemies = GetEnemyHeroes()
-	for idx, enemy in ipairs(Enemies) do
+	for _, enemy in ipairs(Enemies) do
 		if not enemy.dead and ValidTarget(enemy) and GetDistance(enemy) < SkillE.range and Config.Extras.EGapClosers then
 			local IsDashing, CanHit, Position = VP:IsDashing(enemy, SkillE.delay, SkillE.width, SkillE.speed, myHero)
 			if IsDashing and CanHit and GetDistance(Position) < SkillE.range and SkillE.ready then
@@ -580,7 +593,7 @@ function GetBestCone(Radius, Angle)
 	local Targets = {}
 	local PosibleCastPoints = {}
 
-	for i, enemy in ipairs(GetEnemyHeroes()) do
+	for _, enemy in ipairs(GetEnemyHeroes()) do
 		if ValidTarget(enemy) then
 			local Position = VP:GetPredictedPos(enemy, SkillR.delay)
 			if Position and (GetDistance(myHero.visionPos, Position) <= Radius) and (GetDistance(myHero.visionPos, enemy) <= Radius) then
@@ -630,7 +643,7 @@ function CountEnemiesInCone(CastPoint, Radius, Angle)
 	local Vector2 = Direction:rotated(0, -Angle/2, 0)
 	local Targets = {}
 
-	for i, enemy in ipairs(GetEnemyHeroes()) do
+	for _, enemy in ipairs(GetEnemyHeroes()) do
 		if ValidTarget(enemy) then
 			local Position = VP:GetPredictedPos(enemy, Rdelay/1000)
 			if Position and (GetDistance(myHero.visionPos, Position) <= Radius) and GetDistance(myHero.visionPos, enemy) <= Radius then
@@ -642,11 +655,40 @@ function CountEnemiesInCone(CastPoint, Radius, Angle)
 end
 -- / CountEnemiesInCone Function / --
 
--- / GetQVectorAngle Function / --
-function GetQVectorAngle(Target, bTarget)
-	local VectorToEnemy = Vector(Target) - Vector(myHero)
-	local VectorToTarget = Vector(bTarget) - Vector(Target)
-	
-	return (VectorToTarget:angle(VectorToEnemy) / (180/math.pi))
+-- / GetTriangle Function / --
+function GetTriangle(triangle_target, Angle, Target)
+	if GetDistance(Target, triangle_target) <= 500 then
+		v1 = (Vector(triangle_target) - Vector(myHero)):rotated(0, Angle / (180 * math.pi), 0):normalized()
+		v2 = (Vector(triangle_target) - Vector(myHero)):rotated(0, -(Angle / (180 * math.pi)), 0):normalized()
+		triangle = Polygon(Point(triangle_target.x, triangle_target.z), Point(triangle_target.x + 300 * v1.x, triangle_target.z + 300 * v1.z), Point(triangle_target.x + 300 * v2.x, triangle_target.z + 300 * v2.z))
+
+		if triangle:contains(Point(Target.x, Target.z)) then
+			return true
+		else
+			return false
+		end
+	end
 end
--- / GetQVectorAngle Function / --
+-- / GetTriangle Function / --
+
+-- / GetQPriorities Function / --
+function GetQPriorities(minion, Target)
+	if GetDistance(Target, minion) <= 500 then
+		for i, secure_minion in ipairs(EnemyMinions.objects) do
+			if GetTriangle(minion, 40, Target) and TargetHaveBuff("missfortunepassivestack", Target) then
+				return true
+			end
+			if GetTriangle(minion, 20, Target) and ((GetTriangle(minion, 20, secure_minion) and GetDistance(minion, secure_minion) > GetDistance(minion, Target)) or not GetTriangle(minion, 20, secure_minion)) and minion ~= secure_minion then
+				return true
+			end
+			if GetTriangle(minion, 40, Target) and ((GetTriangle(minion, 40, secure_minion) and GetDistance(minion, secure_minion) > GetDistance(minion, Target)) or not GetTriangle(minion, 40, secure_minion)) and minion ~= secure_minion then
+				return true
+			end
+			if GetTriangle(minion, 90, Target) and ((GetTriangle(minion, 90, secure_minion) and GetDistance(minion, secure_minion) > GetDistance(minion, Target)) or not GetTriangle(minion, 90, secure_minion)) and minion ~= secure_minion then
+				return true
+			end
+		end
+	end
+	return false
+end
+-- / GetQPriorities Function / --
