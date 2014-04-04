@@ -1,4 +1,4 @@
-local version = "0.07"
+local version = "0.071"
 --[[
 
 
@@ -248,9 +248,9 @@ end
 function Harass(Target)
 	if not SkillR.buff then
 		for i, minion in ipairs(EnemyMinions.objects) do
-			if GetDistance(minion) <= SkillQ.range and GetDistance(Target, minion) < (SkillQ.range - 150) and GetQVectorAngle(minion, Target) <= 35 and SkillQ.ready and Config.HarassSub.usebQ and not isLowMana('Harass') then
+			if GetQPriorities(minion, Target) and SkillQ.ready and Config.HarassSub.usebQ and not isLowMana('Harass') then
 				CastbQ(Target)
-			elseif (GetDistance(Target, minion) > (SkillQ.range - 150) or GetQVectorAngle(minion, Target) > 35) and SkillQ.ready and Config.HarassSub.useQ and not isLowMana('Harass') then
+			elseif not GetQPriorities(minion, Target) and SkillQ.ready and Config.HarassSub.useQ and not isLowMana('Harass') then
 				CastQ(Target)
 			end
 		end
