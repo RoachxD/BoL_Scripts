@@ -1,4 +1,4 @@
-local version = "0.071"
+local version = "0.073"
 --[[
 
 
@@ -19,6 +19,8 @@ local version = "0.071"
 			0.07
 				- Updated the Script after the Rework
 				- Improved Bouncing Q Maths (Thanks to Honda for the Input)
+				- Improved FPS Drops
+				- Fixed Ult Breaking
 			
 			0.06
 				- Hopefully improved Bouncing Q
@@ -82,10 +84,10 @@ end
 local Config = nil
 local lastAnimation = nil
 local VP = VPrediction()
-local SkillQ = { speed = 2000, range =  650, bRange = 550, delay = 0.290, width =   0, ready = false			   }
-local SkillW = { 																	   ready = false			   }
-local SkillE = { speed =  500, range = 	800, 			   delay = 0.333, width = 400, ready = false			   }
-local SkillR = { speed =  775, range = 1400, 			   delay = 0.261, width = 100, ready = false, buff = false } 
+local SkillQ = { speed = 2000, range =  650, bRange = 550, delay = 0.290, width =   0, ready = false				  }
+local SkillW = { 																	   ready = false				  }
+local SkillE = { speed =  500, range = 	800, 			   delay = 0.333, width = 400, ready = false				  }
+local SkillR = { speed =  775, range = 1400, 			   delay = 0.261, width = 100, ready = false, casting = false } 
 
 -- / OnLoad Function / --
 function OnLoad()
@@ -220,7 +222,7 @@ end
 
 -- / Combo Function / --
 function Combo(Target)
-	if not SkillR.buff then
+	if not SkillR.casting then
 		for i, minion in ipairs(EnemyMinions.objects) do
 			if GetQPriorities(minion, Target) and SkillQ.ready and Config.ComboSub.usebQ and not isLowMana('Combo') then
 				CastbQ(Target)
@@ -246,7 +248,7 @@ end
 
 -- / Harass Function / --
 function Harass(Target)
-	if not SkillR.buff then
+	if not SkillR.casting then
 		for i, minion in ipairs(EnemyMinions.objects) do
 			if GetQPriorities(minion, Target) and SkillQ.ready and Config.HarassSub.usebQ and not isLowMana('Harass') then
 				CastbQ(Target)
@@ -331,6 +333,7 @@ function CastR(Target)
 				Count, RCastPosition = GetBestCone(SkillR.range, 30)
 				if Count <= Config.Extras.RMinEnemies then
 					Packet("S_CAST", {spellId = _R, toX = RCastPosition.x, toY = RCastPosition.z}):send()
+					SkillR.casting = true
 				end
 			end
 		end
@@ -340,7 +343,7 @@ end
 
 -- / Farm Function / --
 function Farm()
-	if not SkillR.buff then
+	if not SkillR.casting then
 		if Config.FarmSub.useE then
 			FarmE()
 		end
@@ -365,7 +368,7 @@ end
 
 -- / KillSteal Function / --
 function KillSteal()
-	if not SkillR.buff then
+	if not SkillR.casting then
 		local Enemies = GetEnemyHeroes()
 		for _, enemy in pairs(Enemies) do
 			if ValidTarget(enemy) and not enemy.dead and GetDistance(enemy) < 1400 then
@@ -400,7 +403,7 @@ end
 -- / OnGainBuff Function / --
 function OnGainBuff(unit, buff)
 	if unit.isMe and buff.name == "missfortunebulletsound" then
-		SkillR.buff = true
+		SkillR.casting = true
 	end
 end
 -- / OnGainBuff Function / --
@@ -408,7 +411,7 @@ end
 -- / OnLoseBuff Function / --
 function OnLoseBuff(unit, buff)
 	if unit.isMe and buff.name == "missfortunebulletsound" then
-		SkillR.buff = false
+		SkillR.casting = false
 	end
 end
 -- / OnLoseBuff Function / --
@@ -417,7 +420,7 @@ end
 function OnSendPacket(p)
 	-- Block Packets if Channeling --
 	--->
-		if SkillR.buff then
+		if SkillR.casting then
 			if (p.header == S_MOVE or p.header == S_CAST) and (p:get('spellId') ~= SUMMONER_1 and p:get('spellId') ~= SUMMONER_2) then
 				p:Block()
 			end
@@ -447,8 +450,9 @@ function Check()
 		SkillR.ready = (myHero:CanUseSpell(_R) == READY)
 	---<
 	---> Set up Ult
-		if SkillR.buff then
+		if SkillR.casting then
 			if _G.AutoCarry then 
+				_G.AutoCarry.Orbwalker = false
 				if _G.AutoCarry.MainMenu ~= nil then
 						if _G.AutoCarry.CanAttack ~= nil then
 							_G.AutoCarry.CanAttack = false
@@ -460,7 +464,8 @@ function Check()
 						_G.AutoCarry.MyHero:AttacksEnabled(false)
 					end
 				end
-			elseif _G.MMA_Loaded then
+			end
+			if _G.MMA_Loaded then
 				_G.MMA_Orbwalker	= false
 				_G.MMA_HybridMode	= false
 				_G.MMA_LaneClear	= false
@@ -657,7 +662,7 @@ end
 
 -- / GetTriangle Function / --
 function GetTriangle(triangle_target, Angle, Target)
-	if GetDistance(Target, triangle_target) <= 500 then
+	if GetDistance(Target, triangle_target) <= 500 and GetDistance(triangle_target) <= SkillQ.range then
 		v1 = (Vector(triangle_target) - Vector(myHero)):rotated(0, Angle / (180 * math.pi), 0):normalized()
 		v2 = (Vector(triangle_target) - Vector(myHero)):rotated(0, -(Angle / (180 * math.pi)), 0):normalized()
 		triangle = Polygon(Point(triangle_target.x, triangle_target.z), Point(triangle_target.x + 300 * v1.x, triangle_target.z + 300 * v1.z), Point(triangle_target.x + 300 * v2.x, triangle_target.z + 300 * v2.z))
@@ -673,7 +678,7 @@ end
 
 -- / GetQPriorities Function / --
 function GetQPriorities(minion, Target)
-	if GetDistance(Target, minion) <= 500 then
+	if GetDistance(Target, triangle_target) <= 500 and GetDistance(triangle_target) <= SkillQ.range then
 		for i, secure_minion in ipairs(EnemyMinions.objects) do
 			if GetTriangle(minion, 40, Target) and TargetHaveBuff("missfortunepassivestack", Target) then
 				return true
