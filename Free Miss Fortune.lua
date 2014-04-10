@@ -1,4 +1,4 @@
-local version = "0.073"
+local version = "0.074"
 --[[
 
 
@@ -21,6 +21,7 @@ local version = "0.073"
 				- Improved Bouncing Q Maths (Thanks to Honda for the Input)
 				- Improved FPS Drops
 				- Fixed Ult Breaking
+				- Fixed Spamming Nil Errors
 			
 			0.06
 				- Hopefully improved Bouncing Q
@@ -662,15 +663,17 @@ end
 
 -- / GetTriangle Function / --
 function GetTriangle(triangle_target, Angle, Target)
-	if GetDistance(Target, triangle_target) <= 500 and GetDistance(triangle_target) <= SkillQ.range then
-		v1 = (Vector(triangle_target) - Vector(myHero)):rotated(0, Angle / (180 * math.pi), 0):normalized()
-		v2 = (Vector(triangle_target) - Vector(myHero)):rotated(0, -(Angle / (180 * math.pi)), 0):normalized()
-		triangle = Polygon(Point(triangle_target.x, triangle_target.z), Point(triangle_target.x + 300 * v1.x, triangle_target.z + 300 * v1.z), Point(triangle_target.x + 300 * v2.x, triangle_target.z + 300 * v2.z))
+	if triangle_target ~= nil and Target ~= nil then
+		if GetDistance(Target, triangle_target) <= 500 and GetDistance(triangle_target) <= SkillQ.range then
+			v1 = (Vector(triangle_target) - Vector(myHero)):rotated(0, Angle / (180 * math.pi), 0):normalized()
+			v2 = (Vector(triangle_target) - Vector(myHero)):rotated(0, -(Angle / (180 * math.pi)), 0):normalized()
+			triangle = Polygon(Point(triangle_target.x, triangle_target.z), Point(triangle_target.x + 300 * v1.x, triangle_target.z + 300 * v1.z), Point(triangle_target.x + 300 * v2.x, triangle_target.z + 300 * v2.z))
 
-		if triangle:contains(Point(Target.x, Target.z)) then
-			return true
-		else
-			return false
+			if triangle:contains(Point(Target.x, Target.z)) then
+				return true
+			else
+				return false
+			end
 		end
 	end
 end
@@ -678,19 +681,23 @@ end
 
 -- / GetQPriorities Function / --
 function GetQPriorities(minion, Target)
-	if GetDistance(Target, triangle_target) <= 500 and GetDistance(triangle_target) <= SkillQ.range then
-		for i, secure_minion in ipairs(EnemyMinions.objects) do
-			if GetTriangle(minion, 40, Target) and TargetHaveBuff("missfortunepassivestack", Target) then
-				return true
-			end
-			if GetTriangle(minion, 20, Target) and ((GetTriangle(minion, 20, secure_minion) and GetDistance(minion, secure_minion) > GetDistance(minion, Target)) or not GetTriangle(minion, 20, secure_minion)) and minion ~= secure_minion then
-				return true
-			end
-			if GetTriangle(minion, 40, Target) and ((GetTriangle(minion, 40, secure_minion) and GetDistance(minion, secure_minion) > GetDistance(minion, Target)) or not GetTriangle(minion, 40, secure_minion)) and minion ~= secure_minion then
-				return true
-			end
-			if GetTriangle(minion, 90, Target) and ((GetTriangle(minion, 90, secure_minion) and GetDistance(minion, secure_minion) > GetDistance(minion, Target)) or not GetTriangle(minion, 90, secure_minion)) and minion ~= secure_minion then
-				return true
+	if minion ~= nil and Target ~= nil then
+		if GetDistance(Target, triangle_target) <= 500 and GetDistance(triangle_target) <= SkillQ.range then
+			for i, secure_minion in ipairs(EnemyMinions.objects) do
+				if secure_minion ~= nil then
+					if GetTriangle(minion, 40, Target) and TargetHaveBuff("missfortunepassivestack", Target) then
+						return true
+					end
+					if GetTriangle(minion, 20, Target) and ((GetTriangle(minion, 20, secure_minion) and GetDistance(minion, secure_minion) > GetDistance(minion, Target)) or not GetTriangle(minion, 20, secure_minion)) and minion ~= secure_minion then
+						return true
+					end
+					if GetTriangle(minion, 40, Target) and ((GetTriangle(minion, 40, secure_minion) and GetDistance(minion, secure_minion) > GetDistance(minion, Target)) or not GetTriangle(minion, 40, secure_minion)) and minion ~= secure_minion then
+						return true
+					end
+					if GetTriangle(minion, 90, Target) and ((GetTriangle(minion, 90, secure_minion) and GetDistance(minion, secure_minion) > GetDistance(minion, Target)) or not GetTriangle(minion, 90, secure_minion)) and minion ~= secure_minion then
+						return true
+					end
+				end
 			end
 		end
 	end
