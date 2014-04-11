@@ -1,4 +1,4 @@
-local version = "0.074"
+local version = "0.08"
 --[[
 
 
@@ -16,6 +16,9 @@ local version = "0.074"
 			- Nothing
 
 		Changelog:
+			0.08
+				- Improved Script Performance
+				- Fixed Spamming Errors
 			0.07
 				- Updated the Script after the Rework
 				- Improved Bouncing Q Maths (Thanks to Honda for the Input)
@@ -224,24 +227,28 @@ end
 -- / Combo Function / --
 function Combo(Target)
 	if not SkillR.casting then
-		for i, minion in ipairs(EnemyMinions.objects) do
-			if GetQPriorities(minion, Target) and SkillQ.ready and Config.ComboSub.usebQ and not isLowMana('Combo') then
-				CastbQ(Target)
-			elseif not GetQPriorities(minion, Target) and SkillQ.ready and Config.ComboSub.useQ and not isLowMana('Combo') then
-				CastQ(Target)
+		if Target ~= nil then
+			for i, minion in ipairs(EnemyMinions.objects) do
+				if minion ~= nil then
+					if GetQPriorities(minion, Target) and SkillQ.ready and Config.ComboSub.usebQ and not isLowMana('Combo') then
+						CastbQ(Target)
+					elseif not GetQPriorities(minion, Target) and SkillQ.ready and Config.ComboSub.useQ and not isLowMana('Combo') then
+						CastQ(Target)
+					end
+				end
 			end
-		end
 
-		if SkillW.ready and Config.ComboSub.useW and not isLowMana('Combo') then
-			CastW(Target)
-		end
+			if SkillW.ready and Config.ComboSub.useW and not isLowMana('Combo') then
+				CastW(Target)
+			end
 
-		if SkillE.ready and Config.ComboSub.useE and not isLowMana('Combo') then
-			CastE(Target)
-		end
+			if SkillE.ready and Config.ComboSub.useE and not isLowMana('Combo') then
+				CastE(Target)
+			end
 
-		if SkillR.ready and Config.ComboSub.useR and not isLowMana('Combo') and GetDistance(Target) > Config.Extras.RMinRange then
-			CastR(Target)
+			if SkillR.ready and Config.ComboSub.useR and not isLowMana('Combo') and GetDistanceSqr(Target) > Config.Extras.RMinRange*Config.Extras.RMinRange then
+				CastR(Target)
+			end
 		end
 	end
 end
@@ -250,24 +257,28 @@ end
 -- / Harass Function / --
 function Harass(Target)
 	if not SkillR.casting then
-		for i, minion in ipairs(EnemyMinions.objects) do
-			if GetQPriorities(minion, Target) and SkillQ.ready and Config.HarassSub.usebQ and not isLowMana('Harass') then
-				CastbQ(Target)
-			elseif not GetQPriorities(minion, Target) and SkillQ.ready and Config.HarassSub.useQ and not isLowMana('Harass') then
-				CastQ(Target)
+		if Target ~= nil then
+			for i, minion in ipairs(EnemyMinions.objects) do
+				if minion ~= nil then
+					if GetQPriorities(minion, Target) and SkillQ.ready and Config.HarassSub.usebQ and not isLowMana('Harass') then
+						CastbQ(Target)
+					elseif not GetQPriorities(minion, Target) and SkillQ.ready and Config.HarassSub.useQ and not isLowMana('Harass') then
+						CastQ(Target)
+					end
+				end
 			end
-		end
 
-		if SkillW.ready and Config.HarassSub.useW and not isLowMana('Harass') then
-			CastW(Target)
-		end
+			if SkillW.ready and Config.HarassSub.useW and not isLowMana('Harass') then
+				CastW(Target)
+			end
 
-		if SkillE.ready and Config.HarassSub.useE and not isLowMana('Harass') then
-			CastE(Target)
-		end
+			if SkillE.ready and Config.HarassSub.useE and not isLowMana('Harass') then
+				CastE(Target)
+			end
 
-		if SkillR.ready and Config.HarassSub.useR and not isLowMana('Harass') and GetDistance(Target) > Config.Extras.RMinRange then
-			CastR(Target)
+			if SkillR.ready and Config.HarassSub.useR and not isLowMana('Harass') and GetDistanceSqr(Target) > Config.Extras.RMinRange*Config.Extras.RMinRange then
+				CastR(Target)
+			end
 		end
 	end
 end
@@ -287,8 +298,8 @@ end
 function CastbQ(Target)
 	---> Minion Q Cast
 		for i, minion in ipairs(EnemyMinions.objects) do
-			if Target ~= nil and ValidTarget(Target) and SkillQ.ready then
-				if GetDistance(Target, minion) <= 500 then
+			if Target ~= nil and minion ~= nil and ValidTarget(Target) and SkillQ.ready then
+				if GetDistanceSqr(Target, minion) <= 500*500 then
 					if GetQPriorities(minion, Target) then
 						Packet("S_CAST", {spellId = _Q, targetNetworkId = minion.networkID}):send()
 					end
@@ -314,7 +325,7 @@ function CastE(Target)
 	---> Dynamic E Cast
 		if Target ~= nil and ValidTarget(Target, SkillE.range) and SkillE.ready then
 			local AOECastPosition, MainTargetHitChance, nTargets = VP:GetCircularAOECastPosition(Target, SkillE.delay, SkillE.width, SkillE.range, SkillE.speed, myHero)
-			if MainTargetHitChance >= 2 and GetDistance(AOECastPosition) < SkillE.range then
+			if MainTargetHitChance >= 2 and GetDistanceSqr(AOECastPosition) < SkillE.range*SkillE.range then
 				CastSpell(_E, AOECastPosition.x, AOECastPosition.z)
 			end
 		end
@@ -372,7 +383,7 @@ function KillSteal()
 	if not SkillR.casting then
 		local Enemies = GetEnemyHeroes()
 		for _, enemy in pairs(Enemies) do
-			if ValidTarget(enemy) and not enemy.dead and GetDistance(enemy) < 1400 then
+			if ValidTarget(enemy) and enemy ~= nil and not enemy.dead and GetDistanceSqr(enemy) < 1400*1400 then
 				if getDmg("Q", enemy, myHero) > enemy.health and  Config.KS.useQ then
 					CastQ(enemy)
 				end
@@ -422,7 +433,7 @@ function OnSendPacket(p)
 	-- Block Packets if Channeling --
 	--->
 		if SkillR.casting then
-			if (p.header == S_MOVE or p.header == S_CAST) and (p:get('spellId') ~= SUMMONER_1 and p:get('spellId') ~= SUMMONER_2) then
+			if (p.header == Packet.headers.S_MOVE or p.header == Packet.headers.S_CAST) and (p:get('spellId') ~= SUMMONER_1 and p:get('spellId') ~= SUMMONER_2) then
 				p:Block()
 			end
 		end
@@ -495,7 +506,7 @@ end
 function CountMinionsHitE(pos, radius)
 	local n = 0
 	for i, minion in pairs(EnemyMinions.objects) do
-		if GetDistance(minion, pos) < (radius + 50) then
+		if GetDistanceSqr(minion, pos) < (radius + 50)*(radius + 50) then
 			n = n + 1
 		end
 	end
@@ -546,9 +557,9 @@ end
 function CheckDashes()
 	local Enemies = GetEnemyHeroes()
 	for _, enemy in ipairs(Enemies) do
-		if not enemy.dead and ValidTarget(enemy) and GetDistance(enemy) < SkillE.range and Config.Extras.EGapClosers then
+		if not enemy.dead and ValidTarget(enemy) and GetDistanceSqr(enemy) < SkillE.range*SkillE.range and Config.Extras.EGapClosers then
 			local IsDashing, CanHit, Position = VP:IsDashing(enemy, SkillE.delay, SkillE.width, SkillE.speed, myHero)
-			if IsDashing and CanHit and GetDistance(Position) < SkillE.range and SkillE.ready then
+			if IsDashing and CanHit and GetDistanceSqr(Position) < SkillE.range*SkillE.range and SkillE.ready then
 				CastSpell(_E, Position.x, Position.z)
 			end
 		end
@@ -602,8 +613,8 @@ function GetBestCone(Radius, Angle)
 	for _, enemy in ipairs(GetEnemyHeroes()) do
 		if ValidTarget(enemy) then
 			local Position = VP:GetPredictedPos(enemy, SkillR.delay)
-			if Position and (GetDistance(myHero.visionPos, Position) <= Radius) and (GetDistance(myHero.visionPos, enemy) <= Radius) then
-				table.insert(Targets, Vector(Position.x - myHero.x, 0, Position.z - myHero.z))
+			if Position and (GetDistanceSqr(myHero.visionPos, Position) <= Radius*Radius) and (GetDistanceSqr(myHero.visionPos, enemy) <= Radius*Radius) then
+				Targets[#Targets+1] = Vector(Position.x - myHero.x, 0, Position.z - myHero.z)
 			end
 		end
 	end
@@ -652,8 +663,8 @@ function CountEnemiesInCone(CastPoint, Radius, Angle)
 	for _, enemy in ipairs(GetEnemyHeroes()) do
 		if ValidTarget(enemy) then
 			local Position = VP:GetPredictedPos(enemy, Rdelay/1000)
-			if Position and (GetDistance(myHero.visionPos, Position) <= Radius) and GetDistance(myHero.visionPos, enemy) <= Radius then
-				table.insert(Targets, Vector(Position.x - myHero.x, 0, Position.z - myHero.z))
+			if Position and (GetDistanceSqr(myHero.visionPos, Position) <= Radius*Radius) and GetDistanceSqr(myHero.visionPos, enemy) <= Radius*Radius then
+				Targets[#Targets+1] = Vector(Position.x - myHero.x, 0, Position.z - myHero.z)
 			end
 		end
 	end
@@ -664,7 +675,7 @@ end
 -- / GetTriangle Function / --
 function GetTriangle(triangle_target, Angle, Target)
 	if triangle_target ~= nil and Target ~= nil then
-		if GetDistance(Target, triangle_target) <= 500 and GetDistance(triangle_target) <= SkillQ.range then
+		if GetDistanceSqr(Target, triangle_target) <= 500*500 and GetDistanceSqr(triangle_target) <= SkillQ.range*SkillQ.range then
 			v1 = (Vector(triangle_target) - Vector(myHero)):rotated(0, Angle / (180 * math.pi), 0):normalized()
 			v2 = (Vector(triangle_target) - Vector(myHero)):rotated(0, -(Angle / (180 * math.pi)), 0):normalized()
 			triangle = Polygon(Point(triangle_target.x, triangle_target.z), Point(triangle_target.x + 300 * v1.x, triangle_target.z + 300 * v1.z), Point(triangle_target.x + 300 * v2.x, triangle_target.z + 300 * v2.z))
@@ -682,7 +693,7 @@ end
 -- / GetQPriorities Function / --
 function GetQPriorities(minion, Target)
 	if minion ~= nil and Target ~= nil then
-		if GetDistance(Target, triangle_target) <= 500 and GetDistance(triangle_target) <= SkillQ.range then
+		if GetDistanceSqr(Target, triangle_target) <= 500*500 and GetDistanceSqr(triangle_target) <= SkillQ.range*SkillQ.range then
 			for i, secure_minion in ipairs(EnemyMinions.objects) do
 				if secure_minion ~= nil then
 					if GetTriangle(minion, 40, Target) and TargetHaveBuff("missfortunepassivestack", Target) then
