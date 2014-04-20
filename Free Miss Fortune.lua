@@ -1,24 +1,34 @@
-local version = "0.08"
+local MF_Ver = "1.00"
 --[[
 
 
-			d88888b d8888b. d88888b d88888b      .88b  d88. d888888b .d8888. .d8888.      d88888b  .d88b.  d8888b. d888888b db    db d8b   db d88888b 
-			88'     88  `8D 88'     88'          88'YbdP`88   `88'   88'  YP 88'  YP      88'     .8P  Y8. 88  `8D `~~88~~' 88    88 888o  88 88'     
-			88ooo   88oobY' 88ooooo 88ooooo      88  88  88    88    `8bo.   `8bo.        88ooo   88    88 88oobY'    88    88    88 88V8o 88 88ooooo 
-			88~~~   88`8b   88~~~~~ 88~~~~~      88  88  88    88      `Y8b.   `Y8b.      88~~~   88    88 88`8b      88    88    88 88 V8o88 88~~~~~ 
-			88      88 `88. 88.     88.          88  88  88   .88.   db   8D db   8D      88      `8b  d8' 88 `88.    88    88b  d88 88  V888 88.     
-			YP      88   YD Y88888P Y88888P      YP  YP  YP Y888888P `8888Y' `8888Y'      YP       `Y88P'  88   YD    YP    ~Y8888P' VP   V8P Y88888P 
+			.88b  d88. d888888b .d8888. .d8888.      d88888b  .d88b.  d8888b. d888888b db    db d8b   db d88888b 
+			88'YbdP`88   `88'   88'  YP 88'  YP      88'     .8P  Y8. 88  `8D `~~88~~' 88    88 888o  88 88'     
+			88  88  88    88    `8bo.   `8bo.        88ooo   88    88 88oobY'    88    88    88 88V8o 88 88ooooo 
+			88  88  88    88      `Y8b.   `Y8b.      88~~~   88    88 88`8b      88    88    88 88 V8o88 88~~~~~ 
+			88  88  88   .88.   db   8D db   8D      88      `8b  d8' 88 `88.    88    88b  d88 88  V888 88.     
+			YP  YP  YP Y888888P `8888Y' `8888Y'      YP       `Y88P'  88   YD    YP    ~Y8888P' VP   V8P Y88888P 
 
 
-		Script - Free Miss Fortune 0.07 by Roach
+		Script - Miss Fortune 1.00 by Roach
 
 		Dependency: 
 			- Nothing
 
 		Changelog:
+			1.00
+				- Revamped the whole script
+				- Removed Farming Function as SAC / MMA handles that
+				- Improved Script's Performance
+				- Changed Menu
+				- Added Aim-Ult Hotkey
+				- Improved Combo
+				- Added a lot of features
+
 			0.08
 				- Improved Script Performance
 				- Fixed Spamming Errors
+
 			0.07
 				- Updated the Script after the Rework
 				- Improved Bouncing Q Maths (Thanks to Honda for the Input)
@@ -49,669 +59,427 @@ local version = "0.08"
 
 if myHero.charName ~= "MissFortune" or not VIP_USER then return end
 
-require 'VPrediction'
+local MF_Autoupdate = true
 
--- / Auto-Update Function / --
-local autoupdateenabled = true
-local UPDATE_SCRIPT_NAME = "Free Miss Fortune"
+local REQUIRED_LIBS = {
+	["VPrediction"] = "https://raw.githubusercontent.com/honda7/BoL/master/Common/VPrediction.lua"
+}
+
+local DOWNLOADING_LIBS, DOWNLOAD_COUNT = false, 0
+
+function AfterDownload()
+	DOWNLOAD_COUNT = DOWNLOAD_COUNT - 1
+	if DOWNLOAD_COUNT == 0 then
+		DOWNLOADING_LIBS = false
+		print("<font color=\"#FF0000\"><b>Free Miss Fortune:</b></font> <font color=\"#FFFFFF\">Required libraries downloaded successfully, please reload (double F9).</font>")
+	end
+end
+
+for DOWNLOAD_LIB_NAME, DOWNLOAD_LIB_URL in pairs(REQUIRED_LIBS) do
+	if FileExist(LIB_PATH .. DOWNLOAD_LIB_NAME .. ".lua") then
+		require(DOWNLOAD_LIB_NAME)
+	else
+		DOWNLOADING_LIBS = true
+		DOWNLOAD_COUNT = DOWNLOAD_COUNT + 1
+		DownloadFile(DOWNLOAD_LIB_URL, LIB_PATH .. DOWNLOAD_LIB_NAME..".lua", AfterDownload)
+	end
+end
+
+if DOWNLOADING_LIBS then return end
+
+local UPDATE_NAME = "Free Miss Fortune"
 local UPDATE_HOST = "raw.github.com"
-local UPDATE_PATH = "/RoachxD/BoL_Scripts/master/Free%20Miss%20Fortune.lua?chunk="..math.random(1, 1000)
+local UPDATE_PATH = "/RoachxD/BoL_Scripts/master/Free%20Miss%20Fortune.lua".."?rand="..math.random(1,10000)
 local UPDATE_FILE_PATH = SCRIPT_PATH..GetCurrentEnv().FILE_NAME
 local UPDATE_URL = "https://"..UPDATE_HOST..UPDATE_PATH
 
-local ServerData
-if autoupdateenabled then
-	GetAsyncWebResult(UPDATE_HOST, UPDATE_PATH, function(d) ServerData = d end)
-	function update()
-		if ServerData ~= nil then
-			local ServerVersion
-			local send, tmp, sstart = nil, string.find(ServerData, "local version = \"")
-			if sstart then
-				send, tmp = string.find(ServerData, "\"", sstart+1)
+function AutoupdaterMsg(msg) print("<font color=\"#FF0000\">"..UPDATE_NAME..":</font> <font color=\"#FFFFFF\">"..msg..".</font>") end
+if MF_Autoupdate then
+	local ServerData = GetWebResult(UPDATE_HOST, UPDATE_PATH)
+	if ServerData then
+		local ServerVersion = string.match(ServerData, "local MF_Ver = \"%d+.%d+\"")
+		ServerVersion = string.match(ServerVersion and ServerVersion or "", "%d+.%d+")
+		if ServerVersion then
+			ServerVersion = tonumber(ServerVersion)
+			if tonumber(MF_Ver) < ServerVersion then
+				AutoupdaterMsg("New version available"..ServerVersion)
+				AutoupdaterMsg("Updating, please don't press F9")
+				DownloadFile(UPDATE_URL, UPDATE_FILE_PATH, function () AutoupdaterMsg("Successfully updated. ("..MF_Ver.." => "..ServerVersion.."), press F9 twice to load the updated version.") end)	 
+			else
+				AutoupdaterMsg("You have got the latest version ("..ServerVersion..")")
 			end
-			if send then
-				ServerVersion = tonumber(string.sub(ServerData, sstart+1, send-1))
-			end
-
-			if ServerVersion ~= nil and tonumber(ServerVersion) ~= nil and tonumber(ServerVersion) > tonumber(version) then
-				DownloadFile(UPDATE_URL.."?nocache"..myHero.charName..os.clock(), UPDATE_FILE_PATH, function () print("<font color=\"#FF0000\"><b>"..UPDATE_SCRIPT_NAME..":</b> successfully updated. Reload (double F9) Please. ("..version.." => "..ServerVersion..")</font>") end)
-			elseif ServerVersion then
-				print("<font color=\"#FF0000\"><b>"..UPDATE_SCRIPT_NAME..":</b> You have got the latest version: <u><b>"..ServerVersion.."</b></u></font>")
-			end		
-			ServerData = nil
 		end
+	else
+		AutoupdaterMsg("Error downloading version info")
 	end
-	AddTickCallback(update)
 end
--- / Auto-Update Function / --
 
 local Config = nil
-local lastAnimation = nil
 local VP = VPrediction()
-local SkillQ = { speed = 2000, range =  650, bRange = 550, delay = 0.290, width =   0, ready = false				  }
-local SkillW = { 																	   ready = false				  }
-local SkillE = { speed =  500, range = 	800, 			   delay = 0.333, width = 400, ready = false				  }
-local SkillR = { speed =  775, range = 1400, 			   delay = 0.261, width = 100, ready = false, casting = false } 
 
--- / OnLoad Function / --
+local Spells = {
+	["Q"] = { key = _Q, speed = 1400, range =  650, bRange = 500, delay = 0.290, width =   0, ready = false					 },
+	["W"] = { key = _W, 																	  ready = false					 },
+	["E"] = { key = _E, speed =  500, range =  800, 			  delay = 0.500, width = 300, ready = false					 },
+	["R"] = { key = _R, speed =  780, range = 1400,				  delay = 0.333, width = 100, ready = false, casting = false } 
+}
+
 function OnLoad()
-	---> On Load Functions
-		Menu()
-		Init()
-	---<
+	Menu()
+	Init()
 end
--- / OnLoad Function / --
 
--- / Init Function / --
 function Init()
-	---> Load Target Selector
-		TargetSelector = TargetSelector(TARGET_LESS_CAST_PRIORITY, 1400, DAMAGE_PHYSICAL)
-		TargetSelector.name = "Ranged Main"
+	TargetSelector = TargetSelector(TARGET_LESS_CAST_PRIORITY, 1400, DAMAGE_PHYSICAL)
+	TargetSelector.name = "Ranged Main"
 
-		Config:addTS(TargetSelector)
-	---<
-	---> Load Enemy Minions
-		EnemyMinions = minionManager(MINION_ENEMY, SkillR.range, myHero, MINION_SORT_MAXHEALTH_DEC)
-	---<
+	Config:addTS(TargetSelector)
+
+	EnemyMinions = minionManager(MINION_ENEMY, Spells.R.range, myHero, MINION_SORT_MAXHEALTH_DEC)
 
 	initDone = true
 end
--- / Init Function / --
 
--- / Menu Function / --
 function Menu()
-	---> Main Menu
-		Config = scriptConfig("Miss Fortune", "Miss Fortune")
-		---> Combo Key
-		Config:addParam("Combo", "Combo", SCRIPT_PARAM_ONKEYDOWN, false, 32)
-			Config:permaShow("Combo")
-		---<
-		---> Harass Key
-		Config:addParam("Harass", "Harass", SCRIPT_PARAM_ONKEYDOWN, false, string.byte('C'))
-			Config:permaShow("Harass")
-		---<
-		---> Farm Key
-		Config:addParam("Farm", "Farm", SCRIPT_PARAM_ONKEYDOWN, false, string.byte('V'))
-			Config:permaShow("Farm")
-		---<
-		---> Combo Menu
-		Config:addSubMenu("Combo options", "ComboSub")
-			Config.ComboSub:addParam("useQ", "Use Q", SCRIPT_PARAM_ONOFF, true)
-			Config.ComboSub:addParam("usebQ", "Use Bouncing Q", SCRIPT_PARAM_ONOFF, true)
-			Config.ComboSub:addParam("useW", "Use W", SCRIPT_PARAM_ONOFF, true)
-			Config.ComboSub:addParam("useE", "Use E", SCRIPT_PARAM_ONOFF, true)
-			Config.ComboSub:addParam("useR", "Use R", SCRIPT_PARAM_ONOFF, true)
-			Config.ComboSub:addParam("mManager", "Mana slider", SCRIPT_PARAM_SLICE, 0, 0, 100, 0)
-		---<
-		---> Harass Menu
-		Config:addSubMenu("Harass options", "HarassSub")
-			Config.HarassSub:addParam("useQ", "Use Q", SCRIPT_PARAM_ONOFF, true)
-			Config.HarassSub:addParam("usebQ", "Use Bouncing Q", SCRIPT_PARAM_ONOFF, true)
-			Config.HarassSub:addParam("useW", "Use W", SCRIPT_PARAM_ONOFF, true)
-			Config.HarassSub:addParam("useE", "Use E", SCRIPT_PARAM_ONOFF, false)
-			Config.HarassSub:addParam("useR", "Use R", SCRIPT_PARAM_ONOFF, false)
-			Config.HarassSub:addParam("mManager", "Mana slider", SCRIPT_PARAM_SLICE, 0, 0, 100, 0)
-		---<
-		---> Farming Menu
-		Config:addSubMenu("Farm", "FarmSub")
-			Config.FarmSub:addParam("useE", "Use E", SCRIPT_PARAM_ONOFF, false)
-			Config.FarmSub:addParam("useW", "Use W", SCRIPT_PARAM_ONOFF, true)
-		---<
-		---> Killsteal Menu
-		Config:addSubMenu("KS", "KS")
-			Config.KS:addParam("useQ", "Use Q", SCRIPT_PARAM_ONOFF, true)
-			Config.KS:addParam("usebQ", "Use Bouncing Q", SCRIPT_PARAM_ONOFF, true)
-		---<
-		---> Extras Menu
-		Config:addSubMenu("Extra Config", "Extras")
-			Config.Extras:addParam("RMinRange", "R Minimum Range", SCRIPT_PARAM_SLICE, 500, 0, 1400, 0)
-			Config.Extras:addParam("RMinEnemies", "R Minimum Number of Enemies", SCRIPT_PARAM_SLICE, 1, 0, 5, 0)
-			Config.Extras:addParam("EGapClosers", "E Gap Closers", SCRIPT_PARAM_ONOFF, true)
-		---<
-		---> Draw Menu
-		Config:addSubMenu("Draw", "Draw")
-			Config.Draw:addParam("DrawQ", "Draw Q Range", SCRIPT_PARAM_ONOFF, true)
-			Config.Draw:addParam("DrawE", "Draw E Range", SCRIPT_PARAM_ONOFF, true)
-			Config.Draw:addParam("DrawR", "Draw R Range", SCRIPT_PARAM_ONOFF, true)
-		---<
-	---<
-end
--- / Menu Function / --
+	Config = scriptConfig("Miss Fortune v"..MF_Ver, "Miss Fortune")
 
--- / GetCustomTarget Function / --
+	Config:addSubMenu("Combo", "Combo")
+		Config.Combo:addParam("useQ", "Use Q", SCRIPT_PARAM_ONOFF, true)
+		Config.Combo:addParam("usebQ", "Use Bouncing Q", SCRIPT_PARAM_ONOFF, true)
+		Config.Combo:addParam("useW", "Use W", SCRIPT_PARAM_ONOFF, true)
+		Config.Combo:addParam("useE", "Use E", SCRIPT_PARAM_ONOFF, true)
+		Config.Combo:addParam("Enabled", "Combo!", SCRIPT_PARAM_ONKEYDOWN, false, 32)
+
+	Config:addSubMenu("Harass", "Harass")
+		Config.Harass:addParam("useQ", "Use Q", SCRIPT_PARAM_ONOFF, true)
+		Config.Harass:addParam("usebQ", "Use Bouncing Q", SCRIPT_PARAM_ONOFF, true)
+		Config.Harass:addParam("useW", "Use W", SCRIPT_PARAM_ONOFF, true)
+		Config.Harass:addParam("useE", "Use E", SCRIPT_PARAM_ONOFF, false)
+		Config.Harass:addParam("mManager", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 0, 0, 100, 0)
+		Config.Harass:addParam("Enabled", "Harass!", SCRIPT_PARAM_ONKEYDOWN, false, GetKey('C'))
+
+	Config:addSubMenu("Ultimate", "Ultimate")
+		Config.Ultimate:addParam("minEnemies", "Enemies in Cone: ", SCRIPT_PARAM_LIST, 1, {"0 < Enemies", "1 < Enemies", "2 < Enemies", "3 < Enemies", "4 < Enemies"})
+		Config.Ultimate:addParam("Enabled", "Get best cone for Ult & Cast", SCRIPT_PARAM_ONKEYDOWN, false, GetKey('T'))
+
+	Config:addSubMenu("Killsteal", "Killsteal")
+		Config.Killsteal:addParam("useQ", "Use Q", SCRIPT_PARAM_ONOFF, true)
+		Config.Killsteal:addParam("usebQ", "Use Bouncing Q", SCRIPT_PARAM_ONOFF, true)
+
+	Config:addSubMenu("Draw", "Draw")
+		Config.Draw:addSubMenu("Range Indicators", "Range")
+			Config.Draw.Range:addParam("DrawQmin", "Draw Q Min Range", SCRIPT_PARAM_ONOFF, true)
+			Config.Draw.Range:addParam("DrawQmas", "Draw Q Min Range", SCRIPT_PARAM_ONOFF, true)
+			Config.Draw.Range:addParam("DrawE", "Draw E Range", SCRIPT_PARAM_ONOFF, true)
+			Config.Draw.Range:addParam("DrawR", "Draw R Range", SCRIPT_PARAM_ONOFF, true)
+			Config.Draw.Range:addParam("Triangle", "Draw Triangle Indicator", SCRIPT_PARAM_ONOFF, true)
+		Config.Draw:addParam("lagFree", "Use Lag Free Circles", SCRIPT_PARAM_ONOFF, false)
+
+	Config:addSubMenu("Extras", "Extras")
+		Config.Extras:addParam("usePackets", "Use Packet Cast", SCRIPT_PARAM_ONOFF, false)
+		Config.Extras:addParam("eGapClosers", "Auto-E Gap Closers", SCRIPT_PARAM_ONOFF, true)
+end
+
 function GetCustomTarget()
-	---> Update Target Selector
-		TargetSelector:update()
-	---<
-	---> Check Target Selector from MMA / SAC
-		if _G.MMA_Target and _G.MMA_Target.type == myHero.type then return _G.MMA_Target end
-		if _G.AutoCarry and _G.AutoCarry.Crosshair and _G.AutoCarry.Attack_Crosshair and _G.AutoCarry.Attack_Crosshair.target and _G.AutoCarry.Attack_Crosshair.target.type == myHero.type then return _G.AutoCarry.Attack_Crosshair.target end
-	---<
+	TargetSelector:update()
 
-	return TargetSelector.target
+	if _G.MMA_Target and _G.MMA_Target.type == myHero.type then
+		return _G.MMA_Target
+	elseif _G.AutoCarry and _G.AutoCarry.Crosshair and _G.AutoCarry.Attack_Crosshair then
+		return _G.AutoCarry.Attack_Crosshair.target
+	elseif TargetSelector.target and not TargetSelector.target.dead and TargetSelector.target.type  == "obj_AI_Hero" then
+		return TargetSelector.target
+	else
+		return nil
+	end
 end
--- / GetCustomTarget Function / --
 
--- / OnTick Function / --
 function OnTick()
 	if not initDone then return end
-	---> Load General Checks
-		Check()
-	---<
-	---> Config Combo
-		if Config.Combo and Target ~= nil then
-			Combo(Target)
-		end
-	---<
-	---> Config Harass
-		if Config.Harass and Target ~= nil then
-			Harass(Target)
-		end
-	---<
-	---> Config Farm
-		if Config.Farm then
-			Farm()
-		end
-	---<
-	---> Config Dashes
-		if Config.Extras.EGapClosers then
-			CheckDashes()
-		end
-	---<
-	---> Config Killsteal
-		KillSteal()
-	---<
+
+	Check()
+
+	if Spells.R.casting then return end
+
+	if Config.Combo.Enabled then
+		Combo(Target)
+	end
+	if Config.Harass.Enabled then
+		Harass(Target)
+	end
+	if Config.Ultimate.Enabled then
+		CastR(Target)
+	end
+	if Config.Extras.eGapClosers then
+		CheckDashes()
+	end
+
+	KillSteal()
 end
--- / OnTick Function / --
 
--- / Combo Function / --
-function Combo(Target)
-	if not SkillR.casting then
-		if Target ~= nil then
-			for i, minion in ipairs(EnemyMinions.objects) do
-				if minion ~= nil then
-					if GetQPriorities(minion, Target) and SkillQ.ready and Config.ComboSub.usebQ and not isLowMana('Combo') then
-						CastbQ(Target)
-					elseif not GetQPriorities(minion, Target) and SkillQ.ready and Config.ComboSub.useQ and not isLowMana('Combo') then
-						CastQ(Target)
-					end
-				end
-			end
+function Combo(unit)
+	if unit == nil then return end
 
-			if SkillW.ready and Config.ComboSub.useW and not isLowMana('Combo') then
-				CastW(Target)
-			end
-
-			if SkillE.ready and Config.ComboSub.useE and not isLowMana('Combo') then
-				CastE(Target)
-			end
-
-			if SkillR.ready and Config.ComboSub.useR and not isLowMana('Combo') and GetDistanceSqr(Target) > Config.Extras.RMinRange*Config.Extras.RMinRange then
-				CastR(Target)
+	for i, minion in pairs(EnemyMinions.objects) do
+		if minion ~= nil then
+			if GetQPriorities(minion, unit) and Config.Combo.usebQ then
+				CastbQ(unit)
+			elseif not GetQPriorities(minion, unit) and Config.Combo.useQ then
+				CastQ(unit)
 			end
 		end
 	end
+
+	if Config.Combo.useW then
+		CastW(unit)
+	end
+
+	if Config.Combo.useE then
+		CastE(unit)
+	end
 end
--- / Combo Function / --
 
--- / Harass Function / --
-function Harass(Target)
-	if not SkillR.casting then
-		if Target ~= nil then
-			for i, minion in ipairs(EnemyMinions.objects) do
-				if minion ~= nil then
-					if GetQPriorities(minion, Target) and SkillQ.ready and Config.HarassSub.usebQ and not isLowMana('Harass') then
-						CastbQ(Target)
-					elseif not GetQPriorities(minion, Target) and SkillQ.ready and Config.HarassSub.useQ and not isLowMana('Harass') then
-						CastQ(Target)
-					end
-				end
-			end
+function Harass(unit)
+	if unit == nil then return end
 
-			if SkillW.ready and Config.HarassSub.useW and not isLowMana('Harass') then
-				CastW(Target)
-			end
-
-			if SkillE.ready and Config.HarassSub.useE and not isLowMana('Harass') then
-				CastE(Target)
-			end
-
-			if SkillR.ready and Config.HarassSub.useR and not isLowMana('Harass') and GetDistanceSqr(Target) > Config.Extras.RMinRange*Config.Extras.RMinRange then
-				CastR(Target)
+	for i, minion in pairs(EnemyMinions.objects) do
+		if minion ~= nil then
+			if GetQPriorities(minion, unit) and Config.Harass.usebQ and not isLowMana(myHero, Config.Harass.mManager) then
+				CastbQ(unit)
+			elseif not GetQPriorities(minion, unit) and Config.Harass.useQ and not isLowMana(myHero, Config.Harass.mManager) then
+				CastQ(unit)
 			end
 		end
 	end
+
+	if Config.Harass.useW and not isLowMana(myHero, Config.Harass.mManager) then
+		CastW(unit)
+	end
+
+	if Config.Harass.useE and not isLowMana(myHero, Config.Harass.mManager) then
+		CastE(unit)
+	end
 end
--- / Harass Function / --
 
--- / CastQ Function / --
-function CastQ(Target)
-	---> Dynamic Q Cast
-		if Target ~= nil and ValidTarget(Target, SkillQ.range) and SkillQ.ready then
-			Packet("S_CAST", {spellId = _Q, targetNetworkId = Target.networkID}):send()
-		end
-	---<
+function CastQ(unit)
+	if unit == nil or not ValidTarget(unit, Spells.Q.range) or not Spells.Q.ready then return end
+
+	if Config.Extras.usePackets then
+		Packet("S_CAST", {spellId = Spells.Q.key, targetNetworkId = unit.networkID}):send()
+	else
+		CastSpell(Spells.Q.key, unit)
+	end
 end
--- / CastQ Function / --
 
--- / CastbQ Function / --
-function CastbQ(Target)
-	---> Minion Q Cast
-		for i, minion in ipairs(EnemyMinions.objects) do
-			if Target ~= nil and minion ~= nil and ValidTarget(Target) and SkillQ.ready then
-				if GetDistanceSqr(Target, minion) <= 500*500 then
-					if GetQPriorities(minion, Target) then
-						Packet("S_CAST", {spellId = _Q, targetNetworkId = minion.networkID}):send()
-					end
-				end
-			end
-		end
-	---<
-end
--- / CastbQ Function / --
+function CastbQ(unit)
+	if unit == nil or not ValidTarget(unit) or not Spells.Q.ready then return end
 
--- / CastW Function / --
-function CastW(Target)
-	---> Dynamic W Cast
-		if Target ~= nil and ValidTarget(Target, myHero.range) and SkillW.ready then
-			CastSpell(_W)
-		end
-	---<
-end
--- / CastW Function / --
+	for i, minion in pairs(EnemyMinions.objects) do
+		Position, HitChance = VP:GetPredictedPos(unit, Spells.Q.delay, Spells.Q.speed, myHero, false)
+		if unit == nil or minion == nil or GetDistanceSqr(Position, minion) > Spells.Q.bRange*Spells.Q.bRange or not GetQPriorities(minion, unit) then return end
 
--- / CastE Function / --
-function CastE(Target)
-	---> Dynamic E Cast
-		if Target ~= nil and ValidTarget(Target, SkillE.range) and SkillE.ready then
-			local AOECastPosition, MainTargetHitChance, nTargets = VP:GetCircularAOECastPosition(Target, SkillE.delay, SkillE.width, SkillE.range, SkillE.speed, myHero)
-			if MainTargetHitChance >= 2 and GetDistanceSqr(AOECastPosition) < SkillE.range*SkillE.range then
-				CastSpell(_E, AOECastPosition.x, AOECastPosition.z)
-			end
-		end
-	---<
-end
--- / CastE Function / --
-
--- / CastR Function / --
-function CastR(Target)
-	---> Dynamic R Cast
-		if not SkillR.ready then return end
-		local CastPosition, HitChance, heroPos = VP:GetCircularCastPosition(Target, SkillR.delay, 1)
-		if HitChance < 2 then return end
-
-		if SkillR.ready and Target ~= nil and ValidTarget(Target, SkillR.range) then
-			if CountEnemyHeroInRange(Config.Extras.RMinRange) <= Config.Extras.RMinEnemies then
-				Count, RCastPosition = GetBestCone(SkillR.range, 30)
-				if Count <= Config.Extras.RMinEnemies then
-					Packet("S_CAST", {spellId = _R, toX = RCastPosition.x, toY = RCastPosition.z}):send()
-					SkillR.casting = true
-				end
-			end
-		end
-	---<
-end
--- / CastR Function / --
-
--- / Farm Function / --
-function Farm()
-	if not SkillR.casting then
-		if Config.FarmSub.useE then
-			FarmE()
-		end
-		if Config.FarmSub.useW then
-			FarmW()
+		if Config.Extras.usePackets then
+			Packet("S_CAST", {spellId = Spells.Q.key, targetNetworkId = minion.networkID}):send()
+		else
+			CastSpell(Spells.Q.key, minion)
 		end
 	end
 end
--- / Farm Function / --
 
--- / Reset Function / --
-function Reset()
-	if _G.MMA_Loaded and _G.MMA_NextAttackAvailability < 0.6 then
-		return true
-	elseif _G.AutoCarry and (_G.AutoCarry.shotFired or _G.AutoCarry.Orbwalker:IsAfterAttack()) then 
+function CastW(unit)
+	if unit == nil or not ValidTarget(unit, myHero.range) or not Spells.W.ready then return end
+
+	CastSpell(Spells.W.key)
+end
+
+function CastE(unit)
+	if unit == nil or not ValidTarget(unit, Spells.E.range) or not Spells.E.ready then return end
+
+	local AOECastPosition, MainTargetHitChance, nTargets = VP:GetCircularAOECastPosition(Target, Spells.E.delay, Spells.E.width, Spells.E.range, Spells.E.speed, myHero)
+	if MainTargetHitChance < 2 and GetDistanceSqr(myHero, AOECastPosition) > Spells.E.range*Spells.E.range then return end
+
+	if Config.Extras.usePackets then
+		Packet("S_CAST", {spellId = Spells.E.key, toX = AOECastPosition.x, toY = AOECastPosition.z}):send()
+	else
+		CastSpell(Spells.E.key, AOECastPosition.x, AOECastPosition.z)
+	end
+end
+
+function CastR(unit)
+	if unit == nil or not ValidTarget(unit, Spells.R.range) or not Spells.R.ready then return end
+
+	local mainCastPosition, mainHitChance, maxHit = VP:GetConeAOECastPosition(unit, Spells.R.delay, 30, Spells.R.range, Spells.R.speed, myHero)
+	if mainHitChance < 2 or maxHit < Config.Ultimate.minEnemies then return end
+
+	if Config.Extras.usePackets then
+		Packet("S_CAST", {spellId = Spells.R.key, toX = mainCastPosition.x, toY = mainCastPosition.z}):send()
+	else
+		CastSpell(Spells.R.key, mainCastPosition.x, mainCastPosition.z)
+	end
+	Spells.R.casting = true
+end
+
+function KillSteal()
+	local Enemies = GetEnemyHeroes()
+	for _, enemy in pairs(Enemies) do
+		if not ValidTarget(enemy) or enemy == nil or enemy.dead or GetDistanceSqr(myHero, enemy) > 1400*1400 then return end
+
+		if getDmg("Q", enemy, myHero) > enemy.health and Config.Killsteal.useQ then
+			CastQ(enemy)
+		end
+		if (getDmg("Q", enemy, myHero) + (getDmg("Q", enemy, myHero) * 0.2)) > enemy.health and Config.Killsteal.usebQ then
+			CastbQ(enemy)
+		end
+	end
+end
+
+function OnDraw()
+	if Config.Draw.lagFree then
+		if Config.Draw.DrawQmin then
+			DrawCircle2(myHero.x, myHero.y, myHero.z, Spells.Q.range,					ARGB(255,178, 0 , 0 ))
+		end
+		if Config.Draw.DrawQmax then
+			DrawCircle2(myHero.x, myHero.y, myHero.z, Spells.Q.range + Spells.Q.bRange,	ARGB(255, 32,178,170))
+		end
+		if Config.Draw.DrawE then
+			DrawCircle2(myHero.x, myHero.y, myHero.z, Spells.E.range,					ARGB(255,128, 0 ,128))
+		end
+		if Config.Draw.DrawR then
+			DrawCircle2(myHero.x, myHero.y, myHero.z, Spells.R.range,					ARGB(255, 0, 255, 255))
+		end
+	else
+		if Config.Draw.DrawQmin then
+			DrawCircle(myHero.x, myHero.y, myHero.z, Spells.Q.range,					ARGB(255,178, 0 , 0 ))
+		end
+		if Config.Draw.DrawQmax then
+			DrawCircle(myHero.x, myHero.y, myHero.z, Spells.Q.range + Spells.Q.bRange,	ARGB(255, 32,178,170))
+		end
+		if Config.Draw.DrawE then
+			DrawCircle(myHero.x, myHero.y, myHero.z, Spells.E.range,					ARGB(255,128, 0 ,128))
+		end
+		if Config.Draw.DrawR then
+			DrawCircle(myHero.x, myHero.y, myHero.z, Spells.R.range,					ARGB(255, 0, 255, 255))
+		end
+	end
+end
+
+function OnGainBuff(unit, buff)
+	if unit.isMe and buff.name == "missfortunebulletsound" then
+		Spells.R.casting = true
+	end
+end
+
+function OnLoseBuff(unit, buff)
+	if unit.isMe and buff.name == "missfortunebulletsound" then
+		Spells.R.casting = false
+	end
+end
+
+function OnSendPacket(p)
+	if Spells.R.casting then
+		if (p.header == Packet.headers.S_MOVE or p.header == Packet.headers.S_CAST) and (Packet(p):get('spellId') ~= SUMMONER_1 and Packet(p):get('spellId') ~= SUMMONER_2) then
+			p:Block()
+		end
+	end
+end
+
+function Check()
+	EnemyMinions:update()
+
+	Target = GetCustomTarget()
+
+	for i, Spell in pairs(Spells) do
+		Spell.ready = (myHero:CanUseSpell(Spell.key) == READY)
+	end
+end
+
+function CheckDashes()
+	local Enemies = GetEnemyHeroes()
+	for _, enemy in pairs(Enemies) do
+		if enemy.dead or not ValidTarget(enemy) or GetDistanceSqr(myHero, enemy) > Spells.E.range*Spells.E.range  then return end
+
+		local IsDashing, CanHit, Position = VP:IsDashing(enemy, Spells.E.delay, Spells.E.width, Spells.E.speed, myHero)
+		if not IsDashing or not CanHit or GetDistanceSqr(myHero, Position) > Spells.E.range*Spells.E.range or not Spells.E.ready then return end
+
+		if Config.Extras.usePackets then
+			Packet("S_CAST", {spellId = Spells.E.key, toX = Position.x, toY = Position.z}):send()
+		else
+			CastSpell(Spells.E.key, Position.x, Position.z)
+		end
+	end
+end
+
+function isLowMana(unit, slider)
+	if unit.mana < (unit.maxMana * (slider / 100)) then
 		return true
 	else
 		return false
 	end
 end
--- / Reset Function / --
 
--- / KillSteal Function / --
-function KillSteal()
-	if not SkillR.casting then
-		local Enemies = GetEnemyHeroes()
-		for _, enemy in pairs(Enemies) do
-			if ValidTarget(enemy) and enemy ~= nil and not enemy.dead and GetDistanceSqr(enemy) < 1400*1400 then
-				if getDmg("Q", enemy, myHero) > enemy.health and  Config.KS.useQ then
-					CastQ(enemy)
-				end
-				if (getDmg("Q", enemy, myHero) + (getDmg("Q", enemy, myHero) * 0.2)) > enemy.health and  Config.KS.usebQ then
-					CastbQ(enemy)
-				end
-			end
-		end
-	end
-end
--- / KillSteal Function / --
+function GetTriangle(triangle_target, angle, unit)
+	if triangle_target == nil or unit == nil or GetDistanceSqr(unit, triangle_target) > Spells.Q.bRange*Spells.Q.bRange or GetDistanceSqr(myHero, triangle_target) > Spells.Q.range*Spells.Q.range then return end
 
--- / OnDraw Function / --
-function OnDraw()
-	if Config.Draw.DrawQ then
-		DrawCircle3D(myHero.x, myHero.y, myHero.z, SkillQ.range, 1,  ARGB(255, 0, 255, 255))
-	end
+	v1 = (Vector(triangle_target) - Vector(myHero)):rotated(0, angle / (180 * math.pi), 0):normalized()
+	v2 = (Vector(triangle_target) - Vector(myHero)):rotated(0, -(angle / (180 * math.pi)), 0):normalized()
+	triangle = Polygon(Point(triangle_target.x, triangle_target.z), Point(triangle_target.x + 300 * v1.x, triangle_target.z + 300 * v1.z), Point(triangle_target.x + 300 * v2.x, triangle_target.z + 300 * v2.z))
 
-	if Config.Draw.DrawE then
-		DrawCircle3D(myHero.x, myHero.y, myHero.z, SkillE.range, 1,  ARGB(255, 0, 255, 255))
-	end
-
-	if Config.Draw.DrawR then
-		DrawCircle3D(myHero.x, myHero.y, myHero.z, SkillR.range, 1,  ARGB(255, 0, 255, 255))
-	end
-end
--- / OnDraw Function / --
-
--- / OnGainBuff Function / --
-function OnGainBuff(unit, buff)
-	if unit.isMe and buff.name == "missfortunebulletsound" then
-		SkillR.casting = true
-	end
-end
--- / OnGainBuff Function / --
-
--- / OnLoseBuff Function / --
-function OnLoseBuff(unit, buff)
-	if unit.isMe and buff.name == "missfortunebulletsound" then
-		SkillR.casting = false
-	end
-end
--- / OnLoseBuff Function / --
-
--- / On Send Packet Function / --
-function OnSendPacket(p)
-	-- Block Packets if Channeling --
-	--->
-		if SkillR.casting then
-			if (p.header == Packet.headers.S_MOVE or p.header == Packet.headers.S_CAST) and (p:get('spellId') ~= SUMMONER_1 and p:get('spellId') ~= SUMMONER_2) then
-				p:Block()
-			end
-		end
-	---<
-	--- Block Packets if Channeling --
-end
--- / On Send Packet Function / --
-
--- / Check Function / --
-function Check()
-	---> Check Minions Update
-		EnemyMinions:update()
-	---<
-	---> Set up Target
-		tsTarget = GetTarget()
-		if tsTarget and tsTarget.type == "obj_AI_Hero" then
-			Target = tsTarget
-		else
-			Target = nil
-		end
-	---<
-	---> Set up Skills
-		SkillQ.ready = (myHero:CanUseSpell(_Q) == READY)
-		SkillW.ready = (myHero:CanUseSpell(_W) == READY)
-		SkillE.ready = (myHero:CanUseSpell(_E) == READY)
-		SkillR.ready = (myHero:CanUseSpell(_R) == READY)
-	---<
-	---> Set up Ult
-		if SkillR.casting then
-			if _G.AutoCarry then 
-				_G.AutoCarry.Orbwalker = false
-				if _G.AutoCarry.MainMenu ~= nil then
-						if _G.AutoCarry.CanAttack ~= nil then
-							_G.AutoCarry.CanAttack = false
-							_G.AutoCarry.CanMove = false
-						end
-				elseif _G.AutoCarry.Keys ~= nil then
-					if _G.AutoCarry.MyHero ~= nil then
-						_G.AutoCarry.MyHero:MovementEnabled(false)
-						_G.AutoCarry.MyHero:AttacksEnabled(false)
-					end
-				end
-			end
-			if _G.MMA_Loaded then
-				_G.MMA_Orbwalker	= false
-				_G.MMA_HybridMode	= false
-				_G.MMA_LaneClear	= false
-				_G.MMA_LastHit		= false
-			end
-		else
-			if _G.AutoCarry then 
-				if _G.AutoCarry.MainMenu ~= nil then
-						if _G.AutoCarry.CanAttack ~= nil then
-							_G.AutoCarry.CanAttack = true
-							_G.AutoCarry.CanMove = true
-						end
-				elseif _G.AutoCarry.Keys ~= nil then
-					if _G.AutoCarry.MyHero ~= nil then
-						_G.AutoCarry.MyHero:MovementEnabled(true)
-						_G.AutoCarry.MyHero:AttacksEnabled(true)
-					end
-				end
-			end
-		end
-	---<
-end
--- / Check Function / --
-
--- / CountMinionsHitE Function / --
-function CountMinionsHitE(pos, radius)
-	local n = 0
-	for i, minion in pairs(EnemyMinions.objects) do
-		if GetDistanceSqr(minion, pos) < (radius + 50)*(radius + 50) then
-			n = n + 1
-		end
-	end
-	return n
-end
--- / CountMinionsHitE Function / --
-
--- / GetBestEPositionFarm Function / --
-function GetBestEPositionFarm()
-	local MaxE = 0 
-	local MaxEPos 
-	for i, minion in pairs(EnemyMinions.objects) do
-		local hitE = CountMinionsHitE(minion, 100)
-		if hitE > MaxE or MaxEPos == nil then
-			MaxEPos = minion
-			MaxE = hitE
-		end
-	end
-
-	if MaxEPos then
-		return MaxEPos
+	if triangle:contains(Point(unit.x, unit.z)) then
+		return true
 	else
-		return nil
+		return false
 	end
 end
--- / GetBestEPositionFarm Function / --
 
--- / FarmE Function / --
-function FarmE()
-	if SkillE.ready and #EnemyMinions.objects > 0 then
-		local EPos = GetBestEPositionFarm()
-		if EPos then
-			CastSpell(_E, EPos.x, EPos.z)
-		end
-	end
-end
--- / FarmE Function / --
+function GetQPriorities(minion, unit)
+	if minion == nil or unit == nil or GetDistanceSqr(unit, triangle_target) > Spells.Q.bRange*Spells.Q.bRange or GetDistanceSqr(myHero, triangle_target) > Spells.Q.range*Spells.Q.range then return end
 
--- / FarmW Function / --
-function FarmW()
-	if SkillW.ready and #EnemyMinions.objects > 2 then
-		CastSpell(_W)
-	end
-end
--- / FarmW Function / --
+	for i, secure_minion in pairs(EnemyMinions.objects) do
+		if secure_minion == nil then return end
 
--- / CheckDashes Function / --
-function CheckDashes()
-	local Enemies = GetEnemyHeroes()
-	for _, enemy in ipairs(Enemies) do
-		if not enemy.dead and ValidTarget(enemy) and GetDistanceSqr(enemy) < SkillE.range*SkillE.range and Config.Extras.EGapClosers then
-			local IsDashing, CanHit, Position = VP:IsDashing(enemy, SkillE.delay, SkillE.width, SkillE.speed, myHero)
-			if IsDashing and CanHit and GetDistanceSqr(Position) < SkillE.range*SkillE.range and SkillE.ready then
-				CastSpell(_E, Position.x, Position.z)
-			end
-		end
-	end
-end
--- / CheckDashes Function / --
-
--- / isLowMana Function / --
-function isLowMana(name)
-	if name == 'Combo' or 'combo' then
-		if myHero.mana < (myHero.maxMana * ( Config.ComboSub.mManager / 100)) then
+		if GetTriangle(minion, 40, unit) and TargetHaveBuff("missfortunepassivestack", unit) then
 			return true
-		else
-			return false
 		end
-	elseif name == 'Harass' or 'harass' then
-		if myHero.mana < (myHero.maxMana * ( Config.HarassSub.mManager / 100)) then
+		if GetTriangle(minion, 20, unit) and ((GetTriangle(minion, 20, secure_minion) and GetDistance(minion, secure_minion) > GetDistance(minion, unit)) or not GetTriangle(minion, 20, secure_minion)) and minion ~= secure_minion then
 			return true
-		else
-			return false
+		end
+		if GetTriangle(minion, 40, unit) and ((GetTriangle(minion, 40, secure_minion) and GetDistance(minion, secure_minion) > GetDistance(minion, unit)) or not GetTriangle(minion, 40, secure_minion)) and minion ~= secure_minion then
+			return true
+		end
+		if GetTriangle(minion, 90, unit) and ((GetTriangle(minion, 90, secure_minion) and GetDistance(minion, secure_minion) > GetDistance(minion, unit)) or not GetTriangle(minion, 90, secure_minion)) and minion ~= secure_minion then
+			return true
 		end
 	end
-end
--- / isLowMana Function / --
 
--- / CountVectorsBetween Function / --
-function CountVectorsBetween(V1, V2, Vectors)
-	local result = 0	 
-	for i, test in ipairs(Vectors) do
-		local NVector = V1:crossP(test)
-		local NVector2 = test:crossP(V2)
-		if NVector.y >= 0 and NVector2.y >= 0 then
-			result = result + 1
-		end
-	end
-	return result
-end
--- / CountVectorsBetween Function / --
-
--- / MidPointBetween Function / --
-function MidPointBetween(V1, V2) 
-	return Vector((V1.x + V2.x)/2, 0, (V1.z + V2.z)/2)
-end
--- / MidPointBetween Function / --
-
--- / GetBestCone Function / --
-function GetBestCone(Radius, Angle)
-	local Targets = {}
-	local PosibleCastPoints = {}
-
-	for _, enemy in ipairs(GetEnemyHeroes()) do
-		if ValidTarget(enemy) then
-			local Position = VP:GetPredictedPos(enemy, SkillR.delay)
-			if Position and (GetDistanceSqr(myHero.visionPos, Position) <= Radius*Radius) and (GetDistanceSqr(myHero.visionPos, enemy) <= Radius*Radius) then
-				Targets[#Targets+1] = Vector(Position.x - myHero.x, 0, Position.z - myHero.z)
-			end
-		end
-	end
-	
-	local Best = 0
-	local BestCastPos = nil
-
-	if #Targets == 1 then
-		Best = 1
-		BestCastPos = Radius*Vector(Targets[1].x,0,Targets[1].z):normalized()
-	elseif #Targets > 1  then
-		for i, edge in ipairs(Targets) do
-			local Edge1 = Radius*Vector(edge.x,0,edge.z):normalized()
-			local Edge2 = Edge1:rotated(0, Angle, 0)
-			local Edge3 = Edge1:rotated(0, -Angle, 0)
-			
-			Count1 = CountVectorsBetween(Edge1, Edge2, Targets)
-			Count2 = CountVectorsBetween(Edge3, Edge1, Targets)
-			
-			if Count1 >= Best then
-				Best = Count1
-				BestCastPos = MidPointBetween(Edge1, Edge2)
-			end
-			if Count2 >= Best then
-				Best = Count2
-				BestCastPos = MidPointBetween(Edge3, Edge1)
-			end
-		end
-	end
-	
-
-	if BestCastPos then
-		BestCastPos = Vector(myHero.x + BestCastPos.x, 0, myHero.z+BestCastPos.z)
-	end
-	return Best, BestCastPos
-end	
--- / GetBestCone Function / --
-
--- / CountEnemiesInCone Function / --
-function CountEnemiesInCone(CastPoint, Radius, Angle)
-	local Direction = Radius * (-Vector(myHero.x, 0, myHero.z) + Vector(CastPoint.x,0,CastPoint.z)):normalized()
-	local Vector1 = Direction:rotated(0, Angle/2, 0) 
-	local Vector2 = Direction:rotated(0, -Angle/2, 0)
-	local Targets = {}
-
-	for _, enemy in ipairs(GetEnemyHeroes()) do
-		if ValidTarget(enemy) then
-			local Position = VP:GetPredictedPos(enemy, Rdelay/1000)
-			if Position and (GetDistanceSqr(myHero.visionPos, Position) <= Radius*Radius) and GetDistanceSqr(myHero.visionPos, enemy) <= Radius*Radius then
-				Targets[#Targets+1] = Vector(Position.x - myHero.x, 0, Position.z - myHero.z)
-			end
-		end
-	end
-	return CountVectorsBetween(Vector2, Vector1, Targets)
-end
--- / CountEnemiesInCone Function / --
-
--- / GetTriangle Function / --
-function GetTriangle(triangle_target, Angle, Target)
-	if triangle_target ~= nil and Target ~= nil then
-		if GetDistanceSqr(Target, triangle_target) <= 500*500 and GetDistanceSqr(triangle_target) <= SkillQ.range*SkillQ.range then
-			v1 = (Vector(triangle_target) - Vector(myHero)):rotated(0, Angle / (180 * math.pi), 0):normalized()
-			v2 = (Vector(triangle_target) - Vector(myHero)):rotated(0, -(Angle / (180 * math.pi)), 0):normalized()
-			triangle = Polygon(Point(triangle_target.x, triangle_target.z), Point(triangle_target.x + 300 * v1.x, triangle_target.z + 300 * v1.z), Point(triangle_target.x + 300 * v2.x, triangle_target.z + 300 * v2.z))
-
-			if triangle:contains(Point(Target.x, Target.z)) then
-				return true
-			else
-				return false
-			end
-		end
-	end
-end
--- / GetTriangle Function / --
-
--- / GetQPriorities Function / --
-function GetQPriorities(minion, Target)
-	if minion ~= nil and Target ~= nil then
-		if GetDistanceSqr(Target, triangle_target) <= 500*500 and GetDistanceSqr(triangle_target) <= SkillQ.range*SkillQ.range then
-			for i, secure_minion in ipairs(EnemyMinions.objects) do
-				if secure_minion ~= nil then
-					if GetTriangle(minion, 40, Target) and TargetHaveBuff("missfortunepassivestack", Target) then
-						return true
-					end
-					if GetTriangle(minion, 20, Target) and ((GetTriangle(minion, 20, secure_minion) and GetDistance(minion, secure_minion) > GetDistance(minion, Target)) or not GetTriangle(minion, 20, secure_minion)) and minion ~= secure_minion then
-						return true
-					end
-					if GetTriangle(minion, 40, Target) and ((GetTriangle(minion, 40, secure_minion) and GetDistance(minion, secure_minion) > GetDistance(minion, Target)) or not GetTriangle(minion, 40, secure_minion)) and minion ~= secure_minion then
-						return true
-					end
-					if GetTriangle(minion, 90, Target) and ((GetTriangle(minion, 90, secure_minion) and GetDistance(minion, secure_minion) > GetDistance(minion, Target)) or not GetTriangle(minion, 90, secure_minion)) and minion ~= secure_minion then
-						return true
-					end
-				end
-			end
-		end
-	end
 	return false
 end
--- / GetQPriorities Function / --
+
+function DrawCircleNextLvl(x, y, z, radius, width, color, chordlength)
+	radius = radius or 300
+	quality = math.max(8, round(180 / math.deg((math.asin((chordlength / (2 * radius)))))))
+	quality = 2 * math.pi / quality
+	radius = radius * .92
+	local points = {}
+	
+	for theta = 0, 2 * math.pi + quality, quality do
+		local c = WorldToScreen(D3DXVECTOR3(x + radius * math.cos(theta), y, z - radius * math.sin(theta)))
+		points[#points + 1] = D3DXVECTOR2(c.x, c.y)
+	end
+	
+	DrawLines2(points, width or 1, color or 4294967295)
+end
+
+function round(num) 
+	if num >= 0 then return math.floor(num+.5) else return math.ceil(num-.5) end
+end
+
+function DrawCircle2(x, y, z, radius, color)
+	local vPos1 = Vector(x, y, z)
+	local vPos2 = Vector(cameraPos.x, cameraPos.y, cameraPos.z)
+	local tPos = vPos1 - (vPos1 - vPos2):normalized() * radius
+	local sPos = WorldToScreen(D3DXVECTOR3(tPos.x, tPos.y, tPos.z))
+	
+	if OnScreen({ x = sPos.x, y = sPos.y }, { x = sPos.x, y = sPos.y }) then
+		DrawCircleNextLvl(x, y, z, radius, 1, color, PanthMenu.drawing.lfc.CL) 
+	end
+end
