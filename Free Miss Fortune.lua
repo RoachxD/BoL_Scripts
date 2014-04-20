@@ -172,7 +172,6 @@ function Menu()
 			Config.Draw.Range:addParam("DrawQmas", "Draw Q Min Range", SCRIPT_PARAM_ONOFF, true)
 			Config.Draw.Range:addParam("DrawE", "Draw E Range", SCRIPT_PARAM_ONOFF, true)
 			Config.Draw.Range:addParam("DrawR", "Draw R Range", SCRIPT_PARAM_ONOFF, true)
-			Config.Draw.Range:addParam("Triangle", "Draw Triangle Indicator", SCRIPT_PARAM_ONOFF, true)
 		Config.Draw:addParam("lagFree", "Use Lag Free Circles", SCRIPT_PARAM_ONOFF, false)
 
 	Config:addSubMenu("Extras", "Extras")
