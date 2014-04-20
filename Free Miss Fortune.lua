@@ -1,4 +1,4 @@
-local MF_Ver = "1.00"
+local MF_Ver = "1.01"
 --[[
 
 
@@ -10,12 +10,14 @@ local MF_Ver = "1.00"
 			YP  YP  YP Y888888P `8888Y' `8888Y'      YP       `Y88P'  88   YD    YP    ~Y8888P' VP   V8P Y88888P 
 
 
-		Script - Miss Fortune 1.00 by Roach
+		Script - Miss Fortune 1.01 by Roach
 
 		Dependency: 
 			- Nothing
 
 		Changelog:
+			1.01
+				- Fixed spamming errors to Random Users
 			1.00
 				- Revamped the whole script
 				- Removed Farming Function as SAC / MMA handles that
@@ -141,7 +143,7 @@ function Init()
 end
 
 function Menu()
-	Config = scriptConfig("Miss Fortune v"..MF_Ver, "Miss Fortune")
+	Config = scriptConfig("Miss Fortune v"..MF_Ver, "MF")
 
 	Config:addSubMenu("Combo", "Combo")
 		Config.Combo:addParam("useQ", "Use Q", SCRIPT_PARAM_ONOFF, true)
@@ -194,11 +196,9 @@ function GetCustomTarget()
 end
 
 function OnTick()
-	if not initDone then return end
+	if not initDone or Spells.R.casting then return end
 
 	Check()
-
-	if Spells.R.casting then return end
 
 	if Config.Combo.Enabled then
 		Combo(Target)
