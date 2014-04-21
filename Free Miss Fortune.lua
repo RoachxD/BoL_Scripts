@@ -1,4 +1,4 @@
-local MF_Ver = "1.01"
+local MF_Ver = "1.02"
 --[[
 
 
@@ -10,14 +10,20 @@ local MF_Ver = "1.01"
 			YP  YP  YP Y888888P `8888Y' `8888Y'      YP       `Y88P'  88   YD    YP    ~Y8888P' VP   V8P Y88888P 
 
 
-		Script - Miss Fortune 1.01 by Roach
+		Script - Miss Fortune 1.02 by Roach
 
 		Dependency: 
 			- Nothing
 
 		Changelog:
+			1.02
+				- Fixed Script not Drawing circles
+				- Fixed Ult Cancelling
+
 			1.01
 				- Fixed spamming errors to Random Users
+				- Changed OnDraw Functionality
+
 			1.00
 				- Revamped the whole script
 				- Removed Farming Function as SAC / MMA handles that
@@ -333,31 +339,33 @@ function KillSteal()
 end
 
 function OnDraw()
-	if Config.Draw.lagFree then
-		if Config.Draw.DrawQmin then
-			DrawCircle2(myHero.x, myHero.y, myHero.z, Spells.Q.range,					ARGB(255,178, 0 , 0 ))
-		end
-		if Config.Draw.DrawQmax then
-			DrawCircle2(myHero.x, myHero.y, myHero.z, Spells.Q.range + Spells.Q.bRange,	ARGB(255, 32,178,170))
-		end
-		if Config.Draw.DrawE then
-			DrawCircle2(myHero.x, myHero.y, myHero.z, Spells.E.range,					ARGB(255,128, 0 ,128))
-		end
-		if Config.Draw.DrawR then
-			DrawCircle2(myHero.x, myHero.y, myHero.z, Spells.R.range,					ARGB(255, 0, 255, 255))
-		end
-	else
-		if Config.Draw.DrawQmin then
-			DrawCircle(myHero.x, myHero.y, myHero.z, Spells.Q.range,					ARGB(255,178, 0 , 0 ))
-		end
-		if Config.Draw.DrawQmax then
-			DrawCircle(myHero.x, myHero.y, myHero.z, Spells.Q.range + Spells.Q.bRange,	ARGB(255, 32,178,170))
-		end
-		if Config.Draw.DrawE then
-			DrawCircle(myHero.x, myHero.y, myHero.z, Spells.E.range,					ARGB(255,128, 0 ,128))
-		end
-		if Config.Draw.DrawR then
-			DrawCircle(myHero.x, myHero.y, myHero.z, Spells.R.range,					ARGB(255, 0, 255, 255))
+	if not myHero.dead then
+		if Config.Draw.lagFree then
+			if Config.Draw.Range.DrawQmin then
+				DrawCircle2(myHero.x, myHero.y, myHero.z, Spells.Q.range,					ARGB(255,178, 0 , 0 ))
+			end
+			if Config.Draw.Range.DrawQmax then
+				DrawCircle2(myHero.x, myHero.y, myHero.z, Spells.Q.range + Spells.Q.bRange,	ARGB(255, 32,178,170))
+			end
+			if Config.Draw.Range.DrawE then
+				DrawCircle2(myHero.x, myHero.y, myHero.z, Spells.E.range,					ARGB(255,128, 0 ,128))
+			end
+			if Config.Draw.Range.DrawR then
+				DrawCircle2(myHero.x, myHero.y, myHero.z, Spells.R.range,					ARGB(255, 0, 255, 255))
+			end
+		else
+			if Config.Draw.Range.DrawQmin then
+				DrawCircle(myHero.x, myHero.y, myHero.z, Spells.Q.range,					ARGB(255,178, 0 , 0 ))
+			end
+			if Config.Draw.Range.DrawQmax then
+				DrawCircle(myHero.x, myHero.y, myHero.z, Spells.Q.range + Spells.Q.bRange,	ARGB(255, 32,178,170))
+			end
+			if Config.Draw.Range.DrawE then
+				DrawCircle(myHero.x, myHero.y, myHero.z, Spells.E.range,					ARGB(255,128, 0 ,128))
+			end
+			if Config.Draw.Range.DrawR then
+				DrawCircle(myHero.x, myHero.y, myHero.z, Spells.R.range,					ARGB(255, 0, 255, 255))
+			end
 		end
 	end
 end
@@ -377,7 +385,7 @@ end
 function OnSendPacket(p)
 	if Spells.R.casting then
 		if (p.header == Packet.headers.S_MOVE or p.header == Packet.headers.S_CAST) and (Packet(p):get('spellId') ~= SUMMONER_1 and Packet(p):get('spellId') ~= SUMMONER_2) then
-			p:Block()
+			p:block()
 		end
 	end
 end
