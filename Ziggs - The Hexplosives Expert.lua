@@ -1,4 +1,4 @@
-local Ziggs_Ver = "1.00"
+local Ziggs_Ver = "1.01"
 --[[
 
 
@@ -9,9 +9,11 @@ local Ziggs_Ver = "1.00"
 		 d8' db   .88.   88. ~8~ 88. ~8~ db   8D 
 		d88888P Y888888P  Y888P   Y888P  `8888Y' 
 
-	Script - Ziggs - The Hexplosives Expert 1.00
+	Script - Ziggs - The Hexplosives Expert 1.01
 
 	Changelog:
+		1.01
+			- Fixed OnDeleteObj Bug
 		1.00
 			- First Release
 ]]--
@@ -367,7 +369,7 @@ function Menu()
 			ZiggsMenu.misc.satchel:addParam("behindTarget", "Throw "..SpellW.name.." (W) behind Target (T)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey('T'))
 		ZiggsMenu.misc:addSubMenu("Spells - Ultimate Settings", "umisc")
 			ZiggsMenu.misc.umisc:addParam("vPredHC", "vPrediction Hitchance to Ult: ", SCRIPT_PARAM_SLICE, 2, 0, 2, 0)
-			ZiggsMenu.misc.umisc:addParam("ultRange", "Max. Range to Ult: ", SCRIPT_PARAM_SLICE, SpellR.range, 700, SpellR.range, 0)
+			ZiggsMenu.misc.umisc:addParam("ultRange", "Max Range to Ult: ", SCRIPT_PARAM_SLICE, SpellR.range, 700, SpellR.range, 0)
 			ZiggsMenu.misc.umisc:addParam("ultInfo", "The smaller is the range, the greater is the hitchance!", SCRIPT_PARAM_INFO, "")
 		--[[ZiggsMenu.misc:addSubMenu("Spells - Collision Settings", "colMisc")
 			ZiggsMenu.misc.colMisc:addParam("spellQ", "Collision for Q: ", SCRIPT_PARAM_LIST, 1, {"Custom Collision", "Normal Collision"})
@@ -466,10 +468,15 @@ function OnDeleteObj(obj)
 		SpellW.canJump = false
 	end
 
-	if FocusJungleNames[obj.name] then
-		table.remove(JungleFocusMobs, obj)
-	elseif JungleMobNames[obj.name] then
-		table.remove(JungleMobs, obj)
+	for i, Mob in pairs(JungleMobs) do
+		if obj.name == Mob.name then
+			table.remove(JungleMobs, i)
+		end
+	end
+	for i, Mob in pairs(JungleFocusMobs) do
+		if obj.name == Mob.name then
+			table.remove(JungleFocusMobs, i)
+		end
 	end
 end
 
@@ -661,15 +668,13 @@ function AutoPots()
 	for i, Pot in pairs(Consumables) do
 		Pot.ready = GetInventorySlotItem(Pot.id) and myHero:CanUseSpell(GetInventorySlotItem(Pot.id)) == READY
 	end
-	-- ZiggsMenu.misc.auto:addParam("HPHealth", "Min. HP Percent: ", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
-	-- ZiggsMenu.misc.auto:addParam("MPMana", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
 	if ZiggsMenu.misc.auto.healthPot then
 		if isLow('HP', myHero, ZiggsMenu.misc.auto.HPHealth) and not Consumables.UsingHP then
 
 		end
 	end
 	if ZiggsMenu.misc.auto.manaPot then
-		if isLow('Mana', myHero, ZiggsMenu.misc.auto.MPMana) then
+		if isLow('Mana', myHero, ZiggsMenu.misc.auto.MPMana) and not Consumables.UsingMana then
 
 		end
 	end
