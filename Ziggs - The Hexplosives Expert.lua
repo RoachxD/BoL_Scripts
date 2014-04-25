@@ -1,4 +1,4 @@
-local Ziggs_Ver = "1.011"
+local Ziggs_Ver = "1.012"
 --[[
 
 
@@ -9,13 +9,19 @@ local Ziggs_Ver = "1.011"
 		 d8' db   .88.   88. ~8~ 88. ~8~ db   8D 
 		d88888P Y888888P  Y888P   Y888P  `8888Y' 
 
-	Script - Ziggs - The Hexplosives Expert 1.00
+	Script - Ziggs - The Hexplosives Expert 1.01
 
 	Changelog:
 		1.01
 			- Fixed OnDeleteObj Bug
 			- Fixed Spamming Errors about 'nil' Table
 			- Fixed Spamming Errors about 'range'
+			- Fixed Spells throwing at Mouse Pos
+			- Removed Auto-Pots Option
+			- Fixed Killsteal Option
+			- Fixed Auto-Ignite Option
+			- Fixed Orbwalker Bug
+
 		1.00
 			- First Release
 ]]--
@@ -99,16 +105,14 @@ function OnTick()
 	SatchelKey		= ZiggsMenu.misc.satchel.satchJump
 	SatchelbKey		= ZiggsMenu.misc.satchel.behindTarget
 
-	if Target then
-		if ComboKey then
-			Combo(Target)
-		end
-		if HarassKey then
-			Harass(Target)
-		end
-		if SatchelbKey then
-			CastW(Target)
-		end
+	if ComboKey then
+		Combo(Target)
+	end
+	if HarassKey then
+		Harass(Target)
+	end
+	if SatchelbKey then
+		CastW(Target)
 	end
 	if FarmKey then
 		Farm()
@@ -130,12 +134,14 @@ function Variables()
 		TTMAP = false
 	end
 
-	SpellP = {name = "Short Fuse",			buffName = "ZiggsPassiveBuff",																  ready = false,			dmg = 0									}
+	SpellP = {name = "Short Fuse",			buffName = "ZiggsPassiveBuff",																   ready = false,			 dmg = 0								 }
 
-	SpellQ = {name = "Bouncing Bomb",		minrange =  850, maxrange = 1400, mindelay = .25, maxdelay = .5,   speed = 1750, width = 150, ready = false, pos = nil, dmg = 0, manaUsage = 0, canJump = false }
-	SpellW = {name = "Satchel Charge",	       range = 1000,					 delay = .5,  behindpos = nil, speed = 1750, width = 275, ready = false, pos = nil, dmg = 0, manaUsage = 0					}
-	SpellE = {name = "Hexplosive Minefield",   range =  900,					 delay = .25,				   speed = 1750, width = 235, ready = false, pos = nil, dmg = 0, manaUsage = 0					}
-	SpellR = {name = "Mega Inferno Bomb",	   range = 5300, 					 delay = .25,				   speed = 1750, width = 550, ready = false, pos = nil, dmg = 0, manaUsage = 0					}
+	SpellQ = {name = "Bouncing Bomb",		minrange =  850, maxrange = 1400, mindelay = 0.25, maxdelay = 0.5,	speed = 1750, width = 150, ready = false, pos = nil, dmg = 0, manaUsage = 0, canJump = false }
+	SpellW = {name = "Satchel Charge",	       range = 1000,					 delay = 0.50, behindpos = nil,	speed = 1750, width = 275, ready = false, pos = nil, dmg = 0, manaUsage = 0					 }
+	SpellE = {name = "Hexplosive Minefield",   range =  900,					 delay = 0.25,					speed = 1750, width = 235, ready = false, pos = nil, dmg = 0, manaUsage = 0					 }
+	SpellR = {name = "Mega Inferno Bomb",	   range = 5300, 					 delay = 0.25,					speed = 1750, width = 550, ready = false, pos = nil, dmg = 0, manaUsage = 0					 }
+
+	SpellI = {name = "SummonerDot",			   range =  600,																			   ready = false,			 dmg = 0,				 var = nil		 }
 
 	vPred = VPrediction()
 	
@@ -151,7 +157,6 @@ function Variables()
 
 	ProdQCollision = Collision(SpellQ.maxrange, SpellQ.speed, SpellQ.maxdelay, SpellQ.width)
 
-	lastAnimation = "Run"
 	lastAttack = 0
 	lastAttackCD = 0
 	lastWindUpTime = 0
@@ -378,11 +383,6 @@ function Menu()
 			ZiggsMenu.misc.colMisc:addParam("colInfo", "Using the Custom Collision is better because was made specially for Ziggs's Q", SCRIPT_PARAM_INFO, "")]]--
 		ZiggsMenu.misc:addSubMenu("Spells - Cast Settings", "cast")
 			ZiggsMenu.misc.cast:addParam("usePackets", "Use Packets to Cast Spells", SCRIPT_PARAM_ONOFF, false)
-		ZiggsMenu.misc:addSubMenu("Auto - Auto Settings", "auto")
-			ZiggsMenu.misc.auto:addParam("healthPot", "Auto Health Pots", SCRIPT_PARAM_ONOFF, true)
-			ZiggsMenu.misc.auto:addParam("manaPot", "Auto Mana Pots", SCRIPT_PARAM_ONOFF, true)
-			ZiggsMenu.misc.auto:addParam("HPHealth", "Min. HP Percent: ", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
-			ZiggsMenu.misc.auto:addParam("MPMana", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
 
 	ZiggsMenu:addParam("predType", "Prediction Type", SCRIPT_PARAM_LIST, 1, { "Prodiction", "VPrediction" })
 
@@ -394,18 +394,20 @@ function Menu()
 end
 
 function OnProcessSpell(unit, spell)
+	if unit.isMe then
+		if spell.name:lower():find("attack") then
+			lastAttack = GetTickCount() - GetLatency() * 0.5
+			lastWindUpTime = spell.windUpTime * 1000
+			lastAttackCD = spell.animationTime * 1000
+		end
+	end
+
 	if ZiggsMenu.misc.smisc.stopChannel then
 		if GetDistanceSqr(unit) <= SpellW.range*SpellW.range and SpellW.ready then
 			if InterruptingSpells[spell.name] then
 				CastSpell(_W, unit.visionPos.x, unit.visionPos.z)
 			end
 		end
-	end
-
-	if spell.name:lower():find("attack") then
-		lastAttack = GetTickCount() - GetLatency() * .5
-		lastWindUpTime = spell.windUpTime * 1000
-		lastAttackCD = spell.animationTime * 1000
 	end
 end
 
@@ -526,7 +528,12 @@ function TickChecks()
 	SpellE.manaUsage = myHero:GetSpellData(_E).mana
 	SpellR.manaUsage = myHero:GetSpellData(_R).mana
 
-	iReady = (ignite ~= nil and myHero:CanUseSpell(ignite) == READY)
+	if myHero:GetSpellData(SUMMONER_1).name:find(SpellI.name) then
+		SpellI.var = SUMMONER_1
+	elseif myHero:GetSpellData(SUMMONER_2).name:find(SpellI.name) then
+		SpellI.var = SUMMONER_2
+	end
+	SpellI.ready = (SpellI.var ~= nil and myHero:CanUseSpell(SpellI.var) == READY)
 
 	Target = GetTarget()
 
@@ -556,9 +563,9 @@ function UseItems(unit)
 end
 
 function Combo(unit)
-	if unit ~= nil and unit.valid then
+	if ValidTarget(unit) and unit ~= nil then
 		if ZiggsMenu.combo.comboOrbwalk then
-			OrbWalking(Target)
+			OrbWalking(unit)
 		end
 		if ZiggsMenu.combo.comboItems then
 			UseItems(unit)
@@ -585,9 +592,9 @@ function Combo(unit)
 end
 
 function Harass(unit)
-	if unit ~= nil and unit.valid then
+	if ValidTarget(unit) and unit ~= nil then
 		if ZiggsMenu.harass.harassOrbwalk then
-			OrbWalking(Target)
+			OrbWalking(unit)
 		end
 		if not isLow('Mana', myHero, ZiggsMenu.harass.harassMana) then
 			if ZiggsMenu.harass.qHarass then
@@ -666,32 +673,16 @@ function SatchelJump()
 	end
 end
 
-function AutoPots()
-	for i, Pot in pairs(Consumables) do
-		Pot.ready = GetInventorySlotItem(Pot.id) and myHero:CanUseSpell(GetInventorySlotItem(Pot.id)) == READY
-	end
-	if ZiggsMenu.misc.auto.healthPot then
-		if isLow('HP', myHero, ZiggsMenu.misc.auto.HPHealth) and not Consumables.UsingHP then
-
-		end
-	end
-	if ZiggsMenu.misc.auto.manaPot then
-		if isLow('Mana', myHero, ZiggsMenu.misc.auto.MPMana) and not Consumables.UsingMana then
-
-		end
-	end
-end
-
 function CastQ(unit)
 	if not SpellQ.ready or (GetDistanceSqr(unit, myHero) > SpellQ.maxrange*SpellQ.maxrange) then
 		return false
 	end
-	if GetDistanceSqr(unit, myHero) < SpellQ.minrange*SpellQ.minrange then
+	if GetDistanceSqr(unit, myHero) <= SpellQ.minrange*SpellQ.minrange then
 		if ZiggsMenu.predType == 1 then
 			SpellQ.pos = ProdQMin:GetPrediction(unit)
 			if SpellQ.pos ~= nil then
 				if ZiggsMenu.misc.cast.usePackets then
-					Packet("S_CAST", { spellId = _Q, toX = SpellQ.pos.x, toY = SpellQ.pos.z }):send()
+					Packet("S_CAST", { spellId = _Q, toX = SpellQ.pos.x, toY = SpellQ.pos.z, fromX = SpellQ.pos.x, fromY = SpellQ.pos.z }):send()
 				else
 					CastSpell(_Q, SpellQ.pos.x, SpellQ.pos.z)
 				end
@@ -701,21 +692,21 @@ function CastQ(unit)
 			local CastPos, HitChance, Position = vPred:GetCircularCastPosition(unit, SpellQ.mindelay, SpellQ.width, SpellQ.minrange, SpellQ.speed, myHero, false)
 			if HitChance >= 2 then
 				if ZiggsMenu.misc.cast.usePackets then
-					Packet("S_CAST", { spellId = _Q, toX = CastPos.x, toY = CastPos.z }):send()
+					Packet("S_CAST", { spellId = _Q, toX = CastPos.x, toY = CastPos.z, fromX = CastPos.x, fromY = CastPos.z }):send()
 				else
 					CastSpell(_Q, CastPos.x, CastPos.z)
 				end
 				return true
 			end
 		end
-	elseif GetDistanceSqr(unit, myHero) < SpellQ.maxrange*SpellQ.maxrange then
+	elseif GetDistanceSqr(unit, myHero) <= SpellQ.maxrange*SpellQ.maxrange then
 		if ZiggsMenu.predType == 1 then
 			SpellQ.pos = ProdQMax:GetPrediction(unit)
 			if SpellQ.pos ~= nil then
 				local willCollide = ProdQCollision:GetMinionCollision(unit, SpellQ.pos)
 				if not willCollide then
 					if ZiggsMenu.misc.cast.usePackets then
-						Packet("S_CAST", { spellId = _Q, toX = SpellQ.pos.x, toY = SpellQ.pos.z }):send()
+						Packet("S_CAST", { spellId = _Q, toX = SpellQ.pos.x, toY = SpellQ.pos.z, fromX = SpellQ.pos.x, fromY = SpellQ.pos.z }):send()
 					else
 						CastSpell(_Q, SpellQ.pos.x, SpellQ.pos.z)
 					end
@@ -726,7 +717,7 @@ function CastQ(unit)
 			local CastPos, HitChance, Position = vPred:GetCircularCastPosition(unit, SpellQ.maxdelay, SpellQ.width, SpellQ.maxrange, SpellQ.speed, myHero, true)
 			if HitChance >= 2 then
 				if ZiggsMenu.misc.cast.usePackets then
-					Packet("S_CAST", { spellId = _Q, toX = CastPos.x, toY = CastPos.z }):send()
+					Packet("S_CAST", { spellId = _Q, toX = CastPos.x, toY = CastPos.z, fromX = CastPos.x, fromY = CastPos.z }):send()
 				else
 					CastSpell(_Q, CastPos.x, CastPos.z)
 				end
@@ -745,7 +736,7 @@ function CastW(unit)
 		if SpellW.pos ~= nil then
 			SpellW.behindpos = unit + (Vector(unit.visionPos.x, unit.visionPos.y, unit.visionPos.z) - Vector(SpellW.pos.x, SpellW.pos.y, SpellW.pos.z)):normalized()*(SpellW.width+100)
 			if ZiggsMenu.misc.cast.usePackets then
-				Packet("S_CAST", { spellId = _W, toX = SpellW.behindpos.x, toY = SpellW.behindpos.z }):send()
+				Packet("S_CAST", { spellId = _W, toX = SpellW.behindpos.x, toY = SpellW.behindpos.z, fromX = SpellW.behindpos.x, fromY = SpellW.behindpos.z }):send()
 			else
 				CastSpell(_W, SpellW.behindpos.x, SpellW.behindpos.z)
 			end
@@ -756,7 +747,7 @@ function CastW(unit)
 		if HitChance >= 2 then
 			SpellW.behindpos = unit + (Vector(unit.visionPos.x, unit.visionPos.y, unit.visionPos.z) - Vector(CastPos.x, CastPos.y, CastPos.z)):normalized()*(SpellW.width+100)
 			if ZiggsMenu.misc.cast.usePackets then
-				Packet("S_CAST", { spellId = _W, toX = SpellW.behindpos.x, toY = SpellW.behindpos.z }):send()
+				Packet("S_CAST", { spellId = _W, toX = SpellW.behindpos.x, toY = SpellW.behindpos.z, fromX = SpellW.behindpos.x, fromY = SpellW.behindpos.z }):send()
 			else
 				CastSpell(_W, SpellW.behindpos.x, SpellW.behindpos.z)
 			end
@@ -774,7 +765,7 @@ function CastE(unit)
 		SpellE.pos = ProdE:GetPrediction(unit)
 		if SpellE.pos ~= nil then
 			if ZiggsMenu.misc.cast.usePackets then
-				Packet("S_CAST", { spellId = _E, toX = SpellE.pos.x, toY = SpellE.pos.z }):send()
+				Packet("S_CAST", { spellId = _E, toX = SpellE.pos.x, toY = SpellE.pos.z, fromX = SpellE.pos.x, fromY = SpellE.pos.z }):send()
 			else
 				CastSpell(_E, SpellE.pos.x, SpellE.pos.z)
 			end
@@ -784,7 +775,7 @@ function CastE(unit)
 		local CastPos, HitChance, nTargets = vPred:GetCircularAOECastPosition(unit, SpellE.delay, SpellE.width, SpellE.range, SpellE.speed, myHero)
 		if HitChance >= 2 then
 			if ZiggsMenu.misc.cast.usePackets then
-				Packet("S_CAST", { spellId = _E, toX = CastPos.x, toY = CastPos.z }):send()
+				Packet("S_CAST", { spellId = _E, toX = CastPos.x, toY = CastPos.z, fromX = CastPos.x, fromY = CastPos.z }):send()
 			else
 				CastSpell(_E, CastPos.x, CastPos.z)
 			end
@@ -803,7 +794,7 @@ function CastR(unit)
 		SpellR.pos = ProdR:GetPrediction(unit)
 		if SpellR.pos ~= nil then
 			if ZiggsMenu.misc.cast.usePackets then
-				Packet("S_CAST", { spellId = _R, toX = SpellR.pos.x, toY = SpellR.pos.z }):send()
+				Packet("S_CAST", { spellId = _R, toX = SpellR.pos.x, toY = SpellR.pos.z, fromX = SpellR.pos.x, fromY = SpellR.pos.z }):send()
 			else
 				CastSpell(_R, SpellR.pos.x, SpellR.pos.z)
 			end
@@ -813,7 +804,7 @@ function CastR(unit)
 		local CastPos, HitChance, nTargets = vPred:GetCircularAOECastPosition(unit, SpellR.delay, SpellR.width, SpellR.range, SpellR.speed, myHero)
 		if HitChance >= ZiggsMenu.misc.umisc.vPredHC then
 			if ZiggsMenu.misc.cast.usePackets then
-				Packet("S_CAST", { spellId = _R, toX = CastPos.x, toY = CastPos.z }):send()
+				Packet("S_CAST", { spellId = _R, toX = CastPos.x, toY = CastPos.z, fromX = CastPos.x, fromY = CastPos.z }):send()
 			else
 				CastSpell(_R, CastPos.x, CastPos.z)
 			end
@@ -822,27 +813,27 @@ function CastR(unit)
 	end
 end
 
-function OrbWalking(Target)
-	if TimeToAttack() and GetDistanceSqr(Target) <= (myHero.range + GetDistance(myHero.minBBox))*(myHero.range + GetDistance(myHero.minBBox)) then
-		myHero:Attack(Target)
+function OrbWalking(unit)
+	if TimeToAttack() and GetDistanceSqr(unit) <= (myHero.range + GetDistance(myHero.minBBox))*(myHero.range + GetDistance(myHero.minBBox)) then
+		myHero:Attack(unit)
 	elseif heroCanMove() then
 		moveToCursor()
 	end
 end
 
 function TimeToAttack()
-	return (GetTickCount() + GetLatency() * .5 > lastAttack + lastAttackCD)
+	return (GetTickCount() + GetLatency() * 0.5 > lastAttack + lastAttackCD)
 end
 
 function heroCanMove()
-	return (GetTickCount() + GetLatency() * .5 > lastAttack + lastWindUpTime + 20)
+	return (GetTickCount() + GetLatency() * 0.5 > lastAttack + lastWindUpTime + 20)
 end
 
 function moveToCursor()
 	if GetDistance(mousePos) then
 		local moveToPos = myHero + (Vector(mousePos) - myHero):normalized()*300
 
-		Packet('S_MOVE', {x = moveToPos.x, y = moveToPos.z}):send()
+		Packet('S_MOVE', { x = moveToPos.x, y = moveToPos.z }):send()
 	end		
 end
 
@@ -888,11 +879,12 @@ function DmgCalc()
 	for i = 1, enemyCount do
 		local enemy = enemyTable[i].player
 		if ValidTarget(enemy) and enemy.visible then
-			SpellP.dmg = (SpellP.ready and getDmg("P", enemy, myHero)) or 0
-			SpellQ.dmg = (SpellQ.ready and getDmg("Q", enemy, myHero)) or 0
-			SpellW.dmg = (SpellW.ready and getDmg("W", enemy, myHero)) or 0
-			SpellE.dmg = (SpellE.ready and getDmg("E", enemy, myHero)) or 0
-			SpellR.dmg = (SpellR.ready and getDmg("R", enemy, myHero)) or 0
+			SpellP.dmg = (SpellP.ready and getDmg("P",		enemy, myHero)) or 0
+			SpellQ.dmg = (SpellQ.ready and getDmg("Q",		enemy, myHero)) or 0
+			SpellW.dmg = (SpellW.ready and getDmg("W",		enemy, myHero)) or 0
+			SpellE.dmg = (SpellE.ready and getDmg("E",		enemy, myHero)) or 0
+			SpellR.dmg = (SpellR.ready and getDmg("R",		enemy, myHero)) or 0
+			SpellI.dmg = (SpellI.ready and getDmg("IGNITE", enemy, myHero)) or 0
 
 			if enemy.health < SpellR.dmg then
 				enemyTable[i].indicatorText = "R Kill"
@@ -964,10 +956,10 @@ end
 function KillSteal()
 	for i = 1, enemyCount do
 		local enemy = enemyTable[i].player
-		if ValidTarget(enemy) and enemy.visible then
+		if ValidTarget(enemy) and enemy ~= nil then
 			local Distance = GetDistanceSqr(enemy)
 			local Health = enemy.health
-			if SpellQ.ready and Distance < SpellQ.range*SpellQ.range and Health < SpellQ.dmg then
+			if SpellQ.ready and Distance < SpellQ.maxrange * SpellQ.maxrange and Health < SpellQ.dmg then
 				CastQ(enemy)
 			elseif SpellW.ready and ZiggsMenu.ks.useW and Distance < SpellW.range * SpellW.range and Health < SpellW.dmg then
 				CastW(enemy)
@@ -975,16 +967,25 @@ function KillSteal()
 				CastQ(enemy)
 			elseif SpellQ.ready and SpellE.ready and Distance < SpellE.range * SpellE.range and Health < (SpellQ.dmg +  SpellE.dmg) then
 				CastE(enemy)
-			elseif SpellR.ready and Health < SpellR.dmg and Distance < SpellR.range then
+			elseif SpellR.ready and Health < SpellR.dmg and Distance < ZiggsMenu.misc.umisc.ultRange * ZiggsMenu.misc.umisc.ultRange then
 				CastR(enemy)
 			elseif SpellR.ready and SpellQ.ready and Health < SpellR.dmg + SpellQ.dmg then
 				CastQ(enemy)
 			elseif SpellR.ready and SpellE.ready and Health < SpellR.dmg + SpellE.dmg then
 				CastE(enemy)
-			elseif SpellQ.ready and SpellE.ready and SpellR.ready and Distance < SpellE.range * Spell.E.range and Health < (SpellQ.dmg + SpellE.dmg + SpellR.dmg) then
+			elseif SpellQ.ready and SpellE.ready and SpellR.ready and Distance < SpellQ.range * SpellQ.range and Health < (SpellQ.dmg + SpellE.dmg + SpellR.dmg) then
 				CastQ(enemy)
 			end
+			if ZiggsMenu.ks.autoIgnite then
+				AutoIgnite(enemy)
+			end
 		end
+	end
+end
+
+function AutoIgnite(unit)
+	if unit.health <= SpellI.dmg and GetDistanceSqr(unit) <= SpellI.range * SpellI.range then
+		if SpellI.ready then CastSpell(SpellI.var, unit) end
 	end
 end
 
