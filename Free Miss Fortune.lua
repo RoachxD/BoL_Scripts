@@ -1,4 +1,4 @@
-local MF_Ver = "1.021"
+local MF_Ver = "1.022"
 --[[
 
 
@@ -20,6 +20,7 @@ local MF_Ver = "1.021"
 				- Fixed Script not Drawing circles
 				- Fixed Ult Cancelling
 				- Fixed Casting E at Mouse Pos Bug
+				- Fixed Casting Ult at Mouse Pos Bug
 
 			1.01
 				- Fixed spamming errors to Random Users
@@ -318,7 +319,7 @@ function CastR(unit)
 	if mainHitChance < 2 or maxHit < Config.Ultimate.minEnemies then return end
 
 	if Config.Extras.usePackets then
-		Packet("S_CAST", {spellId = Spells.R.key, toX = mainCastPosition.x, toY = mainCastPosition.z}):send()
+		Packet("S_CAST", {spellId = Spells.R.key, toX = mainCastPosition.x, toY = mainCastPosition.z, fromX = mainCastPosition.x, fromY = mainCastPosition.z}):send()
 	else
 		CastSpell(Spells.R.key, mainCastPosition.x, mainCastPosition.z)
 	end
