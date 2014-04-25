@@ -1,4 +1,4 @@
-local Ziggs_Ver = "1.01"
+local Ziggs_Ver = "1.011"
 --[[
 
 
@@ -9,11 +9,13 @@ local Ziggs_Ver = "1.01"
 		 d8' db   .88.   88. ~8~ 88. ~8~ db   8D 
 		d88888P Y888888P  Y888P   Y888P  `8888Y' 
 
-	Script - Ziggs - The Hexplosives Expert 1.01
+	Script - Ziggs - The Hexplosives Expert 1.00
 
 	Changelog:
 		1.01
 			- Fixed OnDeleteObj Bug
+			- Fixed Spamming Errors about 'nil' Table
+			- Fixed Spamming Errors about 'range'
 		1.00
 			- First Release
 ]]--
@@ -630,7 +632,7 @@ function JungleClear()
 			if ZiggsMenu.jungle.jungleOrbwalk then
 				OrbWalking(JungleMob)
 			end
-			if ZiggsMenu.jungle.jungleQ and SpellQ.ready and GetDistanceSqr(JungleMob) <= SpellQ.range*SpellQ.range then
+			if ZiggsMenu.jungle.jungleQ and SpellQ.ready and GetDistanceSqr(JungleMob) <= SpellQ.maxrange*SpellQ.maxrange then
 				CastQ(JungleMob)
 			end
 			if ZiggsMenu.jungle.jungleE and SpellE.ready and GetDistanceSqr(JungleMob) <= SpellE.range*SpellE.range then
@@ -845,7 +847,8 @@ function moveToCursor()
 end
 
 function ArrangePriorities()
-	for i, enemy in pairs(enemyHeroes) do
+	for i = 1, enemyCount do
+		local enemy = enemyTable[i].player
 		SetPriority(priorityTable.AD_Carry, enemy, 1)
 		SetPriority(priorityTable.AP, enemy, 2)
 		SetPriority(priorityTable.Support, enemy, 3)
@@ -855,7 +858,8 @@ function ArrangePriorities()
 end
 
 function ArrangeTTPriorities()
-	for i, enemy in pairs(enemyHeroes) do
+	for i = 1, enemyCount do
+		local enemy = enemyTable[i].player
 		SetPriority(priorityTable.AD_Carry, enemy, 1)
 		SetPriority(priorityTable.AP, enemy, 1)
 		SetPriority(priorityTable.Support, enemy, 2)
