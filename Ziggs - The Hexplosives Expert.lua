@@ -1,4 +1,4 @@
-local Ziggs_Ver = "1.02"
+local Ziggs_Ver = "1.021"
 --[[
 
 
@@ -9,13 +9,14 @@ local Ziggs_Ver = "1.02"
 		 d8' db   .88.   88. ~8~ 88. ~8~ db   8D 
 		d88888P Y888888P  Y888P   Y888P  `8888Y' 
 
-	Script - Ziggs - The Hexplosives Expert 1.01
+	Script - Ziggs - The Hexplosives Expert 1.02
 
 	Changelog:
 		1.02
 			- Added 'Move to Cursor' Option while Satchel Jumping
 			- Fixed W Casting
 			- Updated vPrediction Link
+			- Improved W Accuracy
 		1.01
 			- Fixed OnDeleteObj Bug
 			- Fixed Spamming Errors about 'nil' Table
@@ -743,7 +744,7 @@ function CastW(unit)
 	if ZiggsMenu.predType == 1 then
 		SpellW.pos = ProdW:GetPrediction(unit)
 		if SpellW.pos ~= nil then
-			SpellW.behindpos = unit + (Vector(unit.visionPos.x, unit.visionPos.y, unit.visionPos.z) - Vector(SpellW.pos.x, SpellW.pos.y, SpellW.pos.z)):normalized():unpack()*50
+			SpellW.behindpos = unit + (Vector(unit.visionPos.x, unit.visionPos.y, unit.visionPos.z) - Vector(SpellW.pos.x, SpellW.pos.y, SpellW.pos.z)):normalized()*50
 			if ZiggsMenu.misc.cast.usePackets then
 				Packet("S_CAST", { spellId = _W, toX = SpellW.behindpos.x, toY = SpellW.behindpos.z, fromX = SpellW.behindpos.x, fromY = SpellW.behindpos.z }):send()
 			else
@@ -752,9 +753,9 @@ function CastW(unit)
 			return true
 		end
 	else
-		local CastPos, HitChance, nTargets = vPred:GetCircularAOECastPosition(unit, SpellW.delay, SpellW.width, SpellW.range, SpellW.speed, myHero)
+		local CastPos, HitChance, Position = vPred:GetCircularCastPosition(unit, SpellW.delay, SpellW.width, SpellW.range, SpellW.speed, myHero, false)
 		if HitChance >= 2 then
-			SpellW.behindpos = unit + (Vector(unit.visionPos.x, unit.visionPos.y, unit.visionPos.z) - Vector(CastPos.x, CastPos.y, CastPos.z)):normalized()*(SpellW.width+100)
+			SpellW.behindpos = unit + (Vector(unit.visionPos.x, unit.visionPos.y, unit.visionPos.z) - Vector(CastPos.x, CastPos.y, CastPos.z)):normalized()*50
 			if ZiggsMenu.misc.cast.usePackets then
 				Packet("S_CAST", { spellId = _W, toX = SpellW.behindpos.x, toY = SpellW.behindpos.z, fromX = SpellW.behindpos.x, fromY = SpellW.behindpos.z }):send()
 			else
