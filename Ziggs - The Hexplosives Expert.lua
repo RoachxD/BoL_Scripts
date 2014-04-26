@@ -1,4 +1,4 @@
-local Ziggs_Ver = "1.012"
+local Ziggs_Ver = "1.02"
 --[[
 
 
@@ -12,6 +12,10 @@ local Ziggs_Ver = "1.012"
 	Script - Ziggs - The Hexplosives Expert 1.01
 
 	Changelog:
+		1.02
+			- Added 'Move to Cursor' Option while Satchel Jumping
+			- Fixed W Casting
+			- Updated vPrediction Link
 		1.01
 			- Fixed OnDeleteObj Bug
 			- Fixed Spamming Errors about 'nil' Table
@@ -30,7 +34,7 @@ if myHero.charName ~= "Ziggs" or not VIP_USER then return end
 _G.Ziggs_Autoupdate = true
 
 local REQUIRED_LIBS = {
-	["VPrediction"] = "https://bitbucket.org/honda7/bol/raw/master/Common/VPrediction.lua",
+	["VPrediction"] = "https://raw.githubusercontent.com/honda7/BoL/master/Common/VPrediction.lua",
 	["Prodiction"]	= "https://bitbucket.org/Klokje/public-klokjes-bol-scripts/raw/154ae5a9505b2af87c1a6049baa529b934a498a9/Common/Prodiction.lua",
 	["Collision"]	= "https://bitbucket.org/Klokje/public-klokjes-bol-scripts/raw/154ae5a9505b2af87c1a6049baa529b934a498a9/Common/Collision.lua",
 }
@@ -373,6 +377,7 @@ function Menu()
 			ZiggsMenu.misc.smisc:addParam("AutoQ", "Auto-Q at CCed Enemies", SCRIPT_PARAM_ONOFF, false)
 		ZiggsMenu.misc:addSubMenu("Spells - Satchel Settings", "satchel")
 			ZiggsMenu.misc.satchel:addParam("satchJump", "Satchel Jump (G)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey('G'))
+			ZiggsMenu.misc.satchel:addParam("MTCsatchJump", "Move to Cursor while Satchel Jumping", SCRIPT_PARAM_ONOFF, false)
 			ZiggsMenu.misc.satchel:addParam("behindTarget", "Throw "..SpellW.name.." (W) behind Target (T)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey('T'))
 		ZiggsMenu.misc:addSubMenu("Spells - Ultimate Settings", "umisc")
 			ZiggsMenu.misc.umisc:addParam("vPredHC", "vPrediction Hitchance to Ult: ", SCRIPT_PARAM_SLICE, 2, 0, 2, 0)
@@ -654,6 +659,10 @@ function JungleClear()
 end
 
 function SatchelJump()
+	if ZiggsMenu.misc.satchel.MTCsatchJump then
+		moveToCursor()
+	end
+
 	if not SpellW.ready then return end
 
 	local X, Y, Z = (Vector(myHero) - Vector(mousePos)):normalized():unpack()
@@ -734,7 +743,7 @@ function CastW(unit)
 	if ZiggsMenu.predType == 1 then
 		SpellW.pos = ProdW:GetPrediction(unit)
 		if SpellW.pos ~= nil then
-			SpellW.behindpos = unit + (Vector(unit.visionPos.x, unit.visionPos.y, unit.visionPos.z) - Vector(SpellW.pos.x, SpellW.pos.y, SpellW.pos.z)):normalized()*(SpellW.width+100)
+			SpellW.behindpos = unit + (Vector(unit.visionPos.x, unit.visionPos.y, unit.visionPos.z) - Vector(SpellW.pos.x, SpellW.pos.y, SpellW.pos.z)):normalized():unpack()*50
 			if ZiggsMenu.misc.cast.usePackets then
 				Packet("S_CAST", { spellId = _W, toX = SpellW.behindpos.x, toY = SpellW.behindpos.z, fromX = SpellW.behindpos.x, fromY = SpellW.behindpos.z }):send()
 			else
@@ -976,6 +985,7 @@ function KillSteal()
 			elseif SpellQ.ready and SpellE.ready and SpellR.ready and Distance < SpellQ.range * SpellQ.range and Health < (SpellQ.dmg + SpellE.dmg + SpellR.dmg) then
 				CastQ(enemy)
 			end
+
 			if ZiggsMenu.ks.autoIgnite then
 				AutoIgnite(enemy)
 			end
@@ -984,8 +994,10 @@ function KillSteal()
 end
 
 function AutoIgnite(unit)
-	if unit.health <= SpellI.dmg and GetDistanceSqr(unit) <= SpellI.range * SpellI.range then
-		if SpellI.ready then CastSpell(SpellI.var, unit) end
+	if unit.health < SpellI.dmg and GetDistanceSqr(unit) <= SpellI.range * SpellI.range then
+		if SpellI.ready then
+			CastSpell(SpellI.var, unit)
+		end
 	end
 end
 
