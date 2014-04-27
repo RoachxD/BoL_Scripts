@@ -1,4 +1,4 @@
-local Ziggs_Ver = "1.032"
+local Ziggs_Ver = "1.033"
 --[[
 
 
@@ -20,6 +20,9 @@ local Ziggs_Ver = "1.032"
 			- Added a Slider for the Duration of the 'Alert Option' Text
 			- Added a new Combo Logic when you use W in Combo
 			- Fixed 'Insta W Popping' Bug
+			- Removed In-Built Orbwalker
+			- Added SOW as main Orbwalker
+			- Added MEC Ult Hotkey
 
 		1.02
 			- Added 'Move to Cursor' Option while Satchel Jumping
@@ -49,9 +52,10 @@ if myHero.charName ~= "Ziggs" or not VIP_USER then return end
 _G.Ziggs_Autoupdate = true
 
 local REQUIRED_LIBS = {
-	["VPrediction"] = "https://raw.githubusercontent.com/honda7/BoL/master/Common/VPrediction.lua",
-	["Prodiction"]	= "https://bitbucket.org/Klokje/public-klokjes-bol-scripts/raw/154ae5a9505b2af87c1a6049baa529b934a498a9/Common/Prodiction.lua",
 	["Collision"]	= "https://bitbucket.org/Klokje/public-klokjes-bol-scripts/raw/154ae5a9505b2af87c1a6049baa529b934a498a9/Common/Collision.lua",
+	["Prodiction"]	= "https://bitbucket.org/Klokje/public-klokjes-bol-scripts/raw/154ae5a9505b2af87c1a6049baa529b934a498a9/Common/Prodiction.lua",
+	["SOW"]			= "https://raw.githubusercontent.com/honda7/BoL/master/Common/SOW.lua",
+	["VPrediction"] = "https://raw.githubusercontent.com/honda7/BoL/master/Common/VPrediction.lua"
 }
 
 local DOWNLOADING_LIBS, DOWNLOAD_COUNT = false, 0
@@ -145,6 +149,16 @@ function OnTick()
 	if ZiggsMenu.ks.KillSteal then
 		KillSteal()
 	end
+	if ZiggsMenu.misc.mecUlt.Enable then
+		for i = 1, enemyCount do
+			local enemy = enemyTable[i].player
+
+			CastR(enemy, ZiggsMenu.misc.mecUlt.minEnemies)
+		end
+		if ZiggsMenu.misc.mecUlt.mecMTC
+			moveToCursor()
+		end
+	end
 	if ZiggsMenu.misc.ultAlert.Enable then
 		GetKillable()
 	end
@@ -169,9 +183,8 @@ function Variables()
 	SpellI = {name = "SummonerDot",			   range =  600,																			   ready = false,			 dmg = 0,				 var = nil		 }
 
 	vPred = VPrediction()
-	
-	Qstart = nil
-	Qend = nil
+
+	zSOW = SOW(vPred)
 
 	Prodict = ProdictManager.GetInstance()
 	ProdQMin = Prodict:AddProdictionObject(_Q, SpellQ.minrange, SpellQ.speed, SpellQ.mindelay, SpellQ.width)
@@ -181,10 +194,6 @@ function Variables()
 	ProdR = Prodict:AddProdictionObject(_R, SpellR.range,	 SpellR.speed, SpellR.delay, SpellR.width)
 
 	ProdQCollision = Collision(SpellQ.maxrange, SpellQ.speed, SpellQ.maxdelay, SpellQ.width)
-
-	lastAttack = 0
-	lastAttackCD = 0
-	lastWindUpTime = 0
 
 	enemyMinions = minionManager(MINION_ENEMY, SpellQ.maxrange, player, MINION_SORT_HEALTH_ASC)
 
@@ -352,7 +361,6 @@ function Menu()
 		ZiggsMenu.combo:addParam("useW", "Use "..SpellW.name.." (W) with Combo", SCRIPT_PARAM_ONOFF, false)
 		ZiggsMenu.combo:addParam("useR", "Use "..SpellR.name.." (R): ", SCRIPT_PARAM_LIST, 3, { "If Target Killable", "With Burst", "No" })
 		ZiggsMenu.combo:addParam("comboItems", "Use Items with Burst", SCRIPT_PARAM_ONOFF, true)
-		ZiggsMenu.combo:addParam("comboOrbwalk", "OrbWalk on Combo", SCRIPT_PARAM_ONOFF, true)
 		ZiggsMenu.combo:permaShow("comboKey")
 	
 	ZiggsMenu:addSubMenu("["..myHero.charName.."] - Harass Settings", "harass")
@@ -360,7 +368,6 @@ function Menu()
 		ZiggsMenu.harass:addParam("qHarass", "Use "..SpellQ.name.." (Q) to Harass", SCRIPT_PARAM_ONOFF, true)
 		ZiggsMenu.harass:addParam("eHarass", "Use "..SpellE.name.." (E) to Harass", SCRIPT_PARAM_ONOFF, false)
 		ZiggsMenu.harass:addParam("harassMana", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
-		ZiggsMenu.harass:addParam("harassOrbwalk", "OrbWalk on Harass", SCRIPT_PARAM_ONOFF, true)
 		ZiggsMenu.harass:permaShow("harassKey")
 		
 	
@@ -368,15 +375,12 @@ function Menu()
 		ZiggsMenu.farming:addParam("farmKey", "Farming Key (X)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey('X'))
 		ZiggsMenu.farming:addParam("qFarm", "Farm with "..SpellQ.name.." (Q)", SCRIPT_PARAM_ONOFF, true)
 		ZiggsMenu.farming:addParam("qFarmMana", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
-		ZiggsMenu.farming:addParam("aaLH", "Enable AA Last Hitting", SCRIPT_PARAM_ONOFF, true)
-		ZiggsMenu.farming:addParam("farmMTC", "Move to Cursor when Farming", SCRIPT_PARAM_ONOFF, true)
 		ZiggsMenu.farming:permaShow("farmKey")
 		
 	ZiggsMenu:addSubMenu("["..myHero.charName.."] - Jungle Clear Settings", "jungle")
 		ZiggsMenu.jungle:addParam("jungleKey", "Jungle Clear Key (V)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey('V'))
 		ZiggsMenu.jungle:addParam("jungleQ", "Clear with "..SpellQ.name.." (Q)", SCRIPT_PARAM_ONOFF, true)
 		ZiggsMenu.jungle:addParam("jungleE", "Clear with "..SpellE.name.." (E)", SCRIPT_PARAM_ONOFF, true)
-		ZiggsMenu.jungle:addParam("jungleOrbwalk", "Orbwalk on Jungle Clear", SCRIPT_PARAM_ONOFF, true)
 		
 		
 	ZiggsMenu:addSubMenu("["..myHero.charName.."] - KillSteal Settings", "ks")
@@ -405,6 +409,10 @@ function Menu()
 			ZiggsMenu.misc.umisc:addParam("vPredHC", "vPrediction Hitchance to Ult: ", SCRIPT_PARAM_SLICE, 2, 0, 2, 0)
 			ZiggsMenu.misc.umisc:addParam("ultRange", "Max Range to Ult: ", SCRIPT_PARAM_SLICE, SpellR.range, 700, SpellR.range, 0)
 			ZiggsMenu.misc.umisc:addParam("ultInfo", "The smaller is the range, the greater is the hitchance!", SCRIPT_PARAM_INFO, "")
+		ZiggsMenu.misc:addSubMenu("Spells - Ultimate MEC", "mecUlt")
+			ZiggsMenu.misc.mecUlt:addParam("Enable", "Use MEC to Ult", SCRIPT_PARAM_ONKEYDOWN, false, GetKey('U'))
+			ZiggsMenu.misc.mecUlt:addParam("minEnemies", "Min. Enemies in Radius: ", SCRIPT_PARAM_SLICE, 2, 2, 5, 0)
+			ZiggsMenu.misc.mecUlt:addParam("mecMTC", "Move to Cursor when Searching for Enemies", SCRIPT_PARAM_ONOFF, false)
 		--[[ZiggsMenu.misc:addSubMenu("Spells - Collision Settings", "colMisc")
 			ZiggsMenu.misc.colMisc:addParam("spellQ", "Collision for Q: ", SCRIPT_PARAM_LIST, 1, {"Custom Collision", "Normal Collision"})
 			ZiggsMenu.misc.colMisc:addParam("colInfo", "Using the Custom Collision is better because was made specially for Ziggs's Q", SCRIPT_PARAM_INFO, "")]]--
@@ -416,6 +424,8 @@ function Menu()
 			ZiggsMenu.misc.ultAlert:addParam("Pings", "Use Client-Side Pings to Alert", SCRIPT_PARAM_ONOFF, false)
 			ZiggsMenu.misc.ultAlert:addParam("alertInfo", "It will print a text in the middle of the screen if an Enemy is Killable", SCRIPT_PARAM_INFO, "")
 
+		ZiggsMenu:addSubMenu("["..myHero.charName.."] - Orbwalking Settings", "Orbwalking")
+			zSOW:LoadToMenu(ZiggsMenu.Orbwalking)
 
 	ZiggsMenu:addParam("predType", "Prediction Type", SCRIPT_PARAM_LIST, 1, { "Prodiction", "VPrediction" })
 
@@ -427,14 +437,6 @@ function Menu()
 end
 
 function OnProcessSpell(unit, spell)
-	if unit.isMe then
-		if spell.name:lower():find("attack") then
-			lastAttack = GetTickCount() - GetLatency() * 0.5
-			lastWindUpTime = spell.windUpTime * 1000
-			lastAttackCD = spell.animationTime * 1000
-		end
-	end
-
 	if ZiggsMenu.misc.smisc.stopChannel then
 		if GetDistanceSqr(unit) <= SpellW.range*SpellW.range and SpellW.ready then
 			if InterruptingSpells[spell.name] then
@@ -599,9 +601,6 @@ end
 
 function Combo(unit)
 	if ValidTarget(unit) and unit ~= nil then
-		if ZiggsMenu.combo.comboOrbwalk then
-			OrbWalking(unit)
-		end
 		if ZiggsMenu.combo.comboItems then
 			UseItems(unit)
 		end
@@ -618,24 +617,17 @@ function Combo(unit)
 		if ZiggsMenu.combo.useR ~= 3 then
 			if ZiggsMenu.combo.useR == 1 then
 				if unit.health < SpellR.dmg then
-					CastR(unit)
+					CastR(unit, 1)
 				end
 			else
-				CastR(unit)
+				CastR(unit, 1)
 			end
-		end
-	else
-		if ZiggsMenu.combo.comboOrbwalk then
-			moveToCursor()
 		end
 	end
 end
 
 function Harass(unit)
 	if ValidTarget(unit) and unit ~= nil then
-		if ZiggsMenu.harass.harassOrbwalk then
-			OrbWalking(unit)
-		end
 		if not isLow('Mana', myHero, ZiggsMenu.harass.harassMana) then
 			if ZiggsMenu.harass.qHarass then
 				CastQ(unit)
@@ -644,28 +636,14 @@ function Harass(unit)
 				CastE(unit)
 			end
 		end
-	else
-		if ZiggsMenu.harass.harassOrbwalk then
-			moveToCursor()
-		end
 	end
 end
 
 local nextTick = 0
 function Farm()
-	enemyMinions:update()
-	if GetTickCount() > nextTick and ZiggsMenu.farming.farmMTC then
-		moveToCursor()
-	end						
+	enemyMinions:update()				
 	for i, minion in pairs(enemyMinions.objects) do
 		if ValidTarget(minion) and minion ~= nil then
-			if ZiggsMenu.farming.aaLH then
-				local aaMinionDmg = getDmg("AD", minion, myHero) + SpellP.dmg
-				if minion.health <= aaMinionDmg and GetDistanceSqr(minion) <= myHero.range*myHero.range and GetTickCount() > nextTick then
-					myHero:Attack(minion)
-					nextTick = GetTickCount() + 450
-				end
-			end
 			if minion.health <= SpellQ.dmg and GetDistanceSqr(minion) > myHero.range*myHero.range and GetDistanceSqr(minion) <= SpellQ.maxrange*SpellQ.maxrange and ZiggsMenu.farming.qFarm and not isLow('Mana', myHero, ZiggsMenu.farming.qFarmMana) then
 				CastQ(minion)
 				nextTick = GetTickCount() + 450
@@ -678,18 +656,11 @@ function JungleClear()
 	if ZiggsMenu.jungle.jungleKey then
 		local JungleMob = GetJungleMob()
 		if JungleMob ~= nil then
-			if ZiggsMenu.jungle.jungleOrbwalk then
-				OrbWalking(JungleMob)
-			end
 			if ZiggsMenu.jungle.jungleQ and SpellQ.ready and GetDistanceSqr(JungleMob) <= SpellQ.maxrange*SpellQ.maxrange then
 				CastQ(JungleMob)
 			end
 			if ZiggsMenu.jungle.jungleE and SpellE.ready and GetDistanceSqr(JungleMob) <= SpellE.range*SpellE.range then
 				CastE(JungleMob)
-			end
-		else
-			if ZiggsMenu.jungle.jungleOrbwalk then
-				moveToCursor()
 			end
 		end
 	end
@@ -831,24 +802,36 @@ function CastE(unit)
 end
 
 
-function CastR(unit)
+function CastR(unit, enemies)
 	if unit == nil or (GetDistanceSqr(unit) > ZiggsMenu.misc.umisc.ultRange*ZiggsMenu.misc.umisc.ultRange) or not SpellR.ready then
 		return false
 	end
 
-	if ZiggsMenu.predType == 1 then
-		SpellR.pos = ProdR:GetPrediction(unit)
-		if SpellR.pos ~= nil then
-			if ZiggsMenu.misc.cast.usePackets then
-				Packet("S_CAST", { spellId = _R, toX = SpellR.pos.x, toY = SpellR.pos.z, fromX = SpellR.pos.x, fromY = SpellR.pos.z }):send()
-			else
-				CastSpell(_R, SpellR.pos.x, SpellR.pos.z)
+	if enemies == 1 then
+		if ZiggsMenu.predType == 1 then
+			SpellR.pos = ProdR:GetPrediction(unit)
+			if SpellR.pos ~= nil then
+				if ZiggsMenu.misc.cast.usePackets then
+					Packet("S_CAST", { spellId = _R, toX = SpellR.pos.x, toY = SpellR.pos.z, fromX = SpellR.pos.x, fromY = SpellR.pos.z }):send()
+				else
+					CastSpell(_R, SpellR.pos.x, SpellR.pos.z)
+				end
+				return true
 			end
-			return true
+		else
+			local CastPos, HitChance, nTargets = vPred:GetCircularAOECastPosition(unit, SpellR.delay, SpellR.width, SpellR.range, SpellR.speed, myHero)
+			if HitChance >= ZiggsMenu.misc.umisc.vPredHC then
+				if ZiggsMenu.misc.cast.usePackets then
+					Packet("S_CAST", { spellId = _R, toX = CastPos.x, toY = CastPos.z, fromX = CastPos.x, fromY = CastPos.z }):send()
+				else
+					CastSpell(_R, CastPos.x, CastPos.z)
+				end
+				return true
+			end
 		end
 	else
 		local CastPos, HitChance, nTargets = vPred:GetCircularAOECastPosition(unit, SpellR.delay, SpellR.width, SpellR.range, SpellR.speed, myHero)
-		if HitChance >= ZiggsMenu.misc.umisc.vPredHC then
+		if HitChance >= ZiggsMenu.misc.umisc.vPredHC and nTargets >= enemies then
 			if ZiggsMenu.misc.cast.usePackets then
 				Packet("S_CAST", { spellId = _R, toX = CastPos.x, toY = CastPos.z, fromX = CastPos.x, fromY = CastPos.z }):send()
 			else
@@ -857,22 +840,6 @@ function CastR(unit)
 			return true
 		end
 	end
-end
-
-function OrbWalking(unit)
-	if TimeToAttack() and GetDistanceSqr(unit) <= (myHero.range + GetDistance(myHero.minBBox))*(myHero.range + GetDistance(myHero.minBBox)) then
-		myHero:Attack(unit)
-	elseif heroCanMove() then
-		moveToCursor()
-	end
-end
-
-function TimeToAttack()
-	return (GetTickCount() + GetLatency() * 0.5 > lastAttack + lastAttackCD)
-end
-
-function heroCanMove()
-	return (GetTickCount() + GetLatency() * 0.5 > lastAttack + lastWindUpTime + 20)
 end
 
 function moveToCursor()
@@ -1004,7 +971,7 @@ function KillSteal()
 		local enemy = enemyTable[i].player
 		if ValidTarget(enemy) and enemy.visible then
 			if enemy.health < SpellR.dmg then
-				CastR(enemy)
+				CastR(enemy, 1)
 			elseif enemy.health < SpellQ.dmg then
 				CastQ(enemy)
 			elseif enemy.health < SpellW.dmg and ZiggsMenu.ks.useW then
