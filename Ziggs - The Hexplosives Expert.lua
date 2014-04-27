@@ -1,4 +1,4 @@
-local Ziggs_Ver = "1.035"
+local Ziggs_Ver = "1.036"
 --[[
 
 
@@ -1044,9 +1044,10 @@ function GetKillable()
 					Packet('R_PING',  { x = enemy.x, y = enemy.z, type = PING_FALLBACK }):receive()
 				end
 
+				enemyTable[i].ultAlert = true
 			end
 		end
-		if not enemy.visible or enemy == nil then
+		if not enemy.visible or enemy == nil or enemy.dead then
 			enemyTable[i].ultAlert = false
 		end
 	end
