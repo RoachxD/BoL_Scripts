@@ -1,4 +1,4 @@
-local Ziggs_Ver = "1.03"
+local Ziggs_Ver = "1.031"
 --[[
 
 
@@ -9,13 +9,14 @@ local Ziggs_Ver = "1.03"
 		 d8' db   .88.   88. ~8~ 88. ~8~ db   8D 
 		d88888P Y888888P  Y888P   Y888P  `8888Y' 
 
-	Script - Ziggs - The Hexplosives Expert 1.03
+	Script - Ziggs - The Hexplosives Expert 1.02
 
 	Changelog:
 		1.03
 			- Added 'Alert Option' for Ult if an enemy is Killable
 			- Improved Killsteal Function
 			- Fixed Auto-Ignite Option
+			- Fixed Spamming Errors About 'ARGB'
 
 		1.02
 			- Added 'Move to Cursor' Option while Satchel Jumping
@@ -1057,7 +1058,7 @@ function GetKillable()
 		local enemy = enemyTable[i].player
 		if enemy.health < SpellR.dmg and SpellR.ready then
 			if not enemyTable[i].ultAlert then
-				PrintAlert(enemy.charName.." can be Killed by Ult", 128, 255, 0)
+				PrintAlert(enemy.charName.." can be Killed by Ult", 5, 128, 255, 0)
 
 				if ZiggsMenu.misc.ultAlert.Pings then
 					Packet('R_PING',  { x = enemy.x, y = enemy.z, type = PING_FALLBACK }):receive()
@@ -1072,4 +1073,3 @@ function GetKillable()
 		end
 	end
 end
-
