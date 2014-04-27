@@ -1,4 +1,4 @@
-local Ziggs_Ver = "1.024"
+local Ziggs_Ver = "1.03"
 --[[
 
 
@@ -9,9 +9,14 @@ local Ziggs_Ver = "1.024"
 		 d8' db   .88.   88. ~8~ 88. ~8~ db   8D 
 		d88888P Y888888P  Y888P   Y888P  `8888Y' 
 
-	Script - Ziggs - The Hexplosives Expert 1.02
+	Script - Ziggs - The Hexplosives Expert 1.03
 
 	Changelog:
+		1.03
+			- Added 'Alert Option' for Ult if an enemy is Killable
+			- Improved Killsteal Function
+			- Fixed Auto-Ignite Option
+
 		1.02
 			- Added 'Move to Cursor' Option while Satchel Jumping
 			- Fixed W Casting
@@ -132,6 +137,12 @@ function OnTick()
 	end
 	if SatchelKey then
 		SatchelJump()
+	end
+	if ZiggsMenu.ks.KillSteal then
+		KillSteal()
+	end
+	if ZiggsMenu.misc.ultAlert.Enable then
+		GetKillable()
 	end
 
 	TickChecks()
@@ -313,7 +324,7 @@ function Variables()
         
 		if champ.team ~= player.team then
 			enemyCount = enemyCount + 1
-			enemyTable[enemyCount] = { player = champ, indicatorText = "", damageGettingText = "", ready = true}
+			enemyTable[enemyCount] = { player = champ, indicatorText = "", damageGettingText = "", ultAlert = false, ready = true}
 		end
     end
 
@@ -395,6 +406,11 @@ function Menu()
 			ZiggsMenu.misc.colMisc:addParam("colInfo", "Using the Custom Collision is better because was made specially for Ziggs's Q", SCRIPT_PARAM_INFO, "")]]--
 		ZiggsMenu.misc:addSubMenu("Spells - Cast Settings", "cast")
 			ZiggsMenu.misc.cast:addParam("usePackets", "Use Packets to Cast Spells", SCRIPT_PARAM_ONOFF, false)
+		ZiggsMenu.misc:addSubMenu("Info - Ultimate Alert", "ultAlert")
+			ZiggsMenu.misc.ultAlert:addParam("Enable", "Enable Ultimate Alert", SCRIPT_PARAM_ONOFF, true)
+			ZiggsMenu.misc.ultAlert:addParam("Pings", "Use Client-Side Pings to Alert", SCRIPT_PARAM_ONOFF, false)
+			ZiggsMenu.misc.ultAlert:addParam("alertInfo", "It will print a text in the middle of the screen if an Enemy is Killable", SCRIPT_PARAM_INFO, "")
+
 
 	ZiggsMenu:addParam("predType", "Prediction Type", SCRIPT_PARAM_LIST, 1, { "Prodiction", "VPrediction" })
 
@@ -1035,3 +1051,25 @@ function isLow(what, unit, slider)
 		end
 	end
 end
+
+function GetKillable()
+	for i = 1, enemyCount do
+		local enemy = enemyTable[i].player
+		if enemy.health < SpellR.dmg and SpellR.ready then
+			if not enemyTable[i].ultAlert then
+				PrintAlert(enemy.charName.." can be Killed by Ult", 128, 255, 0)
+
+				if ZiggsMenu.misc.ultAlert.Pings then
+					Packet('R_PING',  { x = enemy.x, y = enemy.z, type = PING_FALLBACK }):receive()
+				end
+
+				enemyTable[i].ultAlert = true
+			else
+				if not enemy.visible or enemy == nil then
+					enemyTable[i].ultAlert = false
+				end
+			end
+		end
+	end
+end
+
