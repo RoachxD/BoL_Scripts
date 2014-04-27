@@ -1,4 +1,4 @@
-local Ziggs_Ver = "1.021"
+local Ziggs_Ver = "1.022"
 --[[
 
 
@@ -17,6 +17,8 @@ local Ziggs_Ver = "1.021"
 			- Fixed W Casting
 			- Updated vPrediction Link
 			- Improved W Accuracy
+			- Fixed Spamming 'nil' Errors
+
 		1.01
 			- Fixed OnDeleteObj Bug
 			- Fixed Spamming Errors about 'nil' Table
@@ -684,7 +686,7 @@ function SatchelJump()
 end
 
 function CastQ(unit)
-	if not SpellQ.ready or (GetDistanceSqr(unit, myHero) > SpellQ.maxrange*SpellQ.maxrange) then
+	if unit == nil or not SpellQ.ready or (GetDistanceSqr(unit, myHero) > SpellQ.maxrange*SpellQ.maxrange) then
 		return false
 	end
 	if GetDistanceSqr(unit, myHero) <= SpellQ.minrange*SpellQ.minrange then
@@ -738,7 +740,7 @@ function CastQ(unit)
 end
 
 function CastW(unit)
-	if (GetDistanceSqr(unit) > SpellW.range*SpellW.range) or not SpellW.ready then
+	if unit == nil or (GetDistanceSqr(unit) > SpellW.range*SpellW.range) or not SpellW.ready then
 		return false
 	end
 	if ZiggsMenu.predType == 1 then
@@ -767,7 +769,7 @@ function CastW(unit)
 end
 
 function CastE(unit)
-	if (GetDistanceSqr(unit) > SpellE.range*SpellE.range) or not SpellE.ready then
+	if unit == nil or (GetDistanceSqr(unit) > SpellE.range*SpellE.range) or not SpellE.ready then
 		return false
 	end
 
@@ -796,7 +798,7 @@ end
 
 
 function CastR(unit)
-	if (GetDistanceSqr(unit) > ZiggsMenu.misc.umisc.ultRange*ZiggsMenu.misc.umisc.ultRange) or not SpellR.ready then
+	if unit == nil or (GetDistanceSqr(unit) > ZiggsMenu.misc.umisc.ultRange*ZiggsMenu.misc.umisc.ultRange) or not SpellR.ready then
 		return false
 	end
 
