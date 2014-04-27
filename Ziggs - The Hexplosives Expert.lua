@@ -1,4 +1,4 @@
-local Ziggs_Ver = "1.031"
+local Ziggs_Ver = "1.032"
 --[[
 
 
@@ -9,7 +9,7 @@ local Ziggs_Ver = "1.031"
 		 d8' db   .88.   88. ~8~ 88. ~8~ db   8D 
 		d88888P Y888888P  Y888P   Y888P  `8888Y' 
 
-	Script - Ziggs - The Hexplosives Expert 1.02
+	Script - Ziggs - The Hexplosives Expert 1.03
 
 	Changelog:
 		1.03
@@ -17,6 +17,9 @@ local Ziggs_Ver = "1.031"
 			- Improved Killsteal Function
 			- Fixed Auto-Ignite Option
 			- Fixed Spamming Errors About 'ARGB'
+			- Added a Slider for the Duration of the 'Alert Option' Text
+			- Added a new Combo Logic when you use W in Combo
+			- Fixed 'Insta W Popping' Bug
 
 		1.02
 			- Added 'Move to Cursor' Option while Satchel Jumping
@@ -409,6 +412,7 @@ function Menu()
 			ZiggsMenu.misc.cast:addParam("usePackets", "Use Packets to Cast Spells", SCRIPT_PARAM_ONOFF, false)
 		ZiggsMenu.misc:addSubMenu("Info - Ultimate Alert", "ultAlert")
 			ZiggsMenu.misc.ultAlert:addParam("Enable", "Enable Ultimate Alert", SCRIPT_PARAM_ONOFF, true)
+			ZiggsMenu.misc.ultAlert:addParam("alertTime", "Time to be shown: ", SCRIPT_PARAM_SLICE, 3, 1, 10, 0)
 			ZiggsMenu.misc.ultAlert:addParam("Pings", "Use Client-Side Pings to Alert", SCRIPT_PARAM_ONOFF, false)
 			ZiggsMenu.misc.ultAlert:addParam("alertInfo", "It will print a text in the middle of the screen if an Enemy is Killable", SCRIPT_PARAM_INFO, "")
 
@@ -484,9 +488,11 @@ function OnLoseBuff(unit, buff)
 end
 
 function OnCreateObj(obj)
-	if obj.name == "ZiggsW_mis_ground.troy" then
-		SpellW.canJump = true
-		SatchelJump()
+	if SatchelKey then
+		if obj.name == "ZiggsW_mis_ground.troy" then
+			SpellW.canJump = true
+			SatchelJump()
+		end
 	end
 
 	if FocusJungleNames[obj.name] then
@@ -599,11 +605,16 @@ function Combo(unit)
 		if ZiggsMenu.combo.comboItems then
 			UseItems(unit)
 		end
-		CastQ(unit)
 		if ZiggsMenu.combo.useW then
 			CastW(unit)
+			DelayAction(function()
+							CastE(unit)
+							CastQ(unit)
+						end, 0.3)
+		else
+			CastE(unit)
+			CastQ(unit)
 		end
-		CastE(unit)
 		if ZiggsMenu.combo.useR ~= 3 then
 			if ZiggsMenu.combo.useR == 1 then
 				if unit.health < SpellR.dmg then
@@ -1058,7 +1069,7 @@ function GetKillable()
 		local enemy = enemyTable[i].player
 		if enemy.health < SpellR.dmg and SpellR.ready then
 			if not enemyTable[i].ultAlert then
-				PrintAlert(enemy.charName.." can be Killed by Ult", 5, 128, 255, 0)
+				PrintAlert(enemy.charName.." can be Killed by Ult", ZiggsMenu.misc.ultAlert.alertTime, 128, 255, 0)
 
 				if ZiggsMenu.misc.ultAlert.Pings then
 					Packet('R_PING',  { x = enemy.x, y = enemy.z, type = PING_FALLBACK }):receive()
