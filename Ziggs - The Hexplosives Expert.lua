@@ -1,4 +1,4 @@
-local Ziggs_Ver = "1.034"
+local Ziggs_Ver = "1.035"
 --[[
 
 
@@ -24,6 +24,7 @@ local Ziggs_Ver = "1.034"
 			- Added SOW as main Orbwalker
 			- Added MEC Ult Hotkey
 			- Fixed Spamming Errors
+			- Fixed Ult Alerter Bug
 
 		1.02
 			- Added 'Move to Cursor' Option while Satchel Jumping
@@ -1043,12 +1044,10 @@ function GetKillable()
 					Packet('R_PING',  { x = enemy.x, y = enemy.z, type = PING_FALLBACK }):receive()
 				end
 
-				enemyTable[i].ultAlert = true
-			else
-				if not enemy.visible or enemy == nil then
-					enemyTable[i].ultAlert = false
-				end
 			end
+		end
+		if not enemy.visible or enemy == nil then
+			enemyTable[i].ultAlert = false
 		end
 	end
 end
