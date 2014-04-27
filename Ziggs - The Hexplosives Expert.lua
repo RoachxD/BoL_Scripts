@@ -1,4 +1,4 @@
-local Ziggs_Ver = "1.022"
+local Ziggs_Ver = "1.023"
 --[[
 
 
@@ -18,6 +18,8 @@ local Ziggs_Ver = "1.022"
 			- Updated vPrediction Link
 			- Improved W Accuracy
 			- Fixed Spamming 'nil' Errors
+			- Fixed Farming Stuttering if SAC / MMA was Used
+			- Re-wrote Killsteal Function
 
 		1.01
 			- Fixed OnDeleteObj Bug
@@ -350,6 +352,7 @@ function Menu()
 		ZiggsMenu.farming:addParam("farmKey", "Farming Key (X)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey('X'))
 		ZiggsMenu.farming:addParam("qFarm", "Farm with "..SpellQ.name.." (Q)", SCRIPT_PARAM_ONOFF, true)
 		ZiggsMenu.farming:addParam("qFarmMana", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
+		ZiggsMenu.farming:addParam("aaLH", "Enable AA Last Hitting", SCRIPT_PARAM_ONOFF, true)
 		ZiggsMenu.farming:addParam("farmMTC", "Move to Cursor when Farming", SCRIPT_PARAM_ONOFF, true)
 		ZiggsMenu.farming:permaShow("farmKey")
 		
@@ -627,10 +630,12 @@ function Farm()
 	end						
 	for i, minion in pairs(enemyMinions.objects) do
 		if ValidTarget(minion) and minion ~= nil then
-			local aaMinionDmg = getDmg("AD", minion, myHero) + SpellP.dmg
-			if minion.health <= aaMinionDmg and GetDistanceSqr(minion) <= myHero.range*myHero.range and GetTickCount() > nextTick then
-				myHero:Attack(minion)
-				nextTick = GetTickCount() + 450
+			if ZiggsMenu.farming.aaLH then
+				local aaMinionDmg = getDmg("AD", minion, myHero) + SpellP.dmg
+				if minion.health <= aaMinionDmg and GetDistanceSqr(minion) <= myHero.range*myHero.range and GetTickCount() > nextTick then
+					myHero:Attack(minion)
+					nextTick = GetTickCount() + 450
+				end
 			end
 			if minion.health <= SpellQ.dmg and GetDistanceSqr(minion) > myHero.range*myHero.range and GetDistanceSqr(minion) <= SpellQ.maxrange*SpellQ.maxrange and ZiggsMenu.farming.qFarm and not isLow('Mana', myHero, ZiggsMenu.farming.qFarmMana) then
 				CastQ(minion)
@@ -968,25 +973,35 @@ end
 function KillSteal()
 	for i = 1, enemyCount do
 		local enemy = enemyTable[i].player
-		if ValidTarget(enemy) and enemy ~= nil then
-			local Distance = GetDistanceSqr(enemy)
-			local Health = enemy.health
-			if SpellQ.ready and Distance < SpellQ.maxrange * SpellQ.maxrange and Health < SpellQ.dmg then
-				CastQ(enemy)
-			elseif SpellW.ready and ZiggsMenu.ks.useW and Distance < SpellW.range * SpellW.range and Health < SpellW.dmg then
-				CastW(enemy)
-			elseif SpellE.ready and Distance < SpellE.range * SpellE.range and Health < SpellE.dmg then
-				CastQ(enemy)
-			elseif SpellQ.ready and SpellE.ready and Distance < SpellE.range * SpellE.range and Health < (SpellQ.dmg +  SpellE.dmg) then
-				CastE(enemy)
-			elseif SpellR.ready and Health < SpellR.dmg and Distance < ZiggsMenu.misc.umisc.ultRange * ZiggsMenu.misc.umisc.ultRange then
+		if ValidTarget(enemy) and enemy.visible then
+			if enemy.health < SpellR.dmg then
 				CastR(enemy)
-			elseif SpellR.ready and SpellQ.ready and Health < SpellR.dmg + SpellQ.dmg then
+			elseif enemy.health < SpellQ.dmg then
 				CastQ(enemy)
-			elseif SpellR.ready and SpellE.ready and Health < SpellR.dmg + SpellE.dmg then
+			elseif enemy.health < SpellW.dmg and ZiggsMenu.ks.useW then
+				CastW(enemy)
+			elseif enemy.health < SpellE.dmg then
 				CastE(enemy)
-			elseif SpellQ.ready and SpellE.ready and SpellR.ready and Distance < SpellQ.range * SpellQ.range and Health < (SpellQ.dmg + SpellE.dmg + SpellR.dmg) then
+			elseif enemy.health < SpellQ.dmg + SpellR.dmg then
 				CastQ(enemy)
+			elseif enemy.health < SpellW.dmg + SpellR.dmg and ZiggsMenu.ks.useW then
+				CastW(enemy)
+			elseif enemy.health < SpellE.dmg + SpellR.dmg then
+				CastE(enemy)
+			elseif enemy.health < SpellQ.dmg + SpellW.dmg + SpellR.dmg and ZiggsMenu.ks.useW then
+				CastW(enemy)
+				DelayAction(function()
+								CastQ(enemy)
+							end, 0.3)
+			elseif enemy.health < SpellQ.dmg + SpellE.dmg + SpellR.dmg then
+				CastE(enemy)
+				CastQ(enemy)
+			elseif enemy.health < SpellQ.dmg + SpellW.dmg + SpellR.dmg and ZiggsMenu.ks.useW then
+				CastW(enemy)
+				DelayAction(function()
+								CastE(enemy)
+								CastQ(enemy)
+							end, 0.3)
 			end
 
 			if ZiggsMenu.ks.autoIgnite then
