@@ -1,4 +1,4 @@
-local Ziggs_Ver = "1.033"
+local Ziggs_Ver = "1.034"
 --[[
 
 
@@ -23,6 +23,7 @@ local Ziggs_Ver = "1.033"
 			- Removed In-Built Orbwalker
 			- Added SOW as main Orbwalker
 			- Added MEC Ult Hotkey
+			- Fixed Spamming Errors
 
 		1.02
 			- Added 'Move to Cursor' Option while Satchel Jumping
@@ -155,7 +156,7 @@ function OnTick()
 
 			CastR(enemy, ZiggsMenu.misc.mecUlt.minEnemies)
 		end
-		if ZiggsMenu.misc.mecUlt.mecMTC
+		if ZiggsMenu.misc.mecUlt.mecMTC then
 			moveToCursor()
 		end
 	end
