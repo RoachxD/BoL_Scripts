@@ -1,4 +1,4 @@
-local Ziggs_Ver = "1.023"
+local Ziggs_Ver = "1.024"
 --[[
 
 
@@ -20,6 +20,7 @@ local Ziggs_Ver = "1.023"
 			- Fixed Spamming 'nil' Errors
 			- Fixed Farming Stuttering if SAC / MMA was Used
 			- Re-wrote Killsteal Function
+			- Fixed Checks if Spells are ready on Killsteal Function
 
 		1.01
 			- Fixed OnDeleteObj Bug
@@ -982,21 +983,21 @@ function KillSteal()
 				CastW(enemy)
 			elseif enemy.health < SpellE.dmg then
 				CastE(enemy)
-			elseif enemy.health < SpellQ.dmg + SpellR.dmg then
+			elseif enemy.health < SpellQ.dmg + SpellR.dmg and SpellQ.ready and SpellR.ready then
 				CastQ(enemy)
-			elseif enemy.health < SpellW.dmg + SpellR.dmg and ZiggsMenu.ks.useW then
+			elseif enemy.health < SpellW.dmg + SpellR.dmg and SpellW.ready and SpellR.ready and ZiggsMenu.ks.useW then
 				CastW(enemy)
-			elseif enemy.health < SpellE.dmg + SpellR.dmg then
+			elseif enemy.health < SpellE.dmg + SpellR.dmg and SpellE.ready and SpellR.ready then
 				CastE(enemy)
-			elseif enemy.health < SpellQ.dmg + SpellW.dmg + SpellR.dmg and ZiggsMenu.ks.useW then
+			elseif enemy.health < SpellQ.dmg + SpellW.dmg + SpellR.dmg and SpellQ.ready and SpellW.ready and SpellR.ready and ZiggsMenu.ks.useW then
 				CastW(enemy)
 				DelayAction(function()
 								CastQ(enemy)
 							end, 0.3)
-			elseif enemy.health < SpellQ.dmg + SpellE.dmg + SpellR.dmg then
+			elseif enemy.health < SpellQ.dmg + SpellE.dmg + SpellR.dmg and SpellQ.ready and SpellE.ready and SpellR.ready then
 				CastE(enemy)
 				CastQ(enemy)
-			elseif enemy.health < SpellQ.dmg + SpellW.dmg + SpellR.dmg and ZiggsMenu.ks.useW then
+			elseif enemy.health < SpellQ.dmg + SpellW.dmg + SpellR.dmg and SpellQ.ready and SpellE.ready and SpellR.ready and ZiggsMenu.ks.useW then
 				CastW(enemy)
 				DelayAction(function()
 								CastE(enemy)
