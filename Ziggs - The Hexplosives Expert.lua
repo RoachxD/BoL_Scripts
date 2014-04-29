@@ -1,4 +1,4 @@
-local Ziggs_Ver = "1.042"
+local Ziggs_Ver = "1.043"
 --[[
 
 
@@ -19,6 +19,7 @@ local Ziggs_Ver = "1.042"
 			- Fixed W Bug not Exploding
 			- Improved Farm Function
 			- Fixed MEC Ult
+			- Fixed Satchel not Poping
 
 		1.03
 			- Added 'Alert Option' for Ult if an enemy is Killable
@@ -505,7 +506,7 @@ function OnLoseBuff(unit, buff)
 end
 
 function OnCreateObj(obj)
-	if SatchelKey or ComboKey then
+	if SatchelKey or ComboKey or SatchelbKey then
 		if obj.name == "ZiggsW_mis_ground.troy" then
 			SpellW.canJump = true
 			SatchelJump()
