@@ -1,4 +1,4 @@
-local Ziggs_Ver = "1.04"
+local Ziggs_Ver = "1.041"
 --[[
 
 
@@ -16,6 +16,8 @@ local Ziggs_Ver = "1.04"
 			- Added Custom Collision
 			- Improved Orbwalker
 			- Re-wrote Ult Alerter
+			- Fixed W Bug not Exploding
+			- Improved Farm Function
 
 		1.03
 			- Added 'Alert Option' for Ult if an enemy is Killable
@@ -502,7 +504,7 @@ function OnLoseBuff(unit, buff)
 end
 
 function OnCreateObj(obj)
-	if SatchelKey then
+	if SatchelKey or ComboKey then
 		if obj.name == "ZiggsW_mis_ground.troy" then
 			SpellW.canJump = true
 			SatchelJump()
@@ -642,11 +644,11 @@ end
 function Harass(unit)
 	if ValidTarget(unit) and unit ~= nil then
 		if not isLow('Mana', myHero, ZiggsMenu.harass.harassMana) then
-			if ZiggsMenu.harass.qHarass then
-				CastQ(unit)
-			end
 			if ZiggsMenu.harass.eHarass then
 				CastE(unit)
+			end
+			if ZiggsMenu.harass.qHarass then
+				CastQ(unit)
 			end
 		end
 	end
@@ -657,7 +659,7 @@ function Farm()
 	enemyMinions:update()
 	for i, minion in pairs(enemyMinions.objects) do
 		if ValidTarget(minion) and minion ~= nil then
-			if minion.health <= SpellQ.dmg and GetDistanceSqr(minion) > myHero.range*myHero.range and GetDistanceSqr(minion) <= SpellQ.maxrange*SpellQ.maxrange and ZiggsMenu.farming.qFarm and not isLow('Mana', myHero, ZiggsMenu.farming.qFarmMana) then
+			if minion.health <= SpellQ.dmg and (GetDistanceSqr(minion) > myHero.range*myHero.range or not zSOW:CanAttack()) and GetDistanceSqr(minion) <= SpellQ.minrange*SpellQ.minrange and ZiggsMenu.farming.qFarm and not isLow('Mana', myHero, ZiggsMenu.farming.qFarmMana) then
 				CastQ(minion)
 				nextTick = GetTickCount() + 450
 			end
