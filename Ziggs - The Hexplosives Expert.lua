@@ -1,4 +1,4 @@
-local Ziggs_Ver = "1.041"
+local Ziggs_Ver = "1.042"
 --[[
 
 
@@ -18,6 +18,7 @@ local Ziggs_Ver = "1.041"
 			- Re-wrote Ult Alerter
 			- Fixed W Bug not Exploding
 			- Improved Farm Function
+			- Fixed MEC Ult
 
 		1.03
 			- Added 'Alert Option' for Ult if an enemy is Killable
@@ -819,12 +820,12 @@ function CastE(unit)
 end
 
 
-function CastR(unit, enemies)
+function CastR(unit, mode)
 	if unit == nil or (GetDistanceSqr(unit) > ZiggsMenu.misc.umisc.ultRange*ZiggsMenu.misc.umisc.ultRange) or not SpellR.ready then
 		return false
 	end
 
-	if enemies == 1 then
+	if mode == 1 then
 		if ZiggsMenu.predType == 1 then
 			SpellR.pos = ProdR:GetPrediction(unit)
 			if SpellR.pos ~= nil then
@@ -847,15 +848,14 @@ function CastR(unit, enemies)
 			end
 		end
 	else
-		local CastPos, HitChance, nTargets = vPred:GetCircularAOECastPosition(unit, SpellR.delay, SpellR.width, SpellR.range, SpellR.speed, myHero)
-		if HitChance >= ZiggsMenu.misc.umisc.vPredHC and nTargets >= enemies then
-			if ZiggsMenu.misc.cast.usePackets then
-				Packet("S_CAST", { spellId = _R, toX = CastPos.x, toY = CastPos.z, fromX = CastPos.x, fromY = CastPos.z }):send()
-			else
-				CastSpell(_R, CastPos.x, CastPos.z)
-			end
-			return true
+		local CastPos = GetAoESpellPosition(SpellR.width, unit, SpellR.delay, SpellR.speed)
+
+		if ZiggsMenu.misc.cast.usePackets then
+			Packet("S_CAST", { spellId = _R, toX = CastPos.x, toY = CastPos.z, fromX = CastPos.x, fromY = CastPos.z }):send()
+		else
+			CastSpell(_R, CastPos.x, CastPos.z)
 		end
+		return true
 	end
 end
 
@@ -1111,4 +1111,102 @@ function CustomCollision(unit)
 	end
 
 	return false
+end
+
+function GetCenter(points)
+	local sum_x = 0
+	local sum_z = 0
+
+	for i = 1, #points do
+		sum_x = sum_x + points[i].x
+		sum_z = sum_z + points[i].z
+	end
+
+	local center = {x = sum_x / #points, y = 0, z = sum_z / #points}
+
+	return center
+end
+
+function ContainsThemAll(circle, points)
+    local radius_sqr = circle.radius*circle.radius
+    local contains_them_all = true
+    local i = 1
+   
+    while contains_them_all and i <= #points do
+            contains_them_all = GetDistanceSqr(points[i], circle.center) <= radius_sqr
+            i = i + 1
+    end
+   
+    return contains_them_all
+end
+
+function FarthestFromPositionIndex(points, position)
+	local index = 2
+	local actual_dist_sqr
+	local max_dist_sqr = GetDistanceSqr(points[index], position)
+
+	for i = 3, #points do
+		actual_dist_sqr = GetDistanceSqr(points[i], position)
+		if actual_dist_sqr > max_dist_sqr then
+			index = i
+			max_dist_sqr = actual_dist_sqr
+		end
+	end
+
+	return index
+end
+
+function RemoveWorst(targets, position)
+	local worst_target = FarthestFromPositionIndex(targets, position)
+
+	table.remove(targets, worst_target)
+
+	return targets
+end
+
+function GetInitialTargets(radius, main_target)
+	local targets = {main_target}
+	local diameter_sqr = 4 * radius * radius
+   
+	for i = 1, heroManager.iCount do
+		target = heroManager:GetHero(i)
+		if target.networkID ~= main_target.networkID and ValidTarget(target) and GetDistanceSqr(main_target, target) < diameter_sqr then table.insert(targets, target) end
+	end
+
+	return targets
+end
+
+function GetPredictedInitialTargets(radius, main_target, delay, speed, col)
+	local predicted_main_target = VP:GetPredictedPos(main_target, delay, speed, myHero, col)
+	local predicted_targets = {predicted_main_target}
+	local diameter_sqr = 4 * radius * radius
+
+	for i = 1, heroManager.iCount do
+		target = heroManager:GetHero(i)
+		if ValidTarget(target) then
+			predicted_target = VP:GetPredictedPos(target, delay, speed, myHero, col)
+			if target.networkID ~= main_target.networkID and GetDistanceSqr(predicted_main_target, predicted_target) < diameter_sqr then table.insert(predicted_targets, predicted_target) end
+		end
+	end
+
+	return predicted_targets
+end
+
+function GetAoESpellPosition(radius, main_target, delay, speed)
+	local targets = GetPredictedInitialTargets(radius, main_target, delay, speed) 
+	local position = GetCenter(targets)
+	local best_pos_found = true
+	local circle = Circle(position, radius)
+	circle.center = position
+
+	if #targets >= ZiggsMenu.misc.mecUlt.minEnemies then best_pos_found = ContainsThemAll(circle, targets) end
+
+	while not best_pos_found do
+		targets = RemoveWorst(targets, position)
+		position = GetCenter(targets)
+		circle.center = position
+		best_pos_found = ContainsThemAll(circle, targets)
+	end
+
+	return position
 end
