@@ -1,4 +1,4 @@
-local Ziggs_Ver = "1.036"
+local Ziggs_Ver = "1.04"
 --[[
 
 
@@ -9,9 +9,14 @@ local Ziggs_Ver = "1.036"
 		 d8' db   .88.   88. ~8~ 88. ~8~ db   8D 
 		d88888P Y888888P  Y888P   Y888P  `8888Y' 
 
-	Script - Ziggs - The Hexplosives Expert 1.03
+	Script - Ziggs - The Hexplosives Expert 1.04
 
 	Changelog:
+		1.04
+			- Added Custom Collision
+			- Improved Orbwalker
+			- Re-wrote Ult Alerter
+
 		1.03
 			- Added 'Alert Option' for Ult if an enemy is Killable
 			- Improved Killsteal Function
@@ -197,7 +202,9 @@ function Variables()
 
 	ProdQCollision = Collision(SpellQ.maxrange, SpellQ.speed, SpellQ.maxdelay, SpellQ.width)
 
-	enemyMinions = minionManager(MINION_ENEMY, SpellQ.maxrange, player, MINION_SORT_HEALTH_ASC)
+	enemyMinions	= minionManager(MINION_ENEMY,	SpellQ.maxrange, myHero.visionPos, MINION_SORT_HEALTH_ASC)
+	jungleMinions	= minionManager(MINION_JUNGLE,	SpellQ.maxrange, myHero.visionPos, MINION_SORT_HEALTH_ASC)
+	otherMinions	= minionManager(MINION_OTHER,	SpellQ.maxrange, myHero.visionPos, MINION_SORT_HEALTH_ASC)
 
 	JungleMobs = {}
 	JungleFocusMobs = {}
@@ -415,9 +422,12 @@ function Menu()
 			ZiggsMenu.misc.mecUlt:addParam("Enable", "Use MEC to Ult", SCRIPT_PARAM_ONKEYDOWN, false, GetKey('U'))
 			ZiggsMenu.misc.mecUlt:addParam("minEnemies", "Min. Enemies in Radius: ", SCRIPT_PARAM_SLICE, 2, 2, 5, 0)
 			ZiggsMenu.misc.mecUlt:addParam("mecMTC", "Move to Cursor when Searching for Enemies", SCRIPT_PARAM_ONOFF, false)
-		--[[ZiggsMenu.misc:addSubMenu("Spells - Collision Settings", "colMisc")
-			ZiggsMenu.misc.colMisc:addParam("spellQ", "Collision for Q: ", SCRIPT_PARAM_LIST, 1, {"Custom Collision", "Normal Collision"})
-			ZiggsMenu.misc.colMisc:addParam("colInfo", "Using the Custom Collision is better because was made specially for Ziggs's Q", SCRIPT_PARAM_INFO, "")]]--
+		ZiggsMenu.misc:addSubMenu("Spells - Collision Settings", "colMisc")
+			ZiggsMenu.misc.colMisc:addParam("spellQ", "Use Custom Collision", SCRIPT_PARAM_ONOFF, true)
+			ZiggsMenu.misc.colMisc:addParam("Minions", "Check for Normal Minions", SCRIPT_PARAM_ONOFF, true)
+			ZiggsMenu.misc.colMisc:addParam("Mobs", "Check for Jungle Mobs", SCRIPT_PARAM_ONOFF, true)
+			ZiggsMenu.misc.colMisc:addParam("Others", "Check for Other Minions", SCRIPT_PARAM_ONOFF, true)
+			ZiggsMenu.misc.colMisc:addParam("colInfo", "Using the Custom Collision is better because was made specially for Ziggs's Q", SCRIPT_PARAM_INFO, "")
 		ZiggsMenu.misc:addSubMenu("Spells - Cast Settings", "cast")
 			ZiggsMenu.misc.cast:addParam("usePackets", "Use Packets to Cast Spells", SCRIPT_PARAM_ONOFF, false)
 		ZiggsMenu.misc:addSubMenu("Info - Ultimate Alert", "ultAlert")
@@ -574,12 +584,13 @@ function TickChecks()
 	end
 	SpellI.ready = (SpellI.var ~= nil and myHero:CanUseSpell(SpellI.var) == READY)
 
-	Target = GetTarget()
+	Target = GetCustomTarget()
+	zSOW:ForceTarget(Target)
 
 	DmgCalc()
 end
 
-function GetTarget()
+function GetCustomTarget()
 	TargetSelector:update()
     if _G.MMA_Target and _G.MMA_Target.type == myHero.type then
     	return _G.MMA_Target
@@ -643,7 +654,7 @@ end
 
 local nextTick = 0
 function Farm()
-	enemyMinions:update()				
+	enemyMinions:update()
 	for i, minion in pairs(enemyMinions.objects) do
 		if ValidTarget(minion) and minion ~= nil then
 			if minion.health <= SpellQ.dmg and GetDistanceSqr(minion) > myHero.range*myHero.range and GetDistanceSqr(minion) <= SpellQ.maxrange*SpellQ.maxrange and ZiggsMenu.farming.qFarm and not isLow('Mana', myHero, ZiggsMenu.farming.qFarmMana) then
@@ -709,6 +720,7 @@ function CastQ(unit)
 			end
 		else
 			local CastPos, HitChance, Position = vPred:GetCircularCastPosition(unit, SpellQ.mindelay, SpellQ.width, SpellQ.minrange, SpellQ.speed, myHero, false)
+
 			if HitChance >= 2 then
 				if ZiggsMenu.misc.cast.usePackets then
 					Packet("S_CAST", { spellId = _Q, toX = CastPos.x, toY = CastPos.z, fromX = CastPos.x, fromY = CastPos.z }):send()
@@ -722,7 +734,7 @@ function CastQ(unit)
 		if ZiggsMenu.predType == 1 then
 			SpellQ.pos = ProdQMax:GetPrediction(unit)
 			if SpellQ.pos ~= nil then
-				local willCollide = ProdQCollision:GetMinionCollision(unit, SpellQ.pos)
+				local willCollide = ZiggsMenu.misc.colMisc.spellQ and CustomCollision(unit) or ProdQCollision:GetMinionCollision(unit, SpellQ.pos)
 				if not willCollide then
 					if ZiggsMenu.misc.cast.usePackets then
 						Packet("S_CAST", { spellId = _Q, toX = SpellQ.pos.x, toY = SpellQ.pos.z, fromX = SpellQ.pos.x, fromY = SpellQ.pos.z }):send()
@@ -733,8 +745,9 @@ function CastQ(unit)
 				end
 			end
 		else
-			local CastPos, HitChance, Position = vPred:GetCircularCastPosition(unit, SpellQ.maxdelay, SpellQ.width, SpellQ.maxrange, SpellQ.speed, myHero, true)
-			if HitChance >= 2 then
+			local CastPos, HitChance, Position = vPred:GetCircularCastPosition(unit, SpellQ.maxdelay, SpellQ.width, SpellQ.maxrange, SpellQ.speed, myHero, ZiggsMenu.misc.colMisc.spellQ and false or true)
+			local willCollide = CustomCollision(unit)
+			if HitChance >= 2 and ((ZiggsMenu.misc.colMisc.spellQ and willCollide ~= nil and not willCollide) or not ZiggsMenu.misc.colMisc.spellQ) then
 				if ZiggsMenu.misc.cast.usePackets then
 					Packet("S_CAST", { spellId = _Q, toX = CastPos.x, toY = CastPos.z, fromX = CastPos.x, fromY = CastPos.z }):send()
 				else
@@ -1036,19 +1049,64 @@ end
 function GetKillable()
 	for i = 1, enemyCount do
 		local enemy = enemyTable[i].player
-		if enemy.health < SpellR.dmg and SpellR.ready then
-			if not enemyTable[i].ultAlert then
-				PrintAlert(enemy.charName.." can be Killed by Ult", ZiggsMenu.misc.ultAlert.alertTime, 128, 255, 0)
+		if enemy.visible and enemy ~= nil and not enemy.dead then
+			if enemy.health < SpellR.dmg and SpellR.ready then
+				if not enemyTable[i].ultAlert then
+					PrintAlert(enemy.charName.." can be Killed by Ult", ZiggsMenu.misc.ultAlert.alertTime, 128, 255, 0)
 
-				if ZiggsMenu.misc.ultAlert.Pings then
-					Packet('R_PING',  { x = enemy.x, y = enemy.z, type = PING_FALLBACK }):receive()
+					if ZiggsMenu.misc.ultAlert.Pings then
+						Packet('R_PING',  { x = enemy.x, y = enemy.z, type = PING_FALLBACK }):receive()
+					end
+
+					enemyTable[i].ultAlert = true
 				end
-
-				enemyTable[i].ultAlert = true
 			end
-		end
-		if not enemy.visible or enemy == nil or enemy.dead then
+		else
 			enemyTable[i].ultAlert = false
 		end
 	end
+end
+
+function CustomCollision(unit)
+	enemyMinions:update()
+	jungleMinions:update()
+	otherMinions:update()
+
+	local Col_Vector = {
+		FirstBounce = Vector(myHero) + SpellQ.minrange * (Vector(unit) - Vector(myHero)):normalized(),
+		SecondBounce = Vector(myHero) + (SpellQ.minrange + (SpellQ.minrange * 0.44711764782193)) * (Vector(unit) - Vector(myHero)):normalized()
+	}
+
+	if ZiggsMenu.misc.colMisc.Minions then
+		for i, minion in pairs(enemyMinions.objects) do
+			if GetDistanceSqr(minion, Col_Vector.FirstBounce) <= SpellQ.width * SpellQ.width and GetDistanceSqr(unit, Col_Vector.FirstBounce) > SpellQ.width * SpellQ.width then
+				return true
+			end
+			if GetDistanceSqr(minion, Col_Vector.SecondBounce) <= SpellQ.width * SpellQ.width and GetDistanceSqr(unit, Col_Vector.SecondBounce) > SpellQ.width * SpellQ.width then
+				return true
+			end
+		end
+	end
+	if ZiggsMenu.misc.colMisc.Mobs then
+		for i, mob in pairs(jungleMinions.objects) do
+			if GetDistanceSqr(mob, Col_Vector.FirstBounce) <= SpellQ.width * SpellQ.width and GetDistanceSqr(unit, Col_Vector.FirstBounce) > SpellQ.width * SpellQ.width then
+				return true
+			end
+			if GetDistanceSqr(mob, Col_Vector.SecondBounce) <= SpellQ.width * SpellQ.width and GetDistanceSqr(unit, Col_Vector.SecondBounce) > SpellQ.width * SpellQ.width then
+				return true
+			end
+		end
+	end
+	if ZiggsMenu.misc.colMisc.Others then
+		for i, other in pairs(otherMinions.objects) do
+			if GetDistanceSqr(other, Col_Vector.FirstBounce) > SpellQ.width * SpellQ.width and GetDistanceSqr(unit, Col_Vector.FirstBounce) > SpellQ.width * SpellQ.width then
+				return true
+			end
+			if GetDistanceSqr(other, Col_Vector.SecondBounce) > SpellQ.width * SpellQ.width and GetDistanceSqr(unit, Col_Vector.SecondBounce) > SpellQ.width * SpellQ.width then
+				return true
+			end
+		end
+	end
+
+	return false
 end
