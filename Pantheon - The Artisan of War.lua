@@ -1,4 +1,4 @@
-local version = "4.01"
+local version = "4.02"
 --[[
 
 
@@ -21,6 +21,7 @@ local version = "4.01"
 				- Added a lot of features
 				- Removed Auto-Pots
 				- Added SOW as main Orbwalker
+				- Added Auto-Q Harass
 
 			3.3
 				- Added Support for SAC Target Selector
@@ -248,6 +249,11 @@ function OnTick()
 	if JungleClearKey then
 		JungleClear()
 	end
+
+	if PanthMenu.harass.autoQ then
+		CastQ(Target)
+	end
+
 	if PanthMenu.ks.killSteal then
 		KillSteal()
 	end
@@ -442,6 +448,7 @@ function Menu()
 	PanthMenu:addSubMenu("["..myHero.charName.."] - Harass Settings", "harass")
 		PanthMenu.harass:addParam("harassKey", "Harass key (C)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("C"))
 		PanthMenu.harass:addParam("hMode", "Harass Mode", SCRIPT_PARAM_LIST, 1, { "Q", "W+E" })
+		PanthMenu.harass:addParam("autoQ", "Auto-Q when Target in Range", SCRIPT_PARAM_ONOFF, false)
 		PanthMenu.harass:addParam("harassMana", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
 		PanthMenu.harass:permaShow("harassKey")
 		
