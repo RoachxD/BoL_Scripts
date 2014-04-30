@@ -1,4 +1,4 @@
-local version = "4.00"
+local version = "4.01"
 --[[
 
 
@@ -16,20 +16,20 @@ local version = "4.00"
 			- Nothing
 
 		Changelog:
-			4.00
+			4.0
 				- Re-wrote the whole Script
 				- Added a lot of features
 				- Removed Auto-Pots
 				- Added SOW as main Orbwalker
 
-			3.03
+			3.3
 				- Added Support for SAC Target Selector
 				- Fixed MMA Breaking E / Ult Channeling
 				- Added Summoner Spells as an Exception at Blocking Packets while Panth is Channeling E / Ult (VIP USERS)
 				- Changed Harass Menu
 				- Indented better the Script
 				- Improved Orbwalker
-			3.02
+			3.2
 				- Removed MEC Ult (because many people cast Ult Manually and it was causing me some problems)
 				- Added new logics for Packets and Orbwalker regarding Ult
 				- Fixed Harass Combo
@@ -42,7 +42,7 @@ local version = "4.00"
 				- Fixed Auto-Updater
 				- Fixed MMA Blocking Issues for Free Users
 				- Added Support for MMA Target Selector
-			3.01
+			3.1
 				- Fixed Ult Spamming Errors
 				- Added new Ultimate Logics
 				- Added Ultimate Delay for AoE Skillshot Position
@@ -154,7 +154,7 @@ local version = "4.00"
 				- Temporarily fix for E.
 				- Fixed some bugsplats on draw.
 			
-			1.00
+			1.0
 				- First release
 			
 --]]
@@ -476,7 +476,6 @@ function Menu()
 	PanthMenu:addSubMenu("["..myHero.charName.."] - Misc Settings", "misc")
 		PanthMenu.misc:addSubMenu("Spells - Misc Settings", "smisc")
 			PanthMenu.misc.smisc:addParam("stopChannel", "Interrupt Channeling Spells", SCRIPT_PARAM_ONOFF, true)
-			PanthMenu.misc.smisc:addParam("AutoQ", "Auto-Q at CCed Enemies", SCRIPT_PARAM_ONOFF, false)
 		if VIP_USER then
 			PanthMenu.misc:addSubMenu("Spells - Cast Settings", "cast")
 				PanthMenu.misc.cast:addParam("usePackets", "Use Packets to Cast Spells", SCRIPT_PARAM_ONOFF, false)
@@ -484,7 +483,9 @@ function Menu()
 		PanthMenu.misc:addSubMenu("Info - Ultimate Alert", "ultAlert")
 			PanthMenu.misc.ultAlert:addParam("Enable", "Enable Ultimate Alert", SCRIPT_PARAM_ONOFF, true)
 			PanthMenu.misc.ultAlert:addParam("alertTime", "Time to be shown: ", SCRIPT_PARAM_SLICE, 3, 1, 10, 0)
-			PanthMenu.misc.ultAlert:addParam("Pings", "Use Client-Side Pings to Alert", SCRIPT_PARAM_ONOFF, false)
+			if VIP_USER then
+				PanthMenu.misc.ultAlert:addParam("Pings", "Use Client-Side Pings to Alert", SCRIPT_PARAM_ONOFF, false)
+			end
 			PanthMenu.misc.ultAlert:addParam("alertInfo", "It will print a text in the middle of the screen if an Enemy is Killable", SCRIPT_PARAM_INFO, "")
 
 		PanthMenu:addSubMenu("["..myHero.charName.."] - Orbwalking Settings", "Orbwalking")
@@ -857,7 +858,7 @@ function GetKillable()
 				if not enemyTable[i].ultAlert then
 					PrintAlert(enemy.charName.." can be Killed by Ult", PanthMenu.misc.ultAlert.alertTime, 128, 255, 0)
 
-					if PanthMenu.misc.ultAlert.Pings then
+					if PanthMenu.misc.ultAlert.Pings and VIP_USER then
 						Packet('R_PING',  { x = enemy.x, y = enemy.z, type = PING_FALLBACK }):receive()
 					end
 
