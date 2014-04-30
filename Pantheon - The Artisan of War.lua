@@ -1,4 +1,4 @@
-local version = "3.03"
+local version = "4.00"
 --[[
 
 
@@ -10,19 +10,26 @@ local version = "3.03"
 			88      YP   YP VP   V8P    YP    YP   YP Y88888P  `Y88P'  VP   V8P
 
 
-		Script - Pantheon - The Artisan of War 3.0.3 by Roach
+		Script - Pantheon - The Artisan of War 4.00 by Roach
 
 		Dependency / Requirements: 
 			- Nothing
 
 		Changelog:
-			3.0.3
+			4.00
+				- Re-wrote the whole Script
+				- Added a lot of features
+				- Removed Auto-Pots
+				- Added SOW as main Orbwalker
+
+			3.03
 				- Added Support for SAC Target Selector
 				- Fixed MMA Breaking E / Ult Channeling
 				- Added Summoner Spells as an Exception at Blocking Packets while Panth is Channeling E / Ult (VIP USERS)
 				- Changed Harass Menu
 				- Indented better the Script
-			3.0.2
+				- Improved Orbwalker
+			3.02
 				- Removed MEC Ult (because many people cast Ult Manually and it was causing me some problems)
 				- Added new logics for Packets and Orbwalker regarding Ult
 				- Fixed Harass Combo
@@ -35,7 +42,7 @@ local version = "3.03"
 				- Fixed Auto-Updater
 				- Fixed MMA Blocking Issues for Free Users
 				- Added Support for MMA Target Selector
-			3.0.1
+			3.01
 				- Fixed Ult Spamming Errors
 				- Added new Ultimate Logics
 				- Added Ultimate Delay for AoE Skillshot Position
@@ -76,1366 +83,789 @@ local version = "3.03"
 						- VIP
 				- Using ARGB Function for the Draw Ranges
 			2.3
-				Fixed Auto-Pots Problem
-				Hopefully fixed AutoE Bug
+				- Fixed Auto-Pots Problem
+				- Hopefully fixed AutoE Bug
 				
 			2.2
-				Improved combo function
-				Fixed Harass Function
-				Rewrote Low Checks Functions
-				Added a new Check for Mana Potions
+				- Improved combo function
+				- Fixed Harass Function
+				- Rewrote Low Checks Functions
+				- Added a new Check for Mana Potions
 					- One for Harass/Farm
 					- One for Potions
-				Deleted Wooglets Support as an Usable Item
+				- Deleted Wooglets Support as an Usable Item
 				
 			2.1
-				Fixed Auto Potions
-				Changed Min Mana Display in Menu
-				Removed Auto Spell Leveler from Menu as it's not done yet
+				- Fixed Auto Potions
+				- Changed Min Mana Display in Menu
+				- Removed Auto Spell Leveler from Menu as it's not done yet
 			
 			2.0
-				Added a Toggle for for Core Combo
-				Added an Extra Menu
-				Added Customizable Chase Combo
-				Added Farm with Q
-				Added Lane Clear with E
-				Added Auto Pots/Items
-				Added Minimum Mana to Harass/Farm - Check
-				Modified Menu - More customizable
-				Modified KS only with Q
-				Modified Harass - Working with Mixed Mode
-				Optimised Chase Combo
-				Rewrited some Functions
+				- Added a Toggle for for Core Combo
+				- Added an Extra Menu
+				- Added Customizable Chase Combo
+				- Added Farm with Q
+				- Added Lane Clear with E
+				- Added Auto Pots/Items
+				- Added Minimum Mana to Harass/Farm - Check
+				- Modified Menu - More customizable
+				- Modified KS only with Q
+				- Modified Harass - Working with Mixed Mode
+				- Optimised Chase Combo
+				- Rewrited some Functions
 				-- Fully Optimised the Script
 				
 			1.6
-				Added Chase Combo
-				Fixed a bug where E was not casting
-				Changed Plugin Menu
-				Added a Mini-Menu
-				Fixed "Draw Crit Text"
+				- Added Chase Combo
+				- Fixed a bug where E was not casting
+				- Changed Plugin Menu
+				- Added a Mini-Menu
+				- Fixed "Draw Crit Text"
 		
 			1.5
-				Auto combo after Ultimate. (With a check!)
-				Toggle for Auto Q Harass when in enemy range , with a mana check. (You will harass them until you'll have Mana for one last Combo)
+				- Auto combo after Ultimate. (With a check!)
+				- Toggle for Auto Q Harass when in enemy range , with a mana check. (You will harass them until you'll have Mana for one last Combo)
 		
 			1.4
-				Optimised Escape Artist
-				Optimised Killsteal(You can KS with Q+W)
-				Fixed Ultimate Bugsplat(TESTED)
-				Fixed Mixed Mode Harass
-				Re-wrote majority of the Functions
-				Hopefully fixed DCT(Draw Critical Text)
-				Changed Circle's Color(Range Circle)
-				Speeded-Up the Script(Some FPS Drops on Escape Artist and Ultimate)
+				- Optimised Escape Artist
+				- Optimised Killsteal(You can KS with Q+W)
+				- Fixed Ultimate Bugsplat(TESTED)
+				- Fixed Mixed Mode Harass
+				- Re-wrote majority of the Functions
+				- Hopefully fixed DCT(Draw Critical Text)
+				- Changed Circle's Color(Range Circle)
+				- Speeded-Up the Script(Some FPS Drops on Escape Artist and Ultimate)
 				
 			1.3
-				Fixed Escape Artist
-				Fixed a problem with Flash, it was flashing before Stunning the enemy
-				Optimised Escape Artist
-				Fully removed Auto-Ignite
-				Fixed all the Bugsplats (TESTED)
-				Hopefully fixed Mixed Mode Harass
+				- Fixed Escape Artist
+				- Fixed a problem with Flash, it was flashing before Stunning the enemy
+				- Optimised Escape Artist
+				- Fully removed Auto-Ignite
+				- Fixed all the Bugsplats (TESTED)
+				- Hopefully fixed Mixed Mode Harass
 				
 			1.2
-				Real fix for E.
-				Fixed Killsteal.
-				Hopefully fixed OnTick bugsplat.
-				Removed Auto-Ignite, because it exists in SAC too.
+				- Real fix for E.
+				- Fixed Killsteal.
+				- Hopefully fixed OnTick bugsplat.
+				- Removed Auto-Ignite, because it exists in SAC too.
 			
 			1.1
-				Temporarily fix for E.
-				Fixed some bugsplats on draw.
+				- Temporarily fix for E.
+				- Fixed some bugsplats on draw.
 			
-			1.0
-				First release
+			1.00
+				- First release
 			
 --]]
 
--- / Hero Name Check / --
 if myHero.charName ~= "Pantheon" then return end
--- / Hero Name Check / --
 
--- / Auto-Update Function / --
-local autoupdateenabled = true
-local UPDATE_SCRIPT_NAME = "Pantheon - The Artisan of War"
+_G.Panth_Autoupdate = true
+
+local REQUIRED_LIBS = {
+	["SOW"]			= "https://raw.githubusercontent.com/honda7/BoL/master/Common/SOW.lua",
+	["VPrediction"] = "https://raw.githubusercontent.com/honda7/BoL/master/Common/VPrediction.lua"
+}
+
+local DOWNLOADING_LIBS, DOWNLOAD_COUNT = false, 0
+
+function AfterDownload()
+	DOWNLOAD_COUNT = DOWNLOAD_COUNT - 1
+	if DOWNLOAD_COUNT == 0 then
+		DOWNLOADING_LIBS = false
+		print("<font color=\"#FF0000\">Pantheon - The Artisan of War:</font> <font color=\"#FFFFFF\">Required libraries downloaded successfully, please reload (double F9).</font>")
+	end
+end
+
+for DOWNLOAD_LIB_NAME, DOWNLOAD_LIB_URL in pairs(REQUIRED_LIBS) do
+	if FileExist(LIB_PATH .. DOWNLOAD_LIB_NAME .. ".lua") then
+		require(DOWNLOAD_LIB_NAME)
+	else
+		DOWNLOADING_LIBS = true
+		DOWNLOAD_COUNT = DOWNLOAD_COUNT + 1
+		DownloadFile(DOWNLOAD_LIB_URL, LIB_PATH .. DOWNLOAD_LIB_NAME..".lua", AfterDownload)
+	end
+end
+
+if DOWNLOADING_LIBS then return end
+
+local UPDATE_NAME = "Pantheon - The Artisan of War"
 local UPDATE_HOST = "raw.github.com"
-local UPDATE_PATH = "/RoachxD/BoL_Scripts/master/Pantheon%20-%20The%20Artisan%20of%20War.lua?chunk="..math.random(1, 1000)
-local UPDATE_FILE_PATH = SCRIPT_PATH..GetCurrentEnv().FILE_NAME
+local UPDATE_PATH = "/RoachxD/BoL_Scripts/master/Pantheon%20-%20The%20Artisan%20of%20War.lua".."?rand="..math.random(1,10000)
+local UPDATE_FILE_PATH = SCRIPT_PATH..UPDATE_NAME..".lua"
 local UPDATE_URL = "https://"..UPDATE_HOST..UPDATE_PATH
 
-local ServerData
-if autoupdateenabled then
-	GetAsyncWebResult(UPDATE_HOST, UPDATE_PATH, function(d) ServerData = d end)
-	function update()
-		if ServerData ~= nil then
-			local ServerVersion
-			local send, tmp, sstart = nil, string.find(ServerData, "local version = \"")
-			if sstart then
-				send, tmp = string.find(ServerData, "\"", sstart+1)
+function AutoupdaterMsg(msg) print("<font color=\"#FF0000\">"..UPDATE_NAME..":</font> <font color=\"#FFFFFF\">"..msg..".</font>") end
+if _G.Panth_Autoupdate then
+	local ServerData = GetWebResult(UPDATE_HOST, UPDATE_PATH)
+	if ServerData then
+		local ServerVersion = string.match(ServerData, "local version = \"%d+.%d+\"")
+		ServerVersion = string.match(ServerVersion and ServerVersion or "", "%d+.%d+")
+		if ServerVersion then
+			ServerVersion = tonumber(ServerVersion)
+			if tonumber(version) < ServerVersion then
+				AutoupdaterMsg("New version available"..ServerVersion)
+				AutoupdaterMsg("Updating, please don't press F9")
+				DownloadFile(UPDATE_URL, UPDATE_FILE_PATH, function () AutoupdaterMsg("Successfully updated. ("..version.." => "..ServerVersion.."), press F9 twice to load the updated version.") end)	 
+			else
+				AutoupdaterMsg("You have got the latest version ("..ServerVersion..")")
 			end
-			if send then
-				ServerVersion = tonumber(string.sub(ServerData, sstart+1, send-1))
-			end
-
-			if ServerVersion ~= nil and tonumber(ServerVersion) ~= nil and tonumber(ServerVersion) > tonumber(version) then
-				DownloadFile(UPDATE_URL.."?nocache"..myHero.charName..os.clock(), UPDATE_FILE_PATH, function () print("<font color=\"#FF0000\"> >> "..UPDATE_SCRIPT_NAME..": successfully updated. Reload (double F9) Please.</font>") end)
-			elseif ServerVersion then
-				print("<font color=\"#FF0000\"> >> "..UPDATE_SCRIPT_NAME..": You have got the latest version of the script.</font>")
-			end		
-			ServerData = nil
 		end
+	else
+		AutoupdaterMsg("Error downloading version info")
 	end
-	AddTickCallback(update)
 end
--- / Auto-Update Function / --
 
--- / Loading Function / --
 function OnLoad()
-	--->
-		Variables()
-		PanthMenu()
-		PrintChat("<font color='#FF0000'> >> Pantheon - The Artisan of War 3.0.3 Loaded <<</font>")
-	---<
-end
--- / Loading Function / --
+	Variables()
+	Menu()
 
--- / Tick Function / --
-function OnTick()
-	--->
-		Checks()
-		DamageCalculation()
-		UseConsumables()
-
-		if Target then
-			if PanthMenu.harass.qharass and not isChanneling("Spell3") and not (isChanneling("Ult_A") and isChanneling("Ult_B") and isChanneling("Ult_C") and isChanneling("Ult_D") and isChanneling("Ult_E")) then CastQ(Target) end
-			if PanthMenu.killsteal.Ignite then AutoIgnite(Target) end
-		end
-	---<
-	-- Menu Variables --
-	--->
-		ComboKey	=	PanthMenu.combo.comboKey
-		FarmingKey	=	PanthMenu.farming.farmKey
-		HarassKey	=	PanthMenu.harass.harassKey
-		ClearKey	=	PanthMenu.clear.clearKey
-		LastHitKey	=	PanthMenu.farming.lastHit
-	---<
-	-- Menu Variables --
-	--->
-		if ComboKey then
-			FullCombo()
-		end
-		if HarassKey then
-			HarassCombo()
-		end
-		if LastHitKey then
-			lastHit()
-		end
-		if FarmingKey and not ComboKey and not LastHitKey and (PanthMenu.farming.Mana / 100) < (myHero.mana / myHero.maxMana) then
-			Farm()
-		end
-		if ClearKey and (PanthMenu.clear.Mana / 100) < (myHero.mana / myHero.maxMana) then
-			MixedClear()
-		end	
-		if PanthMenu.killsteal.smartKS then KillSteal() end
-	---<
-end
--- / Tick Function / --
-
--- / Variables Function / --
-function Variables()
-	--- Skills Vars --
-	--->
-		SkillQ = {range = 600,		name = "Spear Shot",			ready = false, color = ARGB(255,178, 0 , 0 )	}
-		SkillW = {range = 600,		name = "Aegis of Zeonia",		ready = false, color = ARGB(255, 32,178,170)	}
-		SkillE = {range = 300,		name = "Heartseeker Strike",	ready = false, color = ARGB(255,128, 0 ,128)	}
-		SkillR = {range = 5500,		name = "Grand Skyfall",			ready = false									}
-	---<
-	--- Skills Vars ---
-	--- Items Vars ---
-	--->
-		Items =
-		{
-					HealthPot		= {slot = nil, ready = false, inUse = false},
-					ManaPot			= {slot = nil, ready = false, inUse = false},
-					FlaskPot		= {slot = nil, ready = false			   }
-		}
-	---<
-	--- Items Vars ---
-	--- Orbwalking Vars ---
-	--->
-		lastAnimation = nil
-		lastAttack = 0
-		lastAttackCD = 0
-		lastWindUpTime = 0
-	---<
-	--- Orbwalking Vars ---
-	--- TickManager Vars ---
-	--->
-		TManager =
-		{
-			onTick	= TickManager(20),
-			onDraw	= TickManager(80),
-			onSpell	= TickManager(15)
-		}
-	---<
-	--- TickManager Vars ---
-	if VIP_USER then
-		--- LFC Vars ---
-		--->
-			_G.oldDrawCircle = rawget(_G, 'DrawCircle')
-			_G.DrawCircle = DrawCircle2
-		---<
-		--- LFC Vars ---
+	if heroManager.iCount < 10 then -- borrowed from Sidas Auto Carry, modified to 3v3
+			AutoupdaterMsg("Too few champions to arrange priorities")
+	elseif heroManager.iCount == 6 and TTMAP then
+		ArrangeTTPriorities()
+	else
+		ArrangePriorities()
 	end
-	--- Drawing Vars ---
-	--->
-		TextList = {"Harass him", "Q = Kill", "W = Kill!", "W+E = Kill", "Q+W+E = Kill", "Q+W+E+Itm = Kill", "Need CDs"}
-		KillText = {}
-		colorText = ARGB(255,255,204,0)
-	---<
-	--- Drawing Vars ---
-	--- Misc Vars ---
-	--->
-		Items.HealthPot.inUse = false
-		gameState = GetGame()
-		if gameState.map.shortName == "twistedTreeline" then
-			TTMAP = true
-		else
-			TTMAP = false
-		end
-	---<
-	--- Misc Vars ---
-	--- Tables ---
-	--->
-		enemycombo = {}
-		allyHeroes = GetAllyHeroes()
-		enemyHeroes = GetEnemyHeroes()
-		enemyTable = {}
-		enemysInTable = 0
-		enemyMinions = minionManager(MINION_ENEMY, 1000, player, MINION_SORT_HEALTH_ASC)
-		JungleMobs = {}
-		JungleFocusMobs = {}
-		priorityTable = {
+end
+
+function OnTick()
+	ComboKey		= PanthMenu.combo.comboKey
+	HarassKey		= PanthMenu.harass.harassKey
+	FarmKey			= PanthMenu.farming.farmKey
+	JungleClearKey	= PanthMenu.jungle.jungleKey
+
+	if ComboKey then
+		Combo(Target)
+	end
+	if HarassKey then
+		Harass(Target)
+	end
+	if FarmKey then
+		Farm()
+	end
+	if JungleClearKey then
+		JungleClear()
+	end
+	if PanthMenu.ks.killSteal then
+		KillSteal()
+	end
+	
+	if PanthMenu.misc.ultAlert.Enable then
+		GetKillable()
+	end
+
+	TickChecks()
+end
+
+function Variables()
+	if GetGame().map.shortName == "twistedTreeline" then
+		TTMAP = true
+	else
+		TTMAP = false
+	end
+
+	SpellQ = {name = "Spear Shot",			range =  600, ready = false, dmg = 0, manaUsage = 0				   }
+	SpellW = {name = "Aegis of Zeonia",		range =  600, ready = false, dmg = 0, manaUsage = 0				   }
+	SpellE = {name = "Heartseeker Strike",	range =  700, ready = false, dmg = 0, manaUsage = 0				   }
+	SpellR = {name = "Grand Skyfall",		range = 5500, ready = false, dmg = 0, manaUsage = 0				   }
+
+	SpellI = {name = "SummonerDot",			range =  600, ready = false, dmg = 0,				variable = nil }
+
+	vPred = VPrediction()
+
+	pSOW = SOW(vPred)
+
+	enemyMinions	= minionManager(MINION_ENEMY,	SpellQ.range, myHero.visionPos, MINION_SORT_HEALTH_ASC)
+
+	JungleMobs = {}
+	JungleFocusMobs = {}
+
+	priorityTable = {
 			AP = {
 				"Annie", "Ahri", "Akali", "Anivia", "Annie", "Brand", "Cassiopeia", "Diana", "Evelynn", "FiddleSticks", "Fizz", "Gragas", "Heimerdinger", "Karthus",
 				"Kassadin", "Katarina", "Kayle", "Kennen", "Leblanc", "Lissandra", "Lux", "Malzahar", "Mordekaiser", "Morgana", "Nidalee", "Orianna",
-				"Ryze", "Sion", "Swain", "Syndra", "Teemo", "TwistedFate", "Veigar", "Viktor", "Vladimir", "Xerath", "Ziggs", "Zyra",
+				"Ryze", "Sion", "Swain", "Syndra", "Teemo", "TwistedFate", "Veigar", "Viktor", "Vladimir", "Xerath", "Ziggs", "Zyra"
 			},
 			Support = {
-				"Alistar", "Blitzcrank", "Janna", "Karma", "Leona", "Lulu", "Nami", "Nunu", "Sona", "Soraka", "Taric", "Thresh", "Zilean",
+				"Alistar", "Blitzcrank", "Janna", "Karma", "Leona", "Lulu", "Nami", "Nunu", "Sona", "Soraka", "Taric", "Thresh", "Zilean"
 			},
 			Tank = {
 				"Amumu", "Chogath", "DrMundo", "Galio", "Hecarim", "Malphite", "Maokai", "Nasus", "Rammus", "Sejuani", "Nautilus", "Shen", "Singed", "Skarner", "Volibear",
-				"Warwick", "Yorick", "Zac",
+				"Warwick", "Yorick", "Zac"
 			},
 			AD_Carry = {
 				"Ashe", "Caitlyn", "Corki", "Draven", "Ezreal", "Graves", "Jayce", "Jinx", "KogMaw", "Lucian", "MasterYi", "MissFortune", "Pantheon", "Quinn", "Shaco", "Sivir",
-				"Talon","Tryndamere", "Tristana", "Twitch", "Urgot", "Varus", "Vayne", "Yasuo","Zed", 
+				"Talon","Tryndamere", "Tristana", "Twitch", "Urgot", "Varus", "Vayne", "Yasuo","Zed"
 			},
 			Bruiser = {
 				"Aatrox", "Darius", "Elise", "Fiora", "Gangplank", "Garen", "Irelia", "JarvanIV", "Jax", "Khazix", "LeeSin", "Nocturne", "Olaf", "Poppy",
-				"Renekton", "Rengar", "Riven", "Rumble", "Shyvana", "Trundle", "Udyr", "Vi", "MonkeyKing", "XinZhao",
-			},
+				"Renekton", "Rengar", "Riven", "Rumble", "Shyvana", "Trundle", "Udyr", "Vi", "MonkeyKing", "XinZhao"
+			}
 		}
-		if TTMAP then --
-			FocusJungleNames = {
-				["TT_NWraith1.1.1"] = true,
-				["TT_NGolem2.1.1"] = true,
-				["TT_NWolf3.1.1"] = true,
-				["TT_NWraith4.1.1"] = true,
-				["TT_NGolem5.1.1"] = true,
-				["TT_NWolf6.1.1"] = true,
-				["TT_Spiderboss8.1.1"] = true,
-			}		
-			JungleMobNames = {
-				["TT_NWraith21.1.2"] = true,
-				["TT_NWraith21.1.3"] = true,
-				["TT_NGolem22.1.2"] = true,
-				["TT_NWolf23.1.2"] = true,
-				["TT_NWolf23.1.3"] = true,
-				["TT_NWraith24.1.2"] = true,
-				["TT_NWraith24.1.3"] = true,
-				["TT_NGolem25.1.1"] = true,
-				["TT_NWolf26.1.2"] = true,
-				["TT_NWolf26.1.3"] = true,
-			}
-		else 
-			JungleMobNames = { 
-				["Wolf8.1.2"] = true,
-				["Wolf8.1.3"] = true,
-				["YoungLizard7.1.2"] = true,
-				["YoungLizard7.1.3"] = true,
-				["LesserWraith9.1.3"] = true,
-				["LesserWraith9.1.2"] = true,
-				["LesserWraith9.1.4"] = true,
-				["YoungLizard10.1.2"] = true,
-				["YoungLizard10.1.3"] = true,
-				["SmallGolem11.1.1"] = true,
-				["Wolf2.1.2"] = true,
-				["Wolf2.1.3"] = true,
-				["YoungLizard1.1.2"] = true,
-				["YoungLizard1.1.3"] = true,
-				["LesserWraith3.1.3"] = true,
-				["LesserWraith3.1.2"] = true,
-				["LesserWraith3.1.4"] = true,
-				["YoungLizard4.1.2"] = true,
-				["YoungLizard4.1.3"] = true,
-				["SmallGolem5.1.1"] = true,
-			}
-			FocusJungleNames = {
-				["Dragon6.1.1"] = true,
-				["Worm12.1.1"] = true,
-				["GiantWolf8.1.1"] = true,
-				["AncientGolem7.1.1"] = true,
-				["Wraith9.1.1"] = true,
-				["LizardElder10.1.1"] = true,
-				["Golem11.1.2"] = true,
-				["GiantWolf2.1.1"] = true,
-				["AncientGolem1.1.1"] = true,
- 				["Wraith3.1.1"] = true,
-				["LizardElder4.1.1"] = true,
-				["Golem5.1.2"] = true,
-				["GreatWraith13.1.1"] = true,
-				["GreatWraith14.1.1"] = true,
-			}
-		end
-		for i = 0, objManager.maxObjects do
-			local object = objManager:getObject(i)
-			if object ~= nil then
-				if FocusJungleNames[object.name] then
-					table.insert(JungleFocusMobs, object)
-				elseif JungleMobNames[object.name] then
-					table.insert(JungleMobs, object)
-				end
-			end
-		end
-		for i = 1, heroManager.iCount do enemycombo[i] = 0 end
-	---<
-	--- Tables ---
-end
--- / Variables Function / --
 
--- / Menu Function / --
-function PanthMenu()
-	--- Main Menu ---
-	--->
-		PanthMenu = scriptConfig("Pantheon - The Artisan of War", "Pantheon")
-		---> Combo Menu
-		PanthMenu:addSubMenu("["..myHero.charName.." - Combo Settings]", "combo")
-			PanthMenu.combo:addParam("comboKey", "Full Combo Key (X)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("X"))
-			PanthMenu.combo:addParam("comboItems", "Use Items with Burst", SCRIPT_PARAM_ONOFF, true)
-			PanthMenu.combo:addParam("comboOrbwalk", "Orbwalk in Combo", SCRIPT_PARAM_ONOFF, true)
-			PanthMenu.combo:permaShow("comboKey")
-		---<
-		---> Harass Menu
-		PanthMenu:addSubMenu("["..myHero.charName.." - Harass Settings]", "harass")
-			PanthMenu.harass:addParam("hMode", "Harass Mode", SCRIPT_PARAM_LIST, 1, { "Q", "W+E" })
-			PanthMenu.harass:addParam("harassKey", "Harass Hotkey (T)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("T"))
-			PanthMenu.harass:addParam("qharass", "Always "..SkillQ.name.." (Q)", SCRIPT_PARAM_ONOFF, true)
-			PanthMenu.harass:addParam("harassOrbwalk", "Orbwalk in Harass", SCRIPT_PARAM_ONOFF, true)
-			PanthMenu.harass:permaShow("harassKey")
-		---<
-		---> Farming Menu
-		PanthMenu:addSubMenu("["..myHero.charName.." - Farming Settings]", "farming")
-			PanthMenu.farming:addParam("farmKey", "Farming ON/Off (Z)", SCRIPT_PARAM_ONKEYTOGGLE, true, GetKey("Z"))
-			PanthMenu.farming:addParam("lastHit", "Auto Last Hit on Hold", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("C"))
-			PanthMenu.farming:addParam("Mana", "Min Mana to Farm", SCRIPT_PARAM_SLICE, 35, 0, 100, -1)
-			PanthMenu.farming:addParam("qFarm", "Farm with "..SkillQ.name.." (Q)", SCRIPT_PARAM_ONOFF, true)
-			PanthMenu.farming:addParam("wFarm", "Farm with "..SkillE.name.." (W)", SCRIPT_PARAM_ONOFF, false)
-			PanthMenu.farming:permaShow("farmKey")
-		---<
-		---> Clear Menu		
-		PanthMenu:addSubMenu("["..myHero.charName.." - Clear Settings]", "clear")
-			PanthMenu.clear:addParam("clearKey", "Jungle/Lane Clear Key (V)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("V"))
-			PanthMenu.clear:addParam("Mana", "Min Mana to Jungle/Lane Clear", SCRIPT_PARAM_SLICE, 35, 0, 100, -1)
-			PanthMenu.clear:addParam("JungleFarm", "Use Skills to Farm Jungle", SCRIPT_PARAM_ONOFF, true)
-			PanthMenu.clear:addParam("ClearLane", "Use Skills to Clear Lane", SCRIPT_PARAM_ONOFF, true)
-			PanthMenu.clear:addParam("clearQ", "Clear with "..SkillQ.name.." (Q)", SCRIPT_PARAM_ONOFF, true)
-			PanthMenu.clear:addParam("clearW", "Clear with "..SkillW.name.." (W)", SCRIPT_PARAM_ONOFF, true)
-			PanthMenu.clear:addParam("clearE", "Clear with "..SkillE.name.." (E)", SCRIPT_PARAM_ONOFF, true)
-			PanthMenu.clear:addParam("clearOrbM", "OrbWalk Minions", SCRIPT_PARAM_ONOFF, true)
-			PanthMenu.clear:addParam("clearOrbJ", "OrbWalk Jungle", SCRIPT_PARAM_ONOFF, true)
-		---<
-		---> KillSteal Menu
-		PanthMenu:addSubMenu("["..myHero.charName.." - KillSteal Settings]", "killsteal")
-			PanthMenu.killsteal:addParam("smartKS", "Use Smart Kill Steal", SCRIPT_PARAM_ONOFF, true)
-			PanthMenu.killsteal:addParam("itemsKS", "Use Items to KS", SCRIPT_PARAM_ONOFF, true)
-			PanthMenu.killsteal:addParam("Ignite", "Auto Ignite", SCRIPT_PARAM_ONOFF, true)
-			PanthMenu.killsteal:permaShow("smartKS")
-		---<
-		---> Drawing Menu			
-		PanthMenu:addSubMenu("["..myHero.charName.." - Drawing Settings]", "drawing")
-			if VIP_USER then
-				PanthMenu.drawing:addSubMenu("["..myHero.charName.." - LFC Settings]", "lfc")
-					PanthMenu.drawing.lfc:addParam("LagFree", "Activate Lag Free Circles", SCRIPT_PARAM_ONOFF, false)
-					PanthMenu.drawing.lfc:addParam("CL", "Length before Snapping", SCRIPT_PARAM_SLICE, 300, 75, 2000, 0)
-					PanthMenu.drawing.lfc:addParam("CLinfo", "Higher length = Lower FPS Drops", SCRIPT_PARAM_INFO, "")
-			end
-			PanthMenu.drawing:addParam("disableAll", "Disable All Ranges Drawing", SCRIPT_PARAM_ONOFF, false)
-			PanthMenu.drawing:addParam("drawText", "Draw Enemy Text", SCRIPT_PARAM_ONOFF, true)
-			PanthMenu.drawing:addParam("drawTargetText", "Draw Who I'm Targetting", SCRIPT_PARAM_ONOFF, true)
-			PanthMenu.drawing:addParam("drawQ", "Draw "..SkillQ.name.." (Q) Range", SCRIPT_PARAM_ONOFF, true)
-			PanthMenu.drawing:addParam("drawW", "Draw "..SkillW.name.." (W) Range", SCRIPT_PARAM_ONOFF, false)
-			PanthMenu.drawing:addParam("drawE", "Draw "..SkillE.name.." (E) Range", SCRIPT_PARAM_ONOFF, true)
-		---<
-		---> Misc Menu	
-		PanthMenu:addSubMenu("["..myHero.charName.." - Misc Settings]", "misc")
-			PanthMenu.misc:addParam("ZWItems", "Auto Zhonyas/Wooglets", SCRIPT_PARAM_ONOFF, true)
-			PanthMenu.misc:addParam("ZWHealth", "Min Health % for Zhonyas/Wooglets", SCRIPT_PARAM_SLICE, 15, 0, 100, -1)
-			PanthMenu.misc:addParam("aHP", "Auto Health Pots", SCRIPT_PARAM_ONOFF, true)
-			PanthMenu.misc:addParam("pHealth", "Min % for Health Pots", SCRIPT_PARAM_SLICE, 50, 0, 100, -1)
-			PanthMenu.misc:addParam("aMP", "Auto Mana Pots", SCRIPT_PARAM_ONOFF, true)
-			PanthMenu.misc:addParam("pMana", "Min % for Mana Pots", SCRIPT_PARAM_SLICE, 35, 0, 100, -1)
-			PanthMenu.misc:addParam("uTM", "Use Tick Manager/FPS Improver (Requires Reload)",SCRIPT_PARAM_ONOFF, false)
-		---<
-		---> Target Selector		
-			TargetSelector = TargetSelector(TARGET_LESS_CAST_PRIORITY, SkillQ.range, DAMAGE_PHYSICAL)
-			TargetSelector.name = "Pantheon"
-			PanthMenu:addTS(TargetSelector)
-		---<
-		---> Arrange Priorities
-			if heroManager.iCount < 10 then -- borrowed from Sidas Auto Carry, modified to 3v3
-	   			PrintChat(" >> Too few champions to arrange priority")
-			elseif heroManager.iCount == 6 and TTMAP then
-				ArrangeTTPriorities()
-			else
-				ArrangePriorities()
-			end
-		---<
-	---<
-	--- Main Menu ---
-end
--- / Menu Function / --
+	InterruptingSpells = {
+		["AbsoluteZero"]				= true,
+		["AlZaharNetherGrasp"]			= true,
+		["CaitlynAceintheHole"]			= true,
+		["Crowstorm"]					= true,
+		["DrainChannel"]				= true,
+		["FallenOne"]					= true,
+		["GalioIdolOfDurand"]			= true,
+		["InfiniteDuress"]				= true,
+		["KatarinaR"]					= true,
+		["MissFortuneBulletTime"]		= true,
+		["Teleport"]					= true,
+		["Pantheon_GrandSkyfall_Jump"]	= true,
+		["ShenStandUnited"]				= true,
+		["UrgotSwap2"]					= true
+	}
+	AnimationList = {
+		["Spell3"]	= true,
+		["Ult_A"]	= true,
+		["Ult_B"]	= true,
+		["Ult_C"]	= true,
+		["Ult_D"]	= true,
+		["Ult_E"]	= true
+	}
 
--- / Full Combo Function / --
-function FullCombo()
-	--- Combo While Not Channeling --
-	--->
-		if not isChanneling("Spell3") and not (isChanneling("Ult_A") and isChanneling("Ult_B") and isChanneling("Ult_C") and isChanneling("Ult_D") and isChanneling("Ult_E")) then
-			if Target then
-				if PanthMenu.combo.comboOrbwalk then
-					OrbWalking(Target)
-				end
-				if PanthMenu.combo.comboItems then
-					UseItems(Target)
-				end
+	Items = {
+		["BLACKFIRE"]	= { id = 3188, range = 750 },
+		["BRK"]			= { id = 3153, range = 500 },
+		["BWC"]			= { id = 3144, range = 450 },
+		["DFG"]			= { id = 3128, range = 750 },
+		["HXG"]			= { id = 3146, range = 700 },
+		["ODYNVEIL"]	= { id = 3180, range = 525 },
+		["DVN"]			= { id = 3131, range = 200 },
+		["ENT"]			= { id = 3184, range = 350 },
+		["HYDRA"]		= { id = 3074, range = 350 },
+		["TIAMAT"]		= { id = 3077, range = 350 },
+		["YGB"]			= { id = 3142, range = 350 }
+	}
+
+	if TTMAP then --
+		FocusJungleNames = {
+			["TT_NWraith1.1.1"]		= true,
+			["TT_NGolem2.1.1"]		= true,
+			["TT_NWolf3.1.1"]		= true,
+			["TT_NWraith4.1.1"]		= true,
+			["TT_NGolem5.1.1"]		= true,
+			["TT_NWolf6.1.1"]		= true,
+			["TT_Spiderboss8.1.1"]	= true
+		}		
+		JungleMobNames = {
+			["TT_NWraith21.1.2"]	= true,
+			["TT_NWraith21.1.3"]	= true,
+			["TT_NGolem22.1.2"]		= true,
+			["TT_NWolf23.1.2"]		= true,
+			["TT_NWolf23.1.3"]		= true,
+			["TT_NWraith24.1.2"]	= true,
+			["TT_NWraith24.1.3"]	= true,
+			["TT_NGolem25.1.1"]		= true,
+			["TT_NWolf26.1.2"]		= true,
+			["TT_NWolf26.1.3"]		= true
+		}
+	else 
+		JungleMobNames = { 
+			["Wolf8.1.2"]			= true,
+			["Wolf8.1.3"]			= true,
+			["YoungLizard7.1.2"]	= true,
+			["YoungLizard7.1.3"]	= true,
+			["LesserWraith9.1.3"]	= true,
+			["LesserWraith9.1.2"]	= true,
+			["LesserWraith9.1.4"]	= true,
+			["YoungLizard10.1.2"]	= true,
+			["YoungLizard10.1.3"]	= true,
+			["SmallGolem11.1.1"]	= true,
+			["Wolf2.1.2"]			= true,
+			["Wolf2.1.3"]			= true,
+			["YoungLizard1.1.2"]	= true,
+			["YoungLizard1.1.3"]	= true,
+			["LesserWraith3.1.3"]	= true,
+			["LesserWraith3.1.2"]	= true,
+			["LesserWraith3.1.4"]	= true,
+			["YoungLizard4.1.2"]	= true,
+			["YoungLizard4.1.3"]	= true,
+			["SmallGolem5.1.1"]		= true
+		}
+		FocusJungleNames = {
+			["Dragon6.1.1"]			= true,
+			["Worm12.1.1"]			= true,
+			["GiantWolf8.1.1"]		= true,
+			["AncientGolem7.1.1"]	= true,
+			["Wraith9.1.1"]			= true,
+			["LizardElder10.1.1"]	= true,
+			["Golem11.1.2"]			= true,
+			["GiantWolf2.1.1"]		= true,
+			["AncientGolem1.1.1"]	= true,
+			["Wraith3.1.1"]			= true,
+			["LizardElder4.1.1"]	= true,
+			["Golem5.1.2"]			= true,
+			["GreatWraith13.1.1"]	= true,
+			["GreatWraith14.1.1"]	= true
+		}
+	end
+
+	enemyCount = 0
+	enemyTable = {}
+
+	for i = 1, heroManager.iCount do
+		local champ = heroManager:GetHero(i)
+        
+		if champ.team ~= player.team then
+			enemyCount = enemyCount + 1
+			enemyTable[enemyCount] = { player = champ, indicatorText = "", damageGettingText = "", ultAlert = false, ready = true}
+		end
+    end
+
+    for i = 0, objManager.maxObjects do
+		local object = objManager:getObject(i)
+		if object and object.valid and not object.dead then
+			if FocusJungleNames[object.name] then
+				JunglefocusMobs[#JungleFocusMobs+1] = object
+			elseif JungleMobNames[object.name] then
+				JungleMobs[#JungleMobs+1] = object
+			end
+		end
+	end
+end
+
+function Menu()
+	PanthMenu = scriptConfig("Pantheon - The Artisan of War", "Panth")
+	
+	PanthMenu:addSubMenu("["..myHero.charName.."] - Combo Settings", "combo")
+		PanthMenu.combo:addParam("comboKey", "Full Combo Key (SBTW)", SCRIPT_PARAM_ONKEYDOWN, false, 32)
+		PanthMenu.combo:addParam("comboItems", "Use Items with Burst", SCRIPT_PARAM_ONOFF, true)
+		PanthMenu.combo:permaShow("comboKey")
+	
+	PanthMenu:addSubMenu("["..myHero.charName.."] - Harass Settings", "harass")
+		PanthMenu.harass:addParam("harassKey", "Harass key (C)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("C"))
+		PanthMenu.harass:addParam("hMode", "Harass Mode", SCRIPT_PARAM_LIST, 1, { "Q", "W+E" })
+		PanthMenu.harass:addParam("harassMana", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
+		PanthMenu.harass:permaShow("harassKey")
+		
+	
+	PanthMenu:addSubMenu("["..myHero.charName.."] - Farm Settings", "farming")
+		PanthMenu.farming:addParam("farmKey", "Farming Key (X)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey('X'))
+		PanthMenu.farming:addParam("qFarm", "Farm with "..SpellQ.name.." (Q)", SCRIPT_PARAM_ONOFF, true)
+		PanthMenu.farming:addParam("wFarm", "Farm with "..SpellW.name.." (W)", SCRIPT_PARAM_ONOFF, true)
+		PanthMenu.farming:addParam("FarmMana", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
+		PanthMenu.farming:permaShow("farmKey")
+		
+	PanthMenu:addSubMenu("["..myHero.charName.."] - Jungle Clear Settings", "jungle")
+		PanthMenu.jungle:addParam("jungleKey", "Jungle Clear Key (V)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey('V'))
+		PanthMenu.jungle:addParam("jungleQ", "Clear with "..SpellQ.name.." (Q)", SCRIPT_PARAM_ONOFF, true)
+		PanthMenu.jungle:addParam("jungleW", "Clear with "..SpellW.name.." (W)", SCRIPT_PARAM_ONOFF, true)
+		PanthMenu.jungle:addParam("jungleE", "Clear with "..SpellE.name.." (E)", SCRIPT_PARAM_ONOFF, true)
+		
+		
+	PanthMenu:addSubMenu("["..myHero.charName.."] - KillSteal Settings", "ks")
+		PanthMenu.ks:addParam("killSteal", "Use Smart Kill Steal", SCRIPT_PARAM_ONOFF, true)
+		PanthMenu.ks:addParam("autoIgnite", "Auto Ignite", SCRIPT_PARAM_ONOFF, true)
+		PanthMenu.ks:permaShow("killSteal")
 			
-				CastQ(Target)
-				CastW(Target)
-				if not Target.canMove or GetDistance(Target) < 175 then
-					CastE(Target)
-				end
-			else
-				if PanthMenu.combo.comboOrbwalk then
-					moveToCursor()
+	PanthMenu:addSubMenu("["..myHero.charName.."] - Draw Settings", "drawing")	
+		PanthMenu.drawing:addParam("mDraw", "Disable All Range Draws", SCRIPT_PARAM_ONOFF, false)
+		PanthMenu.drawing:addParam("cDraw", "Draw Damage Text", SCRIPT_PARAM_ONOFF, true)
+		PanthMenu.drawing:addParam("qDraw", "Draw "..SpellQ.name.." (Q) Range", SCRIPT_PARAM_ONOFF, true)
+		PanthMenu.drawing:addParam("wDraw", "Draw "..SpellW.name.." (W) Range", SCRIPT_PARAM_ONOFF, false)
+		PanthMenu.drawing:addParam("eDraw", "Draw "..SpellE.name.." (E) Range", SCRIPT_PARAM_ONOFF, true)
+		PanthMenu.drawing:addParam("rDraw", "Draw "..SpellR.name.." (R) Range on the Minimap", SCRIPT_PARAM_ONOFF, true)
+	
+	PanthMenu:addSubMenu("["..myHero.charName.."] - Misc Settings", "misc")
+		PanthMenu.misc:addSubMenu("Spells - Misc Settings", "smisc")
+			PanthMenu.misc.smisc:addParam("stopChannel", "Interrupt Channeling Spells", SCRIPT_PARAM_ONOFF, true)
+			PanthMenu.misc.smisc:addParam("AutoQ", "Auto-Q at CCed Enemies", SCRIPT_PARAM_ONOFF, false)
+		if VIP_USER then
+			PanthMenu.misc:addSubMenu("Spells - Cast Settings", "cast")
+				PanthMenu.misc.cast:addParam("usePackets", "Use Packets to Cast Spells", SCRIPT_PARAM_ONOFF, false)
+		end
+		PanthMenu.misc:addSubMenu("Info - Ultimate Alert", "ultAlert")
+			PanthMenu.misc.ultAlert:addParam("Enable", "Enable Ultimate Alert", SCRIPT_PARAM_ONOFF, true)
+			PanthMenu.misc.ultAlert:addParam("alertTime", "Time to be shown: ", SCRIPT_PARAM_SLICE, 3, 1, 10, 0)
+			PanthMenu.misc.ultAlert:addParam("Pings", "Use Client-Side Pings to Alert", SCRIPT_PARAM_ONOFF, false)
+			PanthMenu.misc.ultAlert:addParam("alertInfo", "It will print a text in the middle of the screen if an Enemy is Killable", SCRIPT_PARAM_INFO, "")
+
+		PanthMenu:addSubMenu("["..myHero.charName.."] - Orbwalking Settings", "Orbwalking")
+			pSOW:LoadToMenu(PanthMenu.Orbwalking)
+
+	TargetSelector = TargetSelector(TARGET_LESS_CAST, SpellQ.range, DAMAGE_PHYSICAL)
+	TargetSelector.name = "Pantheon"
+	PanthMenu:addTS(TargetSelector)
+
+	PanthMenu:addParam("panthVer", "Version: ", SCRIPT_PARAM_INFO, version)
+end
+
+function OnProcessSpell(unit, spell)
+	if PanthMenu.misc.smisc.stopChannel then
+		if GetDistanceSqr(unit) <= SpellW.range * SpellW.range then
+			if InterruptingSpells[spell.name] then
+				CastW(unit)
+			end
+		end
+	end
+end
+
+function OnAnimation(unit, animationName)
+	if unit.isMe then 
+		if AnimationList[animationName] then
+			pSOW:DisableAttacks()
+			pSOW.Move = false
+		else
+			pSOW:EnableAttacks()
+			pSOW.Move = true
+		end
+	end
+end
+
+function OnCreateObj(obj)
+	if FocusJungleNames[obj.name] then
+		JungleFocusMobs[#JungleFocusMobs+1] = obj
+	elseif JungleMobNames[obj.name] then
+		JungleMobs[#JungleMobs+1] = obj
+	end
+end
+
+function OnDeleteObj(obj)
+	for i, Mob in pairs(JungleMobs) do
+		if obj.name == Mob.name then
+			table.remove(JungleMobs, i)
+		end
+	end
+	for i, Mob in pairs(JungleFocusMobs) do
+		if obj.name == Mob.name then
+			table.remove(JungleFocusMobs, i)
+		end
+	end
+end
+
+function OnDraw()
+	if not myHero.dead then
+		if not PanthMenu.drawing.mDraw then
+			if PanthMenu.drawing.qDraw and SpellQ.ready then
+				DrawCircle(myHero.x, myHero.y, myHero.z, SpellQ.range, ARGB(255,178, 0 , 0 ))
+			end
+			if PanthMenu.drawing.wDraw and SpellW.ready then
+				DrawCircle(myHero.x, myHero.y, myHero.z, SpellW.range, ARGB(255, 32,178,170))
+			end
+			if PanthMenu.drawing.eDraw and SpellE.ready then
+				DrawCircle(myHero.x, myHero.y, myHero.z, SpellE.range, ARGB(255,128, 0 ,128))
+			end
+			if PanthMenu.drawing.rDraw and SpellR.ready then
+				DrawCircleMinimap(myHero.x, myHero.y, myHero.z, SpellR.range)
+			end
+		end
+		if PanthMenu.drawing.cDraw then
+			for i = 1, enemyCount do
+				local enemy = enemyTable[i].player
+
+				if ValidTarget(enemy) and enemy.visible then
+					local barPos = WorldToScreen(D3DXVECTOR3(enemy.x, enemy.y, enemy.z))
+					local pos = { X = barPos.x - 35, Y = barPos.y - 50 }
+
+					DrawText(enemyTable[i].indicatorText, 15, pos.X, pos.Y, (enemyTable[i].ready and ARGB(255, 0, 255, 0)) or ARGB(255, 255, 220, 0))
+					DrawText(enemyTable[i].damageGettingText, 15, pos.X, pos.Y + 15, ARGB(255, 255, 0, 0))
 				end
 			end
 		end
-	---<
-	--- Combo While Not Channeling --
+	end
 end
--- / Full Combo Function / --
 
--- / Harass Combo Function / --
-function HarassCombo()
-	--- Smart Harass --
-	--->
-		if Target then
-			if PanthMenu.harass.harassOrbwalk then
-				OrbWalking(Target)
-			end
+function TickChecks()
+	-- Checks if Spells Ready
+	SpellQ.ready = (myHero:CanUseSpell(_Q) == READY)
+	SpellW.ready = (myHero:CanUseSpell(_W) == READY)
+	SpellE.ready = (myHero:CanUseSpell(_E) == READY)
+	SpellR.ready = (myHero:CanUseSpell(_R) == READY)
+
+	SpellQ.manaUsage = myHero:GetSpellData(_Q).mana
+	SpellW.manaUsage = myHero:GetSpellData(_W).mana
+	SpellE.manaUsage = myHero:GetSpellData(_E).mana
+	SpellR.manaUsage = myHero:GetSpellData(_R).mana
+
+	if myHero:GetSpellData(SUMMONER_1).name:find(SpellI.name) then
+		SpellI.variable = SUMMONER_1
+	elseif myHero:GetSpellData(SUMMONER_2).name:find(SpellI.name) then
+		SpellI.variable = SUMMONER_2
+	end
+	SpellI.ready = (SpellI.variable ~= nil and myHero:CanUseSpell(SpellI.variable) == READY)
+
+	Target = GetCustomTarget()
+	pSOW:ForceTarget(Target)
+
+	DmgCalc()
+end
+
+function GetCustomTarget()
+	TargetSelector:update()
+    if _G.MMA_Target and _G.MMA_Target.type == myHero.type then
+    	return _G.MMA_Target
+   	elseif _G.AutoCarry and _G.AutoCarry.Crosshair and _G.AutoCarry.Attack_Crosshair then
+   		return _G.AutoCarry.Attack_Crosshair.target
+   	elseif TargetSelector.target and not TargetSelector.target.dead and TargetSelector.target.type  == "obj_AI_Hero" then
+    	return TargetSelector.target
+    else
+    	return nil
+    end
+end
+
+function UseItems(unit)
+	for i, Item in pairs(Items) do
+		local Item = Items[i]
+		if GetInventoryItemIsCastable(Item.id) and GetDistanceSqr(unit) <= Item.range*Item.range then
+			CastItem(Item.id, unit)
+		end
+	end
+end
+
+function Combo(unit)
+	if ValidTarget(unit) and unit ~= nil then
+		if PanthMenu.combo.comboItems then
+			UseItems(unit)
+		end
+		CastQ(unit)
+		CastW(unit)
+		CastE(unit)
+	end
+end
+
+function Harass(unit)
+	if ValidTarget(unit) and unit ~= nil then
+		if not isLow('Mana', myHero, PanthMenu.harass.harassMana) then
 			--- Harass Mode 1 Q ---
 			if PanthMenu.harass.hMode == 1 then
-				if SkillQ.ready then
-					CastQ(Target)
-				end
+				CastQ(Target)
 			end
-			--- Harass Mode 1 ---
+
 			--- Harass Mode 2 W+E ---
 			if PanthMenu.harass.hMode == 2 then
-				if SkillW.ready then
-					CastW(Target)
-					if not SkillW.ready then CastE(Target) end
-				end
-			end
-			--- Harass Mode 2 ---
-		else
-			if PanthMenu.harass.harassOrbwalk then
-				moveToCursor()
+				CastW(Target)
+				if not SkillW.ready then CastE(Target) end
 			end
 		end
-	---<
-	--- Smart Harass ---
+	end
 end
--- / Harass Combo Function / --
 
--- / Farm Function / --
 function Farm()
-	--->
-		for _, minion in pairs(enemyMinions.objects) do
-			--- Minion Damages ---
-			local qMinionDmg 	= getDmg("Q",  minion, myHero)
-			local eMinionDmg	= getDmg("W",  minion, myHero)
-			local aaMinionDmg	= getDmg("AD", minion, myHero)
-			--- Minion Damages ---
-			--- Minion Keys ---
-			local qFarmKey = PanthMenu.farming.qFarm
-			local WFarmKey = PanthMenu.farming.wFarm
-			--- Minion Keys ---
-			--- Farming Minions ---
-			if ValidTarget(minion) and not isChanneling("Spell3") and not (isChanneling("Ult_A") and isChanneling("Ult_B") and isChanneling("Ult_C") and isChanneling("Ult_D") and isChanneling("Ult_E")) then
-				if GetDistance(minion) <= SkillQ.range then
-					if qFarmKey and wFarmKey then
-						if SkillQ.ready and SkillW.ready then
-							if minion.health <= (wMinionDmg + qMinionDmg) and minion.health > qMinionDmg then
-								CastW(minion)
-								CastQ(minion)
-							end
-						elseif SkillW.ready and not SkillQ.ready then
-							if minion.health <= (wMinionDmg) then
-								CastW(minion)
-							end
-						elseif SkillQ.ready and not SkillW.ready then
-							if minion.health <= (qMinionDmg) then
-								CastQ(minion)
-							end
-						elseif GetDistance(minion) <= myHero.range and not SkillQ.ready and not SkillW.ready then
-							if minion.health <= aaMinionDmg then
-								myHero:Attack(minion)
-							end
-						end
-					elseif qFarmKey and not wFarmKey then
-						if SkillQ.ready then
-							if minion.health <= (qMinionDmg) then
-								CastQ(minion)
-							end
-						elseif GetDistance(minion) <= myHero.range and not SkillQ.ready then
-							if minion.health <= aaMinionDmg then
-								myHero:Attack(minion)
-							end
-						end
-					end
-				elseif (GetDistance(minion) > SkillQ.range) and (GetDistance(minion) <= SkillW.range) then
-					if wFarmKey then
-						if minion.health <= wMinionDmg then
-							CastW(minion)
-						end
-					end
-				end
-			end
-			break									
-		end
-		--- Farming Minions ---
-	---<
-end
--- / Farm Function / --
-
--- / Last Hit Function / --
-local nextTick = 0
-function lastHit()
 	enemyMinions:update()
-	if GetTickCount() > nextTick then
-		myHero:MoveTo(mousePos.x, mousePos.z)
-	end						
-	for index, minion in pairs(enemyMinions.objects) do
-		if ValidTarget(minion) then
-			local aaMinionDmg = getDmg("AD",minion,myHero)
-			if minion.health <= aaMinionDmg and GetDistance(minion) <= (myHero.range + SkillE.range) and GetTickCount() > nextTick then
-				myHero:Attack(minion)
-				nextTick = GetTickCount() + 450
+	for i, minion in pairs(enemyMinions.objects) do
+		if ValidTarget(minion) and minion ~= nil then
+			if minion.health <= SpellQ.dmg and (GetDistanceSqr(minion) > myHero.range*myHero.range or not pSOW:CanAttack()) and PanthMenu.farming.qFarm and not isLow('Mana', myHero, PanthMenu.farming.FarmMana) then
+				CastQ(minion)
+			elseif minion.health <= SpellW.dmg and (GetDistanceSqr(minion) > myHero.range * myHero.range or not pSOW:CanAttack()) and PanthMenu.farming.wFarm and not isLow('Mana', myHero, PanthMenu.farming.FarmMana) then
+				CastW(minion)
 			end
 		end		 
 	end
 end
--- / Last Hit Function / --
 
--- / Clear Function / --
-function MixedClear()
-	--- Jungle Clear ---
-	--->
-		if PanthMenu.clear.JungleFarm and not isChanneling("Spell3") and not (isChanneling("Ult_A") and isChanneling("Ult_B") and isChanneling("Ult_C") and isChanneling("Ult_D") and isChanneling("Ult_E")) then
-			local JungleMob = GetJungleMob()
-			if JungleMob ~= nil then
-			
-				if PanthMenu.clear.clearOrbJ then
-					OrbWalking(JungleMob)
-				end
-				if PanthMenu.clear.clearQ and SkillQ.ready and GetDistance(JungleMob) <= SkillQ.range then
-					CastQ(JungleMob)
-				end
-				if PanthMenu.clear.clearW and SkillW.ready and GetDistance(JungleMob) <= SkillW.range then
-					CastW(JungleMob)
-				end
-				if PanthMenu.clear.clearE and SkillE.ready and GetDistance(JungleMob) <= SkillE.range then
-					CastE(JungleMob)
-				end
-				if tmtReady and GetDistance(JungleMob) <= 185 then CastSpell(tmtSlot) end
-				if hdrReady and GetDistance(JungleMob) <= 185 then CastSpell(hdrSlot) end
-			else
-				if PanthMenu.clear.clearOrbJ then
-					moveToCursor()
-				end
+function JungleClear()
+	if PanthMenu.jungle.jungleKey then
+		local JungleMob = GetJungleMob()
+		if JungleMob ~= nil then
+			if PanthMenu.jungle.jungleQ and GetDistanceSqr(JungleMob) <= SpellQ.range * SpellQ.range then
+				CastQ(JungleMob)
 			end
-		end
-	---<
-	--- Jungle Clear ---
-	--- Lane Clear ---
-	--->
-		if PanthMenu.clear.ClearLane and not isChanneling("Spell3") and not (isChanneling("Ult_A") and isChanneling("Ult_B") and isChanneling("Ult_C") and isChanneling("Ult_D") and isChanneling("Ult_E")) then
-			for _, minion in pairs(enemyMinions.objects) do
-				if  ValidTarget(minion) then
-					if PanthMenu.clear.clearOrbM then
-						OrbWalking(minion)
-					end
-					if PanthMenu.clear.clearQ and SkillQ.ready and GetDistance(minion) <= SkillQ.range then
-						CastQ(minion)
-					end
-					if PanthMenu.clear.clearW and SkillW.ready and GetDistance(minion) <= SkillW.range then
-						CastW(minion)
-					end
-					if PanthMenu.clear.clearE and SkillE.ready and GetDistance(minion) <= SkillE.range then 
-						CastE(minion)
-					end
-					if tmtReady and GetDistance(minion) <= 185 then CastSpell(tmtSlot) end
-					if hdrReady and GetDistance(minion) <= 185 then CastSpell(hdrSlot) end
-				else
-					if PanthMenu.clear.clearOrbM then
-						moveToCursor()
-					end
-				end
+			if PanthMenu.jungle.jungleQ and GetDistanceSqr(JungleMob) <= SpellQ.range * SpellQ.range then
+				CastW(JungleMob)
 			end
-		end
-	---<
-	--- Lane Clear ---
-end
--- / Clear Function / --
-
--- / Casting Q Function / --
-function CastQ(enemy)
-	--- Dynamic Q Cast ---
-	--->
-		if not SkillQ.ready or GetDistance(enemy) > SkillQ.range then
-			return false
-		end
-		if ValidTarget(enemy) then 
-			if VIP_USER then
-				Packet("S_CAST", {spellId = _Q, targetNetworkId = enemy.networkID}):send()
-				return true
-			else
-				CastSpell(_Q, enemy)
-				return true
+			if PanthMenu.jungle.jungleE and GetDistanceSqr(JungleMob) <= SpellE.range * SpellE.range then
+				CastE(JungleMob)
 			end
-		end
-		return false
-	---<
-	--- Dynamic Q Cast ---
-end
--- / Casting Q Function / --
-
--- / Casting W Function / --
-function CastW(enemy)
-	--- Dynamic W Cast ---
-	--->
-		if not SkillW.ready or (GetDistance(enemy) > SkillW.range) then
-			return
-		end
-		if ValidTarget(enemy) then 
-			if VIP_USER then
-				Packet("S_CAST", {spellId = _W, targetNetworkId = enemy.networkID}):send()
-				return true
-			else
-				CastSpell(_W, enemy)
-				return true
-			end
-		end
-		return false
-	---<
-	--- Dynamic W Cast ---
-end
--- / Casting W Function / --
-
--- / Casting E Function / --
-function CastE(enemy)
-	--- Dynamic E Cast ---
-	--->
-		if not SkillE.ready or (GetDistance(enemy) > SkillE.range) then
-			return false
-		end
-		if ValidTarget(enemy) then 
-			if VIP_USER then
-				Packet("S_CAST", {spellId = _E, fromX = myHero.x, fromY = myHero.z, toX = enemy.x, toY = enemy.z}):send()
-				return true
-			else
-				CastSpell(_E, enemy.x, enemy.z)
-				return true
-			end
-		end
-		return false
-	---<
-	--- Dynamic E Cast ---
-end
--- / Casting E Function / --
-
--- / Use Items Function / --
-function UseItems(enemy)
-	--- Use Items ---
-	--->
-		if not enemy then
-			enemy = Target
-		end
-		if ValidTarget(enemy) then
-			if dfgReady and GetDistance(enemy) <= 600 then CastSpell(dfgSlot, enemy) end
-			if hxgReady and GetDistance(enemy) <= 600 then CastSpell(hxgSlot, enemy) end
-			if bwcReady and GetDistance(enemy) <= 450 then CastSpell(bwcSlot, enemy) end
-			if brkReady and GetDistance(enemy) <= 450 then CastSpell(brkSlot, enemy) end
-			if tmtReady and GetDistance(enemy) <= 185 then CastSpell(tmtSlot) end
-			if hdrReady and GetDistance(enemy) <= 185 then CastSpell(hdrSlot) end
-		end
-	---<
-	--- Use Items ---
-end
--- / Use Items Function / --
-
-function UseConsumables()
-	--- Check if Zhonya/Wooglets Needed --
-	--->
-		if PanthMenu.misc.ZWItems and isLow('Wooglets') and Target and (znaReady or wgtReady) then
-			CastSpell((wgtSlot or znaSlot))
-		end
-	---<
-	--- Check if Zhonya/Wooglets Needed --
-	--- Check if HP Potions Needed --
-	--->
-		if PanthMenu.misc.aHP and isLow('Health') and not Items.HealthPot.inUse and (Items.HealthPot.ready or Items.FlaskPot.ready) then
-			CastSpell((Items.HealthPot.slot or Items.FlaskPot.slot))
-		end
-	---<
-	--- Check if HP Potions Needed --
-	--- Check if MP Potions Needed --
-	--->
-		if PanthMenu.misc.aMP and isLow('Mana') and not Items.ManaPot.inUse and (Items.ManaPot.ready or Items.FlaskPot.ready) then
-			CastSpell((Items.ManaPot.slot or Items.FlaskPot.slot))
-		end
-	---<
-	--- Check if MP Potions Needed --
-end	
-
--- / Auto Ignite Function / --
-function AutoIgnite(enemy)
-	--- Simple Auto Ignite ---
-	--->
-		if enemy.health <= iDmg and GetDistance(enemy) <= 600 then
-			if iReady then CastSpell(ignite, enemy) end
-		end
-	---<
-	--- Simple Auto Ignite ---
-end
--- / Auto Ignite Function / --
-
--- / Damage Calculation Function / --
-function DamageCalculation()
-	--- Calculate our Damage On Enemies ---
-	--->
- 		for i=1, heroManager.iCount do
-			local enemy = heroManager:GetHero(i)
-			if ValidTarget(enemy) then
-				dfgDmg, bftDmg, hxgDmg, bwcDmg, tmtDmg, hdrDmg, iDmg = 0, 0, 0, 0, 0, 0, 0
-				qDmg =		(SkillQ.ready and	getDmg("Q",			enemy, myHero)		or 0)
-				wDmg =		(SkillW.ready and	getDmg("W",			enemy, myHero)		or 0)
-				eDmg =		(SkillE.ready and	getDmg("E",			enemy, myHero, 3)	or 0)
-				rDmg =		(SkillR.ready and	getDmg("R",			enemy, myHero)		or 0)
-				dfgDmg =	(dfgSlot and		getDmg("DFG",		enemy, myHero)		or 0)
-				bftdmg =	(bftSlot and		getDmg("BLACKFIRE",	enemy, myHero)		or 0)
-				hxgDmg =	(hxgSlot and		getDmg("HXG",		enemy, myHero)		or 0)
-				bwcDmg =	(bwcSlot and		getDmg("BWC",		enemy, myHero)		or 0)
-				tmtDmg =	(tmtSlot and		getDmg("TIAMAT",	enemy, myHero)		or 0)
-				hdrDmg =	(tmtSlot and		getDmg("HYDRA",		enemy, myHero)		or 0)
-				iDmg =		(ignite and			getDmg("IGNITE",	enemy, myHero)		or 0)
-				
-				onspellDmg = bftDmg
-				itemsDmg = dfgDmg + hxgDmg + bwcDmg + tmtDmg + hdrDmg + iDmg + onspellDmg
-	---<
-	--- Calculate our Damage On Enemies ---
-	--- Setting KillText Color & Text ---
-	--->
-				if enemy.health > (qDmg + eDmg + wDmg + itemsDmg) then
-					KillText[i] = 1
-				elseif enemy.health <= qDmg then
-					if SkillQ.ready then
-						KillText[i] = 2
-					else
-						KillText[i] = 7
-					end
-				elseif enemy.health <= wDmg then
-					if SkillW.ready then
-						KillText[i] = 3
-					else
-						KillText[i] = 7
-					end
-				elseif enemy.health <= (wDmg + eDmg) and SkillW.ready and SkillE.ready then
-					if SkillW.ready and SkillE.ready then
-						KillText[i] = 4
-					else
-						KillText[i] = 7
-					end
-				elseif enemy.health <= (qDmg + wDmg + eDmg) and SkillQ.ready and SkillW.ready and SkillE.ready then
-					if SkillQ.ready and SkillW.ready and SkillE.ready then
-						KillText[i] = 5
-					else
-						KillText[i] = 7
-					end
-				elseif (enemy.health <= (qDmg + wDmg + eDmg + itemsDmg) or enemy.health <= (qDmg + wDmg + eDmg + itemsDmg)) and SkillQ.ready and SkillW.ready and SkillE.ready then
-					if SkillQ.ready and SkillW.ready and SkillE.ready then
-						KillText[i] = 6
-					else
-						KillText[i] = 7
-					end
-				end
-			end
-		end
-	---<
-	--- Setting KillText Color & Text ---
-end
--- / Damage Calculation Function / --
-
--- / KillSteal Function / --
-function KillSteal()
-	--- KillSteal ---
-	--->
-		if Target then
-			local distance = GetDistance(Target)
-			local health = Target.health
-			if health <= qDmg and SkillQ.ready and (distance < SkillQ.range) then
-				CastQ(Target)
-			elseif health <= wDmg and SkillW.ready and (distance < SkillW.range) then
-				CastW(Target)
-			elseif health <= (qDmg + wDmg) and SkillQ.ready and SkillW.ready and (distance < SkillW.range) then
-				CastQ(Target)
-				CastW(Target)
-			elseif PanthMenu.killsteal.itemsKS then
-				if health <= (qDmg + wDmg + itemsDmg) and health > (qDmg + wDmg) then
-					if SkillQ.ready and SkillW.ready then
-						UseItems(Target)
-					end
-				end
-			end
-		end
-	---<
-	--- KillSteal ---
-end
--- / KillSteal Function / --
-
--- / Misc Functions / --
---- On Animation (Setting our last Animation) ---
---->
-	function OnAnimation(unit, animationName)
-		if unit.isMe and lastAnimation ~= animationName then 
-			lastAnimation = animationName
 		end
 	end
----<
---- On Animation (Setting our last Animation) ---
---- isChanneling Function (Checks if Animation is Channeling) ---
---->
-	function isChanneling(animationName)
-		if lastAnimation == animationName then
+end
+
+function CastQ(unit)
+	if unit == nil or not SpellQ.ready or (GetDistanceSqr(unit, myHero) > SpellQ.range * SpellQ.range) then
+		return false
+	end
+
+	if not VIP_USER or not PanthMenu.misc.cast.usePackets then
+		CastSpell(_Q, unit)
+	elseif VIP_USER and PanthMenu.misc.cast.usePackets then
+		Packet("S_CAST", { spellId = _Q, targetNetworkId = unit.networkID }):send()
+	end
+end
+
+function CastW(unit)
+	if unit == nil or not SpellW.ready or (GetDistanceSqr(unit, myHero) > SpellW.range * SpellW.range) then
+		return false
+	end
+
+	if not VIP_USER or not PanthMenu.misc.cast.usePackets then
+		CastSpell(_W, unit)
+	elseif VIP_USER and PanthMenu.misc.cast.usePackets then
+		Packet("S_CAST", { spellId = _W, targetNetworkId = unit.networkID }):send()
+	end
+end
+
+function CastE(unit)
+	if unit == nil or not SpellE.ready or (GetDistanceSqr(unit) > SpellE.range * SpellE.range) then
+		return false
+	end
+
+	if not VIP_USER or not PanthMenu.misc.cast.usePackets then
+		CastSpell(_E, unit.x, unit.z)
+	else
+		Packet("S_CAST", { spellId = _E, toX = unit.x, toY = unit.z, fromX = unit.x, fromY = unit.z }):send()
+	end
+end
+
+function ArrangePriorities()
+	for i = 1, enemyCount do
+		local enemy = enemyTable[i].player
+		SetPriority(priorityTable.AD_Carry, enemy, 1)
+		SetPriority(priorityTable.AP, enemy, 2)
+		SetPriority(priorityTable.Support, enemy, 3)
+		SetPriority(priorityTable.Bruiser, enemy, 4)
+		SetPriority(priorityTable.Tank, enemy, 5)
+	end
+end
+
+function ArrangeTTPriorities()
+	for i = 1, enemyCount do
+		local enemy = enemyTable[i].player
+		SetPriority(priorityTable.AD_Carry, enemy, 1)
+		SetPriority(priorityTable.AP, enemy, 1)
+		SetPriority(priorityTable.Support, enemy, 2)
+		SetPriority(priorityTable.Bruiser, enemy, 2)
+		SetPriority(priorityTable.Tank, enemy, 3)
+	end
+end
+function SetPriority(table, hero, priority)
+	for i = 1, #table do
+		if hero.charName:find(table[i]) ~= nil then
+			TS_SetHeroPriority(priority, hero.charName)
+		end
+	end
+end
+
+function GetJungleMob()
+		for _, Mob in pairs(JungleFocusMobs) do
+			if ValidTarget(Mob, SpellQ.range) then return Mob end
+		end
+		for _, Mob in pairs(JungleMobs) do
+			if ValidTarget(Mob, SpellQ.range) then return Mob end
+		end
+	end
+
+function DmgCalc()
+	for i = 1, enemyCount do
+		local enemy = enemyTable[i].player
+		if ValidTarget(enemy) and enemy.visible then
+			SpellQ.dmg = (SpellQ.ready and getDmg("Q",		enemy, myHero)) or 0
+			SpellW.dmg = (SpellW.ready and getDmg("W",		enemy, myHero)) or 0
+			SpellE.dmg = (SpellE.ready and getDmg("E",		enemy, myHero)) or 0
+			SpellR.dmg = (SpellR.ready and getDmg("R",		enemy, myHero)) or 0
+			SpellI.dmg = (SpellI.ready and getDmg("IGNITE", enemy, myHero)) or 0
+
+			if enemy.health < SpellQ.dmg then
+				enemyTable[i].indicatorText = "Q Kill"
+				enemyTable[i].ready = SpellQ.ready and SpellQ.manaUsage <= myHero.mana
+			elseif enemy.health < SpellW.dmg then
+				enemyTable[i].indicatorText = "W Kill"
+				enemyTable[i].ready = SpellW.ready and SpellW.manaUsage <= myHero.mana
+			elseif enemy.health < SpellE.dmg then
+				enemyTable[i].indicatorText = "E Kill"
+				enemyTable[i].ready = SpellE.ready and SpellE.manaUsage <= myHero.mana
+			elseif enemy.health < SpellQ.dmg + SpellW.dmg then
+				enemyTable[i].indicatorText = "Q + W Kill"
+				enemyTable[i].ready = SpellQ.ready and SpellW.ready and SpellQ.manaUsage + SpellW.manaUsage <= myHero.mana
+			elseif enemy.health < SpellQ.dmg + SpellE.dmg then
+				enemyTable[i].indicatorText = "Q + E Kill"
+				enemyTable[i].ready = SpellQ.ready and SpellE.ready and SpellQ.manaUsage + SpellE.manaUsage <= myHero.mana
+			elseif enemy.health < SpellW.dmg + SpellE.dmg then
+				enemyTable[i].indicatorText = "W + E Kill"
+				enemyTable[i].ready = SpellW.ready and SpellE.ready and SpellW.manaUsage + SpellE.manaUsage <= myHero.mana
+			elseif enemy.health < SpellQ.dmg + SpellW.dmg + SpellE.dmg then
+				enemyTable[i].indicatorText = "Q + W + E Kill"
+				enemyTable[i].ready = SpellQ.ready and SpellW.ready and SpellE.ready and SpellQ.manaUsage + SpellW.manaUsage + SpellE.manaUsage <= myHero.mana
+			else
+				local dmgTotal = SpellQ.dmg + SpellW.dmg + SpellE.dmg
+				local hpLeft = math.round(enemy.health - dmgTotal)
+				local percentLeft = math.round(hpLeft / enemy.maxHealth * 100)
+
+				enemyTable[i].indicatorText = percentLeft .. "% Harass"
+				enemyTable[i].ready = SpellQ.ready and SpellW.ready and SpellE.ready
+			end
+
+			local enemyAD = getDmg("AD", myHero, enemy)
+
+			enemyTable[i].damageGettingText = enemy.charName.." kills me with "..math.ceil(myHero.health / enemyAD).." hits"
+		end
+	end
+end
+
+function KillSteal()
+	for i = 1, enemyCount do
+		local enemy = enemyTable[i].player
+		if ValidTarget(enemy) and enemy.visible then
+			if enemy.health < SpellQ.dmg and SpellQ.ready then
+				CastQ(enemy)
+			elseif enemy.health < SpellW.dmg and SpellW.ready then
+				CastW(enemy)
+			elseif enemy.health < SpellE.dmg and SpellE.ready then
+				CastE(enemy)
+			elseif enemy.health < SpellQ.dmg + SpellW.dmg and SpellQ.ready and SpellW.ready then
+				CastW(enemy)
+			elseif enemy.health < SpellQ.dmg + SpellE.dmg and SpellQ.ready and SpellE.ready then
+				CastQ(enemy)
+			elseif enemy.health < SpellW.dmg + SpellE.dmg and SpellW.ready and SpellE.ready then
+				CastW(enemy)
+			elseif enemy.health < SpellQ.dmg + SpellW.dmg + SpellE.dmg then
+				CastQ(enemy)
+			end
+
+			if PanthMenu.ks.autoIgnite then
+				AutoIgnite(enemy)
+			end
+		end
+	end
+end
+
+function AutoIgnite(unit)
+	if unit.health < SpellI.dmg and GetDistanceSqr(unit) <= SpellI.range * SpellI.range then
+		if SpellI.ready then
+			CastSpell(SpellI.variable, unit)
+		end
+	end
+end
+
+function isLow(what, unit, slider)
+	if what == 'Mana' then
+		if unit.mana < (unit.maxMana * (slider / 100)) then
+			return true
+		else
+			return false
+		end
+	elseif what == 'HP' then
+		if unit.health < (unit.maxHealth * (slider / 100)) then
 			return true
 		else
 			return false
 		end
 	end
----<
---- isChanneling Function (Checks if Animation is Channeling) ---
---- Get Jungle Mob Function by Apple ---
---->
-	function GetJungleMob()
-		for _, Mob in pairs(JungleFocusMobs) do
-			if ValidTarget(Mob, q1Range) then return Mob end
-		end
-		for _, Mob in pairs(JungleMobs) do
-			if ValidTarget(Mob, q1Range) then return Mob end
-		end
-	end
----<
---- Get Jungle Mob Function by Apple ---
---- Arrange Priorities 5v5 ---
---->
-	function ArrangePriorities()
-		for i, enemy in pairs(enemyHeroes) do
-			SetPriority(priorityTable.AD_Carry, enemy, 1)
-			SetPriority(priorityTable.AP, enemy, 2)
-			SetPriority(priorityTable.Support, enemy, 3)
-			SetPriority(priorityTable.Bruiser, enemy, 4)
-			SetPriority(priorityTable.Tank, enemy, 5)
-		end
-	end
----<
---- Arrange Priorities 5v5 ---
---- Arrange Priorities 3v3 ---
---->
-	function ArrangeTTPriorities()
-		for i, enemy in pairs(enemyHeroes) do
-			SetPriority(priorityTable.AD_Carry, enemy, 1)
-			SetPriority(priorityTable.AP, enemy, 1)
-			SetPriority(priorityTable.Support, enemy, 2)
-			SetPriority(priorityTable.Bruiser, enemy, 2)
-			SetPriority(priorityTable.Tank, enemy, 3)
-		end
-	end
----<
---- Arrange Priorities 3v3 ---
---- Set Priorities ---
---->
-	function SetPriority(table, hero, priority)
-		for i=1, #table, 1 do
-			if hero.charName:find(table[i]) ~= nil then
-				TS_SetHeroPriority(priority, hero.charName)
-			end
-		end
-	end
----<
---- Set Priorities ---
--- / Misc Functions / --
-
--- / On Send Packet Function / --
-function OnSendPacket(packet)
-	-- Block Packets if Channeling --
-	--->
-		if isChanneling("Spell3") or (isChanneling("Ult_A") or isChanneling("Ult_B") or isChanneling("Ult_C") or isChanneling("Ult_D") or isChanneling("Ult_E")) then
-			local packet = Packet(packet)
-			if packet:get('name') == 'S_MOVE' or packet:get('name') == 'S_CAST' and (packet:get('spellId') ~= SUMMONER_1 and packet:get('spellId') ~= SUMMONER_2) and packet:get('sourceNetworkId') == myHero.networkID then
-				packet:block()
-			end
-		end
-	---<
-	--- Block Packets if Channeling --
-end
--- / On Send Packet Function / --
-
--- / On Create Obj Function / --
-function OnCreateObj(obj)
-	--- All of Our Objects (CREATE) --
-	-->
-		if obj ~= nil then
-			if obj.name:find("Global_Item_HealthPotion.troy") then
-				if GetDistance(obj, myHero) <= 70 then
-					Items.HealthPot.inUse = true
-				end
-			end
-			if obj.name:find("Global_Item_ManaPotion.troy") then
-				if GetDistance(obj, myHero) <= 70 then
-					Items.ManaPot.inUse = true
-				end
-			end
-			if FocusJungleNames[obj.name] then
-				table.insert(JungleFocusMobs, obj)
-			elseif JungleMobNames[obj.name] then
-				table.insert(JungleMobs, obj)
-			end
-		end
-	---<
-	--- All of Our Objects (CREATE) --
-end
--- / On Create Obj Function / --
-
--- / On Delete Obj Function / --
-function OnDeleteObj(obj)
-	--- All of Our Objects (CLEAR) --
-	--->
-		if obj ~= nil then
-			if obj.name:find("Global_Item_HealthPotion.troy") then
-				Items.HealthPot.inUse = false
-			end
-			if obj.name:find("Global_Item_ManaPotion.troy") then
-				Items.ManaPot.inUse = false
-			end
-			for i, Mob in pairs(JungleMobs) do
-				if obj.name == Mob.name then
-					table.remove(JungleMobs, i)
-				end
-			end
-			for i, Mob in pairs(JungleFocusMobs) do
-				if obj.name == Mob.name then
-					table.remove(JungleFocusMobs, i)
-				end
-			end
-		end
-	--- All of Our Objects (CLEAR) --
-	---<
-end
---- All The Objects in The World Literally ---
--- / On Delete Obj Function / --
-
--- / Plugin On Draw / --
-function OnDraw()
-	--- Tick Manager Check ---
-	--->
-		if not TManager.onDraw:isReady() and PanthMenu.misc.uTM then return end
-	---<
-	--->
-	--- Drawing Our Ranges ---
-	--->
-		if not myHero.dead then
-			if not PanthMenu.drawing.disableAll then
-				if SkillQ.ready and PanthMenu.drawing.drawQ then 
-					DrawCircle(myHero.x, myHero.y, myHero.z, SkillQ.range, SkillQ.color)
-				end
-				if SkillW.ready and PanthMenu.drawing.drawW then
-					DrawCircle(myHero.x, myHero.y, myHero.z, SkillW.range, SkillW.color)
-				end
-				if SkillE.ready and PanthMenu.drawing.drawE then
-					DrawCircle(myHero.x, myHero.y, myHero.z, SkillE.range, SkillE.color)
-				end
-			end
-		end
-	---<
-	--- Drawing Our Ranges ---
-	--- Draw Enemy Target ---
-	--->
-		if Target then
-			if PanthMenu.drawing.drawTargetText and GetDistance(Target) <= SkillQ.range then
-				DrawText("Targeting: " .. Target.charName, 12, 100, 100, colorText)
-			end
-		end
-	---<
-	--- Draw Enemy Target ---
-		if PanthMenu.drawing.drawText then
-			for i = 1, heroManager.iCount do
-				local enemy = heroManager:GetHero(i)
-				if ValidTarget(enemy) then
-					local barPos = WorldToScreen(D3DXVECTOR3(enemy.x, enemy.y, enemy.z)) --(Credit to Zikkah)
-					local PosX = barPos.x - 35
-					local PosY = barPos.y - 10
-					
-					DrawText(TextList[KillText[i]], 16, PosX, PosY, colorText)
-				end
-			end
-		end
-end
--- / Plugin On Draw / --
-
--- / OrbWalking Functions / --
---- Orbwalking Target ---
---->
-	function OrbWalking(Target)
-		if not isChanneling("Spell3") and not (isChanneling("Ult_A") and isChanneling("Ult_B") and isChanneling("Ult_C") and isChanneling("Ult_D") and isChanneling("Ult_E")) then
-			if TimeToAttack() and GetDistance(Target) <= myHero.range + GetDistance(myHero.minBBox) then
-				myHero:Attack(Target)
-			elseif heroCanMove() then
-				moveToCursor()
-			end
-		else
-			moveToCursor()
-		end
-	end
----<
---- Orbwalking Target ---
---- Check When Its Time To Attack ---
---->
-	function TimeToAttack()
-		return (GetTickCount() + GetLatency()/2 > lastAttack + lastAttackCD)
-	end
----<
---- Check When Its Time To Attack ---
---- Prevent AA Canceling ---
---->
-	function heroCanMove()
-		return (GetTickCount() + GetLatency()/2 > lastAttack + lastWindUpTime + 20)
-	end
----<
---- Prevent AA Canceling ---
---- Move to Mouse ---
---->
-	function moveToCursor()
-		if GetDistance(mousePos) > 1 or lastAnimation == "Idle1" then
-			local moveToPos = myHero + (Vector(mousePos) - myHero):normalized()*300
-			myHero:MoveTo(moveToPos.x, moveToPos.z)
-		end		
-	end
----<
---- Move to Mouse ---
---- On Process Spell ---
---->
-	function OnProcessSpell(unit,spell)
-		--- Tick Manager Check ---
-		--->
-			if not TManager.onSpell:isReady() and PanthMenu.misc.uTM then return end
-		---<
-		--->
-			if unit.isMe then
-				if spell.name:find("Attack") then
-					lastAttack = GetTickCount() - GetLatency()/2
-					lastWindUpTime = spell.windUpTime*1000
-					lastAttackCD = spell.animationTime*1000
-				end
-			end
-		---<
-	end
----<
---- On Process Spell ---
--- / OrbWalking Functions / --
-
--- / FPS Manager Functions / --
-class 'TickManager'
---- TM Init Function ---
---->
-	function TickManager:__init(ticksPerSecond)
-		self.TPS = ticksPerSecond
-		self.lastClock = 0
-		self.currentClock = 0
-	end
----<
---- TM Init Function ---
---- TM Type Function ---
---->
-	function TickManager:__type()
-		return "TickManager"
-	end
----<
---- TM Init Function ---
---- Set TPS Function ---
---->
-	function TickManager:setTPS(ticksPerSecond)
-		self.TPS = ticksPerSecond
-	end
----<
---- Set TPS Function ---
---- Get TPS Function ---
---->
-	function TickManager:getTPS(ticksPerSecond)
-		return self.TPS
-	end
----<
---- Get TPS Function ---
---- TM Ready Function ---
---->
-	function TickManager:isReady()
-		self.currentClock = os.clock()
-		if self.currentClock < self.lastClock + (1 / self.TPS) then return false end
-		self.lastClock = self.currentClock
-		return true
-	end
----<
---- TM Ready Function ---
--- / FPS Manager Functions / --
-if VIP_USER then
-	-- / Lag Free Circles Functions / --
-	--- Draw Cicle Next Level Function ---
-	--->
-		function DrawCircleNextLvl(x, y, z, radius, width, color, chordlength)
-			radius = radius or 300
-			quality = math.max(8, round(180 / math.deg((math.asin((chordlength / (2 * radius)))))))
-			quality = 2 * math.pi / quality
-			radius = radius * .92
-			local points = {}
-			
-			for theta = 0, 2 * math.pi + quality, quality do
-				local c = WorldToScreen(D3DXVECTOR3(x + radius * math.cos(theta), y, z - radius * math.sin(theta)))
-				points[#points + 1] = D3DXVECTOR2(c.x, c.y)
-			end
-			
-			DrawLines2(points, width or 1, color or 4294967295)
-		end
-	---<
-	--- Draw Cicle Next Level Function ---
-	--- Round Function ---
-	--->
-		function round(num) 
-			if num >= 0 then return math.floor(num+.5) else return math.ceil(num-.5) end
-		end
-	---<
-	--- Round Function ---
-	--- Draw Cicle 2 Function ---
-	--->
-		function DrawCircle2(x, y, z, radius, color)
-			local vPos1 = Vector(x, y, z)
-			local vPos2 = Vector(cameraPos.x, cameraPos.y, cameraPos.z)
-			local tPos = vPos1 - (vPos1 - vPos2):normalized() * radius
-			local sPos = WorldToScreen(D3DXVECTOR3(tPos.x, tPos.y, tPos.z))
-			
-			if OnScreen({ x = sPos.x, y = sPos.y }, { x = sPos.x, y = sPos.y }) then
-				DrawCircleNextLvl(x, y, z, radius, 1, color, PanthMenu.drawing.lfc.CL) 
-			end
-		end
-	---<
-	--- Draw Cicle 2 Function ---
-	-- / Lag Free Circles Functions / --
 end
 
--- / Checks Function / --
-function Checks()
-	--- Tick Manager Check ---
-	--->
-		if not TManager.onTick:isReady() and PanthMenu.misc.uTM then return end
-	---<
-	--- Tick Manager Check ---
-	if VIP_USER then
-		--- LFC Checks ---
-		--->
-			if not PanthMenu.drawing.lfc.LagFree then 
-				_G.DrawCircle = _G.oldDrawCircle 
-			else
-				_G.DrawCircle = DrawCircle2
-			end
-		---<
-		--- LFC Checks ---
-	end
-	--- Updates & Checks if Target is Valid ---
-	--->
-		tsTarget = GetTarget()
-		if tsTarget and tsTarget.type == "obj_AI_Hero" then
-			Target = tsTarget
-		else
-			Target = nil
-		end
-		
-	---<
-	--- Updates & Checks if Target is Valid ---	
-	--- Checks and finds Ignite ---
-	--->
-		if myHero:GetSpellData(SUMMONER_1).name:find("SummonerDot") then
-			ignite = SUMMONER_1
-		elseif myHero:GetSpellData(SUMMONER_2).name:find("SummonerDot") then
-			ignite = SUMMONER_2
-		end
-	---<
-	--- Checks and finds Ignite ---
-	--- Slots for Items ---
-	--->
-		rstSlot, ssSlot, swSlot, vwSlot =								GetInventorySlotItem(2045),
-																		GetInventorySlotItem(2049),
-																		GetInventorySlotItem(2044),
-																		GetInventorySlotItem(2043)
-		dfgSlot, hxgSlot, bwcSlot, brkSlot =							GetInventorySlotItem(3128),
-																		GetInventorySlotItem(3146),
-																		GetInventorySlotItem(3144),
-																		GetInventorySlotItem(3153)
-		Items.HealthPot.slot, Items.ManaPot.slot, Items.FlaskPot.slot =	GetInventorySlotItem(2003),
-																		GetInventorySlotItem(2004),
-																		GetInventorySlotItem(2041)
-		znaSlot, wgtSlot, bftSlot =										GetInventorySlotItem(3157),
-																		GetInventorySlotItem(3090),
-																		GetInventorySlotItem(3188)
-		tmtSlot, hdrSlot =												GetInventorySlotItem(3077),
-																		GetInventorySlotItem(3074)
-	---<
-	--- Slots for Items ---
-	--- Checks if Spells are Ready ---
-	--->
-		SkillQ.ready = (myHero:CanUseSpell(_Q) == READY)
-		SkillW.ready = (myHero:CanUseSpell(_W) == READY)
-		SkillE.ready = (myHero:CanUseSpell(_E) == READY)
-		iReady = (ignite ~= nil and myHero:CanUseSpell(ignite) == READY)
-	---<
-	--- Checks if Active Items are Ready ---
-	--->
-		dfgReady = (dfgSlot ~= nil and myHero:CanUseSpell(dfgSlot) == READY)
-		hxgReady = (hxgSlot ~= nil and myHero:CanUseSpell(hxgSlot) == READY)
-		bwcReady = (bwcSlot ~= nil and myHero:CanUseSpell(bwcSlot) == READY)
-		brkReady = (brkSlot ~= nil and myHero:CanUseSpell(brkSlot) == READY)
-		znaReady = (znaSlot ~= nil and myHero:CanUseSpell(znaSlot) == READY)
-		wgtReady = (wgtSlot ~= nil and myHero:CanUseSpell(wgtSlot) == READY)
-		bftReady = (bftSlot ~= nil and myHero:CanUseSpell(bftSlot) == READY)
-		tmtReady = (tmtSlot ~= nil and myHero:CanUseSpell(tmtSlot) == READY)
-		hdrReady = (hdrSlot ~= nil and myHero:CanUseSpell(hdrSlot) == READY)
-	---<
-	--- Checks if Items are Ready ---
-	--- Checks if Health Pots / Mana Pots are Ready ---
-	--->
-		Items.HealthPot.ready	= (Items.HealthPot.slot	~= nil and myHero:CanUseSpell(Items.HealthPot.slot)	== READY)
-		Items.ManaPot.ready		= (Items.ManaPot.slot	~= nil and myHero:CanUseSpell(Items.ManaPot.slot)	== READY)
-		Items.FlaskPot.ready	= (Items.FlaskPot.slot	~= nil and myHero:CanUseSpell(Items.FlaskPot.slot)	== READY)
-	---<
-	--- Checks if Health Pots / Mana Pots are Ready ---	
-	--- Updates Minions ---
-	--->
-		enemyMinions:update()
-	---<
-	--- Updates Minions ---
-	--- Setting Cast of E ---
-	--->
-		if isChanneling("Spell3") or (isChanneling("Ult_A") or isChanneling("Ult_B") or isChanneling("Ult_C") or isChanneling("Ult_D") or isChanneling("Ult_E")) then
-			if _G.AutoCarry then 
-				if _G.AutoCarry.MainMenu ~= nil then
-						if AutoCarry.CanAttack ~= nil then
-							_G.AutoCarry.CanAttack = false
-							_G.AutoCarry.CanMove = false
-						end
-				elseif _G.AutoCarry.Keys ~= nil then
-					if _G.AutoCarry.MyHero ~= nil then
-						_G.AutoCarry.MyHero:MovementEnabled(false)
-						_G.AutoCarry.MyHero:AttacksEnabled(false)
+function GetKillable()
+	for i = 1, enemyCount do
+		local enemy = enemyTable[i].player
+		if enemy.visible and enemy ~= nil and not enemy.dead then
+			if enemy.health < SpellR.dmg and SpellR.ready then
+				if not enemyTable[i].ultAlert then
+					PrintAlert(enemy.charName.." can be Killed by Ult", PanthMenu.misc.ultAlert.alertTime, 128, 255, 0)
+
+					if PanthMenu.misc.ultAlert.Pings then
+						Packet('R_PING',  { x = enemy.x, y = enemy.z, type = PING_FALLBACK }):receive()
 					end
+
+					enemyTable[i].ultAlert = true
 				end
-			elseif _G.MMA_Loaded then
-				_G.MMA_Orbwalker = false
 			end
 		else
-			if _G.AutoCarry then 
-				if _G.AutoCarry.MainMenu ~= nil then
-						if _G.AutoCarry.CanAttack ~= nil then
-							_G.AutoCarry.CanAttack = true
-							_G.AutoCarry.CanMove = true
-						end
-				elseif _G.AutoCarry.Keys ~= nil then
-					if _G.AutoCarry.MyHero ~= nil then
-						_G.AutoCarry.MyHero:MovementEnabled(true)
-						_G.AutoCarry.MyHero:AttacksEnabled(true)
-					end
-				end
-			end
+			enemyTable[i].ultAlert = false
 		end
-	---<
-	--- Setting Cast of E ---
+	end
 end
--- / Checks Function / --
-
--- / isLow Function / --
-function isLow(Name)
-	--- Check Zhonya/Wooglets HP ---
-	--->
-		if Name == 'Zhonya' or Name == 'Wooglets' then
-			if (myHero.health / myHero.maxHealth) <= (PanthMenu.misc.ZWHealth / 100) then
-				return true
-			else
-				return false
-			end
-		end
-	---<
-	--- Check Zhonya/Wooglets HP ---
-	--- Check Potions HP ---
-	--->
-		if Name == 'Health' then
-			if (myHero.health / myHero.maxHealth) <= (PanthMenu.misc.pHealth / 100) then
-				return true
-			else
-				return false
-			end
-		end
-	---<
-	--- Check Potions HP ---
-	--- Check Potions MP ---
-	--->
-		if Name == 'Mana' then
-			if (myHero.mana / myHero.maxMana) <= (PanthMenu.misc.pMana / 100) then
-				return true
-			else
-				return false
-			end
-		end
-	---<
-	--- Check Potions MP ---
-end
--- / isLow Function / --
-
--- / GetTarget Function / --
-function GetTarget()
-	TargetSelector:update()
-
-	if _G.MMA_Target ~= nil and _G.MMA_Target.type:lower() == "obj_ai_hero" then return _G.MMA_Target end
-	if _G.AutoCarry and _G.AutoCarry.Crosshair and _G.AutoCarry.Attack_Crosshair and _G.AutoCarry.Attack_Crosshair.target and _G.AutoCarry.Attack_Crosshair.target.type == myHero.type then return _G.AutoCarry.Attack_Crosshair.target end
-
-	return TargetSelector.target
-end
--- / GetTarget Function / --
