@@ -1,4 +1,4 @@
-local Ziggs_Ver = "1.043"
+local Ziggs_Ver = "1.044"
 --[[
 
 
@@ -20,6 +20,8 @@ local Ziggs_Ver = "1.043"
 			- Improved Farm Function
 			- Fixed MEC Ult
 			- Fixed Satchel not Poping
+			- Fixed Killsteal Function not Working Properly
+			- Fixed Auto-Ignite not Working Properly
 
 		1.03
 			- Added 'Alert Option' for Ult if an enemy is Killable
@@ -157,7 +159,7 @@ function OnTick()
 	if SatchelKey then
 		SatchelJump()
 	end
-	if ZiggsMenu.ks.KillSteal then
+	if ZiggsMenu.ks.killSteal then
 		KillSteal()
 	end
 	if ZiggsMenu.misc.mecUlt.Enable then
@@ -191,7 +193,7 @@ function Variables()
 	SpellE = {name = "Hexplosive Minefield",   range =  900,					 delay = 0.25,					speed = 1750, width = 235, ready = false, pos = nil, dmg = 0, manaUsage = 0					 }
 	SpellR = {name = "Mega Inferno Bomb",	   range = 5300, 					 delay = 0.25,					speed = 1750, width = 550, ready = false, pos = nil, dmg = 0, manaUsage = 0					 }
 
-	SpellI = {name = "SummonerDot",			   range =  600,																			   ready = false,			 dmg = 0,				 var = nil		 }
+	SpellI = {name = "SummonerDot",			   range =  600,																			   ready = false,			 dmg = 0,				 variable = nil  }
 
 	vPred = VPrediction()
 
@@ -582,11 +584,11 @@ function TickChecks()
 	SpellR.manaUsage = myHero:GetSpellData(_R).mana
 
 	if myHero:GetSpellData(SUMMONER_1).name:find(SpellI.name) then
-		SpellI.var = SUMMONER_1
+		SpellI.variable = SUMMONER_1
 	elseif myHero:GetSpellData(SUMMONER_2).name:find(SpellI.name) then
-		SpellI.var = SUMMONER_2
+		SpellI.variable = SUMMONER_2
 	end
-	SpellI.ready = (SpellI.var ~= nil and myHero:CanUseSpell(SpellI.var) == READY)
+	SpellI.ready = (SpellI.variable ~= nil and myHero:CanUseSpell(SpellI.variable) == READY)
 
 	Target = GetCustomTarget()
 	zSOW:ForceTarget(Target)
@@ -1028,7 +1030,7 @@ end
 function AutoIgnite(unit)
 	if unit.health < SpellI.dmg and GetDistanceSqr(unit) <= SpellI.range * SpellI.range then
 		if SpellI.ready then
-			CastSpell(SpellI.var, unit)
+			CastSpell(SpellI.variable, unit)
 		end
 	end
 end
