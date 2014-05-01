@@ -1,4 +1,4 @@
-local Ziggs_Ver = "1.044"
+local Ziggs_Ver = "1.045"
 --[[
 
 
@@ -22,6 +22,8 @@ local Ziggs_Ver = "1.044"
 			- Fixed Satchel not Poping
 			- Fixed Killsteal Function not Working Properly
 			- Fixed Auto-Ignite not Working Properly
+			- Updated Variables, some of them were missing in the Tables
+			- Fixed MEC Ult Errors
 
 		1.03
 			- Added 'Alert Option' for Ult if an enemy is Killable
@@ -188,8 +190,8 @@ function Variables()
 
 	SpellP = {name = "Short Fuse",			buffName = "ZiggsPassiveBuff",																   ready = false,			 dmg = 0								 }
 
-	SpellQ = {name = "Bouncing Bomb",		minrange =  850, maxrange = 1400, mindelay = 0.25, maxdelay = 0.5,	speed = 1750, width = 150, ready = false, pos = nil, dmg = 0, manaUsage = 0, canJump = false }
-	SpellW = {name = "Satchel Charge",	       range = 1000,					 delay = 0.50, behindpos = nil,	speed = 1750, width = 275, ready = false, pos = nil, dmg = 0, manaUsage = 0					 }
+	SpellQ = {name = "Bouncing Bomb",		minrange =  850, maxrange = 1400, mindelay = 0.25, maxdelay = 0.5,	speed = 1750, width = 150, ready = false, pos = nil, dmg = 0, manaUsage = 0					 }
+	SpellW = {name = "Satchel Charge",	       range = 1000,					 delay = 0.50, behindpos = nil,	speed = 1750, width = 275, ready = false, pos = nil, dmg = 0, manaUsage = 0, canJump = false }
 	SpellE = {name = "Hexplosive Minefield",   range =  900,					 delay = 0.25,					speed = 1750, width = 235, ready = false, pos = nil, dmg = 0, manaUsage = 0					 }
 	SpellR = {name = "Mega Inferno Bomb",	   range = 5300, 					 delay = 0.25,					speed = 1750, width = 550, ready = false, pos = nil, dmg = 0, manaUsage = 0					 }
 
@@ -1180,14 +1182,14 @@ function GetInitialTargets(radius, main_target)
 end
 
 function GetPredictedInitialTargets(radius, main_target, delay, speed, col)
-	local predicted_main_target = VP:GetPredictedPos(main_target, delay, speed, myHero, col)
+	local predicted_main_target = vPred:GetPredictedPos(main_target, delay, speed, myHero, col)
 	local predicted_targets = {predicted_main_target}
 	local diameter_sqr = 4 * radius * radius
 
 	for i = 1, heroManager.iCount do
 		target = heroManager:GetHero(i)
 		if ValidTarget(target) then
-			predicted_target = VP:GetPredictedPos(target, delay, speed, myHero, col)
+			predicted_target = vPred:GetPredictedPos(target, delay, speed, myHero, col)
 			if target.networkID ~= main_target.networkID and GetDistanceSqr(predicted_main_target, predicted_target) < diameter_sqr then table.insert(predicted_targets, predicted_target) end
 		end
 	end
