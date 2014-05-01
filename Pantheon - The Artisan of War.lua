@@ -1,4 +1,4 @@
-local version = "4.02"
+local version = "4.03"
 --[[
 
 
@@ -22,6 +22,7 @@ local version = "4.02"
 				- Removed Auto-Pots
 				- Added SOW as main Orbwalker
 				- Added Auto-Q Harass
+				- Added an option to not to Auto-Q in Enemy Turret Range
 
 			3.3
 				- Added Support for SAC Target Selector
@@ -251,7 +252,9 @@ function OnTick()
 	end
 
 	if PanthMenu.harass.autoQ then
-		CastQ(Target)
+		if (PanthMenu.harass.aQT and not InEnemyTurretRange(myHero)) or not PanthMenu.harass.aQT then
+			CastQ(Target)
+		end
 	end
 
 	if PanthMenu.ks.killSteal then
@@ -449,6 +452,7 @@ function Menu()
 		PanthMenu.harass:addParam("harassKey", "Harass key (C)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("C"))
 		PanthMenu.harass:addParam("hMode", "Harass Mode", SCRIPT_PARAM_LIST, 1, { "Q", "W+E" })
 		PanthMenu.harass:addParam("autoQ", "Auto-Q when Target in Range", SCRIPT_PARAM_ONOFF, false)
+		PanthMenu.harass:addParam("aQT", "Don't Auto-Q if in enemy Turret Range", SCRIPT_PARAM_ONOFF, true)
 		PanthMenu.harass:addParam("harassMana", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
 		PanthMenu.harass:permaShow("harassKey")
 		
@@ -876,4 +880,15 @@ function GetKillable()
 			enemyTable[i].ultAlert = false
 		end
 	end
+end
+
+function InEnemyTurretRange(unit)
+	for name, turret in pairs(GetTurrets()) do
+		if turret ~= nil and turret.team ~= myHero.team then
+			if GetDistanceSqr(turret) <= turret.range * turret.range then
+				return true
+			end
+		end
+	end
+	return false
 end
