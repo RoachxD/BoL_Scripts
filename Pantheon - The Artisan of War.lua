@@ -1,4 +1,4 @@
-local version = "4.03"
+local version = "4.04"
 --[[
 
 
@@ -23,6 +23,7 @@ local version = "4.03"
 				- Added SOW as main Orbwalker
 				- Added Auto-Q Harass
 				- Added an option to not to Auto-Q in Enemy Turret Range
+				- Fixed Turret Range Function
 
 			3.3
 				- Added Support for SAC Target Selector
@@ -883,9 +884,9 @@ function GetKillable()
 end
 
 function InEnemyTurretRange(unit)
-	for name, turret in pairs(GetTurrets()) do
+	for i, turret in pairs(GetTurrets()) do
 		if turret ~= nil and turret.team ~= myHero.team then
-			if GetDistanceSqr(turret) <= turret.range * turret.range then
+			if GetDistanceSqr(unit) <= turret.range * turret.range then
 				return true
 			end
 		end
