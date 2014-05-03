@@ -1,4 +1,4 @@
-local version = "4.05"
+local version = "4.06"
 --[[
 
 
@@ -25,6 +25,8 @@ local version = "4.05"
 				- Added an option to not to Auto-Q in Enemy Turret Range
 				- Fixed Turret Range Function
 				- Fixed E before W Bug
+				- Added AA Range on Draw
+				- Fixed 'InTurretRange' Function
 
 			3.3
 				- Added Support for SAC Target Selector
@@ -555,6 +557,7 @@ function OnDeleteObj(obj)
 end
 
 function OnDraw()
+	wSOW:DrawAARange(1, ARGB(255, 0, 189, 22))
 	if not myHero.dead then
 		if not PanthMenu.drawing.mDraw then
 			if PanthMenu.drawing.qDraw and SpellQ.ready then
@@ -888,9 +891,11 @@ end
 
 function InEnemyTurretRange(unit)
 	for i, turret in pairs(GetTurrets()) do
-		if turret ~= nil and turret.team ~= myHero.team then
-			if GetDistanceSqr(unit) <= turret.range * turret.range then
-				return true
+		if turret ~= nil then
+			if turret.team ~= myHero.team then
+				if GetDistanceSqr(unit, turret) <= turret.range * turret.range then
+					return true
+				end
 			end
 		end
 	end
