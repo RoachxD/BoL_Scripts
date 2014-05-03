@@ -1,4 +1,4 @@
-local version = "4.04"
+local version = "4.05"
 --[[
 
 
@@ -24,6 +24,7 @@ local version = "4.04"
 				- Added Auto-Q Harass
 				- Added an option to not to Auto-Q in Enemy Turret Range
 				- Fixed Turret Range Function
+				- Fixed E before W Bug
 
 			3.3
 				- Added Support for SAC Target Selector
@@ -452,7 +453,7 @@ function Menu()
 	PanthMenu:addSubMenu("["..myHero.charName.."] - Harass Settings", "harass")
 		PanthMenu.harass:addParam("harassKey", "Harass key (C)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("C"))
 		PanthMenu.harass:addParam("hMode", "Harass Mode", SCRIPT_PARAM_LIST, 1, { "Q", "W+E" })
-		PanthMenu.harass:addParam("autoQ", "Auto-Q when Target in Range", SCRIPT_PARAM_ONOFF, false)
+		PanthMenu.harass:addParam("autoQ", "Auto-Q when Target in Range", SCRIPT_PARAM_ONKEYTOGGLE, false, GetKey('Z'))
 		PanthMenu.harass:addParam("aQT", "Don't Auto-Q if in enemy Turret Range", SCRIPT_PARAM_ONOFF, true)
 		PanthMenu.harass:addParam("harassMana", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
 		PanthMenu.harass:permaShow("harassKey")
@@ -639,7 +640,9 @@ function Combo(unit)
 		end
 		CastQ(unit)
 		CastW(unit)
-		CastE(unit)
+		if not SpellW.ready then
+			CastE(unit)
+		end
 	end
 end
 
