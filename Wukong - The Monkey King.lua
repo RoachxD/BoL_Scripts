@@ -457,6 +457,8 @@ function Menu()
 
 		WukongMenu:addSubMenu("["..myHero.charName.."] - Orbwalking Settings", "Orbwalking")
 			wSOW:LoadToMenu(WukongMenu.Orbwalking)
+				wSOW:RegisterAfterAttackCallback(CastQ)
+				wSOW:RegisterAfterAttackCallback(CastE)
 
 	TargetSelector = TargetSelector(TARGET_LESS_CAST, SpellE.range, DAMAGE_PHYSICAL)
 	TargetSelector.name = "Wukong"
@@ -600,14 +602,6 @@ function Combo(unit)
 		if WukongMenu.combo.smartCombo then
 			if GetDistanceSqr(unit) > wSOW:MyRange(unit) * wSOW:MyRange(unit) then
 				CastE(unit)
-				wSOW:RegisterAfterAttackCallback(CastQ)
-			else
-				wSOW:RegisterAfterAttackCallback(CastQ)
-				if not SpellQ.ready then
-					DelayAction(function()
-									wSOW:RegisterAfterAttackCallback(CastE)
-								end, 0.3)
-				end
 			end
 		else
 			if GetDistanceSqr(unit) > wSOW:MyRange(unit) * wSOW:MyRange(unit) then
@@ -643,10 +637,7 @@ function Harass(unit)
 				if WukongMenu.harass.smartHarass then
 					if GetDistanceSqr(unit) > wSOW:MyRange(unit) * wSOW:MyRange(unit) then
 						CastE(unit)
-					else
-						wSOW:RegisterAfterAttackCallback(CastE)
 					end
-					wSOW:RegisterAfterAttackCallback(CastQ)
 				else
 					CastE(unit)
 					CastQ(unit)
@@ -658,8 +649,6 @@ function Harass(unit)
 				if WukongMenu.harass.smartHarass then
 					if GetDistanceSqr(unit) > wSOW:MyRange(unit) * wSOW:MyRange(unit) then
 						CastE(unit)
-					else
-						wSOW:RegisterAfterAttackCallback(CastE)
 					end
 				else
 					CastE(unit)
@@ -669,10 +658,6 @@ function Harass(unit)
 			--- Harass Mode 3 Q + E ---
 			if WukongMenu.harass.hMode == 3 then
 				if WukongMenu.harass.smartHarass then
-					wSOW:RegisterAfterAttackCallback(CastQ)
-					if not SpellQ.ready then
-						wSOW:RegisterAfterAttackCallback(CastE)
-					end
 				else
 					if GetDistanceSqr(unit) < wSOW:MyRange(unit) * wSOW:MyRange(unit) then
 						CastQ(unit)
@@ -704,7 +689,7 @@ function JungleClear()
 		if JungleMob ~= nil then
 			if WukongMenu.jungle.jungleQ and GetDistanceSqr(JungleMob) <= SpellQ.range * SpellQ.range then
 				if WukongMenu.jungle.smartClear then
-					wSOW:RegisterAfterAttackCallback(CastQ)
+					
 				else
 					CastQ(unit)
 				end
@@ -714,8 +699,6 @@ function JungleClear()
 					DelayAction(function()
 									if GetDistanceSqr(JungleMob) > wSOW:MyRange(JungleMob) * wSOW:MyRange(JungleMob) and not SpellQ.ready then
 										CastE(JungleMob)
-									else
-										wSOW:RegisterAfterAttackCallback(CastE)
 									end
 								end, 0.3)
 				else
