@@ -1,4 +1,4 @@
-local version = "3.0"
+local version = "3.01"
 --[[
 
 
@@ -21,6 +21,8 @@ local version = "3.0"
 				- Removed the Auto-Pots Options
 				- Removed the Auto-Decoy Option
 				- Added a lot of features (Check main Post)
+				- Fixed Typo
+				- Added AA Range
 
 			2.6
 				- Added Support for SAC and MMA Target Selector
@@ -265,7 +267,7 @@ function Variables()
 				"Amumu", "Chogath", "DrMundo", "Galio", "Hecarim", "Malphite", "Maokai", "Nasus", "Rammus", "Sejuani", "Nautilus", "Shen", "Singed", "Skarner", "Volibear",
 				"Warwick", "Yorick", "Zac"
 			},
-			AD_Carry = {
+			ADC = {
 				"Ashe", "Caitlyn", "Corki", "Draven", "Ezreal", "Graves", "Jayce", "Jinx", "KogMaw", "Lucian", "MasterYi", "MissFortune", "Pantheon", "Quinn", "Shaco", "Sivir",
 				"Talon","Tryndamere", "Tristana", "Twitch", "Urgot", "Varus", "Vayne", "Yasuo","Zed"
 			},
@@ -425,7 +427,7 @@ function Menu()
 		WukongMenu.jungle:addParam("smartClear", "Use Smart Jungle Clear", SCRIPT_PARAM_ONOFF, true)
 		WukongMenu.jungle:addParam("jungleQ", "Clear with "..SpellQ.name.." (Q)", SCRIPT_PARAM_ONOFF, true)
 		WukongMenu.jungle:addParam("jungleE", "Clear with "..SpellE.name.." (E)", SCRIPT_PARAM_ONOFF, true)
-		Wukongmenu.jungle:permaShow("jungleKey")
+		WukongMenu.jungle:permaShow("jungleKey")
 		
 		
 	WukongMenu:addSubMenu("["..myHero.charName.."] - KillSteal Settings", "ks")
@@ -508,6 +510,7 @@ function OnDeleteObj(obj)
 end
 
 function OnDraw()
+	wSOW:DrawAARange(1, ARGB(255, 0, 189, 22))
 	if not myHero.dead then
 		if not WukongMenu.drawing.mDraw then
 			if WukongMenu.drawing.qDraw and SpellQ.ready then
@@ -750,7 +753,7 @@ end
 function ArrangePriorities()
 	for i = 1, enemyCount do
 		local enemy = enemyTable[i].player
-		SetPriority(priorityTable.AD_Carry, enemy, 1)
+		SetPriority(priorityTable.ADC, enemy, 1)
 		SetPriority(priorityTable.AP, enemy, 2)
 		SetPriority(priorityTable.Support, enemy, 3)
 		SetPriority(priorityTable.Bruiser, enemy, 4)
@@ -761,7 +764,7 @@ end
 function ArrangeTTPriorities()
 	for i = 1, enemyCount do
 		local enemy = enemyTable[i].player
-		SetPriority(priorityTable.AD_Carry, enemy, 1)
+		SetPriority(priorityTable.ADC, enemy, 1)
 		SetPriority(priorityTable.AP, enemy, 1)
 		SetPriority(priorityTable.Support, enemy, 2)
 		SetPriority(priorityTable.Bruiser, enemy, 2)
