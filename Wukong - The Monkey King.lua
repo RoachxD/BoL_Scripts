@@ -1,4 +1,4 @@
-local version = "3.01"
+local version = "3.02"
 --[[
 
 
@@ -22,7 +22,8 @@ local version = "3.01"
 				- Removed the Auto-Decoy Option
 				- Added a lot of features (Check main Post)
 				- Fixed Typo
-				- Added AA Range
+				- Added AA Range on Draw
+				- Fixed 'InTurretRange' Function
 
 			2.6
 				- Added Support for SAC and MMA Target Selector
@@ -895,9 +896,11 @@ end
 
 function InEnemyTurretRange(unit)
 	for i, turret in pairs(GetTurrets()) do
-		if turret ~= nil and turret.team ~= myHero.team then
-			if GetDistanceSqr(unit) <= turret.range * turret.range then
-				return true
+		if turret ~= nil then
+			if turret.team ~= myHero.team then
+				if GetDistanceSqr(unit, turret) <= turret.range * turret.range then
+					return true
+				end
 			end
 		end
 	end
