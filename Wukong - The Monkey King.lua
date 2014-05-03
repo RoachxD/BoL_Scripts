@@ -1,4 +1,4 @@
-local version = "2.061"
+local version = "3.0"
 --[[
 
 
@@ -10,13 +10,19 @@ local version = "2.061"
 			 `8b8' `8d8'  ~Y8888P' YP   YD  `Y88P'  VP   V8P  Y888P
 
 
-		Script - Wukong - The Monkey King 2.0.6 by Roach
+		Script - Wukong - The Monkey King 3.0 by Roach
 
 		Dependency: 
 			- Nothing
 
 		Changelog:
-			2.0.6
+			3.0
+				- Re-wrote the Whole Script
+				- Removed the Auto-Pots Options
+				- Removed the Auto-Decoy Option
+				- Added a lot of features (Check main Post)
+
+			2.6
 				- Added Support for SAC and MMA Target Selector
 				- Added Summoner Spells as an Exception at Blocking Packets while Wukong is Channeling Ult (VIP USERS)
 				- Changed Harass Menu
@@ -24,7 +30,8 @@ local version = "2.061"
 				- Fixed Harass Bug while not Using W to Escape
 				- Improved Orbwalker
 				- Improved Decoy Escape
-			2.0.5
+
+			2.5
 				- Added Auto-Decoy Spells
 				- Fixed Ult not Casting
 				- Fixed Harass Mode
@@ -32,7 +39,8 @@ local version = "2.061"
 				- Fixed Farming Bug
 				- Added Last Hitter
 				- Fixed Auto-Updater
-			2.0.4
+
+			2.4
 				- Added Mana Check for Farming
 				- Added Mana Check for Mixed Clear
 				- Added Auto-Updater
@@ -40,7 +48,8 @@ local version = "2.061"
 				- Added Smart Clear: Q-AA-E-AA / E-AA-Q-AA
 				- Fixed MEC Ult Bug
 				- Improved Ult functionality
-			2.0.3
+
+			2.3
 				- Removed some useless stuff
 				- Added Tiamat / Hydra usage in the Clearing Option
 				- Added MEC for Ultimate
@@ -50,7 +59,8 @@ local version = "2.061"
 				- Changed TargetSelector mode to 'TARGET_LESS_CAST_PRIORITY'
 				- Removed Orbwalker from Mixed Clear
 				- Fixed Ultimate Canceling Bug
-			2.0.2
+
+			2.2
 				- Fixed Consumables
 				- Fixed some typo from the Autocarry Version
 				- Added Tiamat and Hydra on the Items List
@@ -59,10 +69,12 @@ local version = "2.061"
 				- Added a Check to the Harass Option for Decoy (W) to Enable/Disable it while Harassing
 				- Addded a third Harass mode: Q+E(+W)
 				- Fixed spamming errors
-			2.0.1
+
+			2.1
 				- Fixed Orbwalking in Lane Clear/Jungle Clear
 				- Improved Combo Combination
 				- Removed R from KillSteal Option
+
 			2.0
 				- No longer AutoCarry Script
 				- Rewrote everything
@@ -86,7 +98,8 @@ local version = "2.061"
 					- Requirements:
 						- VIP
 				- Using ARGB Function for the Draw Ranges
-			1.0.3
+
+			1.3
 				- Added a new Check for using Q in Harass Mode
 				- Fixed Harass Function(Many thanks to Sida for his ideea with the DelayedAction)
 				- Rewrote Low Checks Functions
@@ -94,1492 +107,796 @@ local version = "2.061"
 					- One for Harass/Farm
 					- One for Potions
 				- Deleted Wooglets Support as an Usable Item
-			1.0.2
+
+			1.2
 				- Fixed Harass Option
 				- Changed the way to check if mana is low
 				- Added Animation Check
-			1.0.1
-				- First release
+
+			1.1
+				- Fixed bugs
+
+			1.0
+				- First Release
 
 --]]
 
--- / Hero Name Check / --
 if myHero.charName ~= "MonkeyKing" then return end
--- / Hero Name Check / --
 
--- / Auto-Update Function / --
-local autoupdateenabled = true
-local UPDATE_SCRIPT_NAME = "Wukong - The Monkey King"
+_G.Wu_Autoupdate = true
+
+local REQUIRED_LIBS = {
+	["SOW"]			= "https://raw.githubusercontent.com/honda7/BoL/master/Common/SOW.lua",
+	["VPrediction"] = "https://raw.githubusercontent.com/honda7/BoL/master/Common/VPrediction.lua"
+}
+
+local DOWNLOADING_LIBS, DOWNLOAD_COUNT = false, 0
+
+function AfterDownload()
+	DOWNLOAD_COUNT = DOWNLOAD_COUNT - 1
+	if DOWNLOAD_COUNT == 0 then
+		DOWNLOADING_LIBS = false
+		print("<font color=\"#FF0000\">Wukong - The Monkey King:</font> <font color=\"#FFFFFF\">Required libraries downloaded successfully, please reload (double F9).</font>")
+	end
+end
+
+for DOWNLOAD_LIB_NAME, DOWNLOAD_LIB_URL in pairs(REQUIRED_LIBS) do
+	if FileExist(LIB_PATH .. DOWNLOAD_LIB_NAME .. ".lua") then
+		require(DOWNLOAD_LIB_NAME)
+	else
+		DOWNLOADING_LIBS = true
+		DOWNLOAD_COUNT = DOWNLOAD_COUNT + 1
+		DownloadFile(DOWNLOAD_LIB_URL, LIB_PATH .. DOWNLOAD_LIB_NAME..".lua", AfterDownload)
+	end
+end
+
+if DOWNLOADING_LIBS then return end
+
+local UPDATE_NAME = "Wukong - The Monkey King"
 local UPDATE_HOST = "raw.github.com"
-local UPDATE_PATH = "/RoachxD/BoL_Scripts/master/Wukong%20-%20The%20Monkey%20King.lua?chunk="..math.random(1, 1000)
-local UPDATE_FILE_PATH = SCRIPT_PATH..GetCurrentEnv().FILE_NAME
+local UPDATE_PATH = "/RoachxD/BoL_Scripts/master/Wukong%20-%20The%20Monkey%20King.lua".."?rand="..math.random(1,10000)
+local UPDATE_FILE_PATH = SCRIPT_PATH..UPDATE_NAME..".lua"
 local UPDATE_URL = "https://"..UPDATE_HOST..UPDATE_PATH
 
-local ServerData
-if autoupdateenabled then
-	GetAsyncWebResult(UPDATE_HOST, UPDATE_PATH, function(d) ServerData = d end)
-	function update()
-		if ServerData ~= nil then
-			local ServerVersion
-			local send, tmp, sstart = nil, string.find(ServerData, "local version = \"")
-			if sstart then
-				send, tmp = string.find(ServerData, "\"", sstart+1)
+function AutoupdaterMsg(msg) print("<font color=\"#FF0000\">"..UPDATE_NAME..":</font> <font color=\"#FFFFFF\">"..msg..".</font>") end
+if _G.Wu_Autoupdate then
+	local ServerData = GetWebResult(UPDATE_HOST, UPDATE_PATH)
+	if ServerData then
+		local ServerVersion = string.match(ServerData, "local version = \"%d+.%d+\"")
+		ServerVersion = string.match(ServerVersion and ServerVersion or "", "%d+.%d+")
+		if ServerVersion then
+			ServerVersion = tonumber(ServerVersion)
+			if tonumber(version) < ServerVersion then
+				AutoupdaterMsg("New version available"..ServerVersion)
+				AutoupdaterMsg("Updating, please don't press F9")
+				DownloadFile(UPDATE_URL, UPDATE_FILE_PATH, function () AutoupdaterMsg("Successfully updated. ("..version.." => "..ServerVersion.."), press F9 twice to load the updated version.") end)	 
+			else
+				AutoupdaterMsg("You have got the latest version ("..ServerVersion..")")
 			end
-			if send then
-				ServerVersion = tonumber(string.sub(ServerData, sstart+1, send-1))
-			end
-
-			if ServerVersion ~= nil and tonumber(ServerVersion) ~= nil and tonumber(ServerVersion) > tonumber(version) then
-				DownloadFile(UPDATE_URL.."?nocache"..myHero.charName..os.clock(), UPDATE_FILE_PATH, function () print("<font color=\"#FF0000\"> >> "..UPDATE_SCRIPT_NAME..": successfully updated. Reload (double F9) Please.</font>") end)
-			elseif ServerVersion then
-				print("<font color=\"#FF0000\"> >> "..UPDATE_SCRIPT_NAME..": You have got the latest version of the script.</font>")
-			end		
-			ServerData = nil
 		end
+	else
+		AutoupdaterMsg("Error downloading version info")
 	end
-	AddTickCallback(update)
 end
--- / Auto-Update Function / --
 
--- / Loading Function / --
 function OnLoad()
-	--->
-		Variables()
-		WukongMenu()
-		PrintChat("<font color='#FF0000'> >> "..UPDATE_SCRIPT_NAME.." 2.0.6 Loaded <<</font>")
-	---<
-end
--- / Loading Function / --
+	Variables()
+	Menu()
 
--- / Tick Function / --
-function OnTick()
-	--->
-		Checks()
-		DamageCalculation()
-		UseConsumables()
-
-		if Target then
-			if WukongMenu.harass.qharass and not SkillR.castingUlt then CastQ(Target) end
-			if WukongMenu.killsteal.Ignite then AutoIgnite(Target) end
-		end
-	---<
-	-- Menu Variables --
-	--->
-		ComboKey	=	WukongMenu.combo.comboKey
-		FarmingKey	=	WukongMenu.farming.farmKey
-		HarassKey	=	WukongMenu.harass.harassKey
-		ClearKey	=	WukongMenu.clear.clearKey
-		LastHitKey	=	WukongMenu.farming.lastHit
-	---<
-	-- Menu Variables --
-	--->
-		if ComboKey then
-			FullCombo()
-		end
-		if HarassKey then
-			HarassCombo()
-		end
-		if LastHitKey then
-			lastHit()
-		end
-		if FarmingKey and not ComboKey and not LastHitKey and (WukongMenu.farming.Mana / 100) <= (myHero.mana / myHero.maxMana) then
-			Farm()
-		end
-		if ClearKey and (WukongMenu.clear.Mana / 100) <= (myHero.mana / myHero.maxMana) then
-			MixedClear()
-		end
-		if WukongMenu.killsteal.smartKS then KillSteal() end
-	---<
-end
--- / Tick Function / --
-
--- / Variables Function / --
-function Variables()
-	--- Skills Vars --
-	--->
-		SkillQ = {range = 300,		name = "Crushing Blow",	ready = false, 						color = ARGB(255,178, 0 , 0 ),	mana = myHero:GetSpellData(_Q).mana	}
-		SkillW = {range = 125,		name = "Decoy",			ready = false, 						color = ARGB(255, 32,178,170)									 	}
-		SkillE = {range = 625,		name = "Nimbus Strike",	ready = false, 						color = ARGB(255,128, 0 ,128),	mana = myHero:GetSpellData(_E).mana	}
-		SkillR = {range = 162.5,	name = "Cyclone",		ready = false, castingUlt = false,									mana = myHero:GetSpellData(_R).mana	}
-		Decoy =
-		{
-			spellList = 
-			{
-				{charName = "Taric", 		spellName = "Dazzle", 					missileName = "Dazzle_mis.troy", 				radius = 0, 	delay = nil, 	spellType = "Stun / Snare" 		},
-				{charName = "Sion", 		spellName = "CrypticGaze", 				missileName = "CrypticGaze_mis.troy",	 		radius = 0, 	delay = nil, 	spellType = "Stun / Snare" 		},
-				{charName = "Leona",		spellName = "LeonaSolarFlare",			missileName = nil, 								radius = 350, 	delay = 0, 		spellType = "Stun / Snare"		},
-				{charName = "Pantheon", 	spellName = "Pantheon_LeapBash", 		missileName = nil, 								radius = 0, 	delay = 125, 	spellType = "Stun / Snare" 		},
-				{charName = "Renekton", 	spellName = "RenektonPreExecute",		missileName = nil, 								radius = 0,		delay = 0, 		spellType = "Stun / Snare" 		},
-				{charName = "Darius", 		spellName = "DariusAxeGrabCone", 		missileName = nil, 								radius = 550, 	delay = 0, 		spellType = "Stun / Snare"		},
-				{charName = "Annie", 		spellName = "InfernalGuardian", 		missileName = nil, 								radius = 250,	delay = 0, 		spellType = "Stun / Snare"		},
-				{charName = "Amumu", 		spellName = "CurseoftheSadMummy", 		missileName = nil, 								radius = 550,	delay = 0, 		spellType = "Stun / Snare"		},
-				{charName = "Diana", 		spellName = "DianaVortex", 				missileName = nil, 								radius = 250, 	delay = 0, 		spellType = "Stun / Snare"		},
-				{charName = "Riven", 		spellName = "RivenMartyr", 				missileName = nil, 								radius = 125, 	delay = 0, 		spellType = "Stun / Snare" 		},
-				{charName = "Orianna",		spellName = "OrianaDetonateCommand", 	missileName = nil, 								radius = 325, 	delay = 0, 		spellType = "Stun / Snare"		},
-				{charName = "TwistedFate", 	spellName = "PickaCard_yellow_mis.troy",missileName = nil, 								radius = 0, 	delay = 0, 		spellType = "Stun / Snare" 		},
-				{charName = "Irelia", 		spellName = "IreliaEquilibriumStrike", 	missileName = nil, 								radius = 0, 	delay = 200, 	spellType = "Stun / Snare" 		},
-				{charName = "Maokai", 		spellName = "MaokaiUnstableGrowth", 	missileName = nil, 								radius = 0, 	delay = 0, 		spellType = "Stun / Snare" 		},
-				{charName = "Ryze", 		spellName = "RunePrison", 				missileName = nil, 								radius = 0, 	delay = 0, 		spellType = "Stun / Snare" 		},
-				{charName = "Tristana", 	spellName = "BusterShot",				missileName = "BusterShot_mis.troy", 			radius = 0, 	delay = nil, 	spellType = "Knockback" 		},
-				{charName = "Gragas", 		spellName = "GragasExplosiveCask", 		missileName = nil, 								radius = 200, 	delay = 0, 		spellType = "Knockback"			},
-				{charName = "Alistar", 		spellName = "Headbutt", 				missileName = nil, 								radius = 0, 	delay = 200,	spellType = "Knockback" 		},
-				{charName = "LeeSin", 		spellName = "BlindMonkRKick", 			missileName = nil, 								radius = 188, 	delay = 200, 	spellType = "Knockback" 		},
-				{charName = "Janna", 		spellName = "ReapTheWhirlwind", 		missileName = nil, 								radius = 363, 	delay = 0, 		spellType = "Knockback" 		},
-				{charName = "Poppy", 		spellName = "PoppyHeroicCharge", 		missileName = nil, 								radius = 0, 	delay = 200, 	spellType = "Knockback" 		},
-				{charName = "Vayne", 		spellName = "VayneCondemn", 			missileName = nil, 								radius = 0, 	delay = 200, 	spellType = "Knockback" 		},
-				{charName = "Skarner", 		spellName = "SkarnerImpale", 			missileName = nil, 								radius = 0, 	delay = 0,		spellType = "Suppress" 			},
-				{charName = "Malzahar", 	spellName = "AlZaharNetherGrasp", 		missileName = nil, 								radius = 0, 	delay = 0, 		spellType = "Suppress"  		},
-				{charName = "Warwick", 		spellName = "InfiniteDuress", 			missileName = nil, 								radius = 0, 	delay = 0, 		spellType = "Suppress"  		},
-				{charName = "Urgot", 		spellName = "UrgotSwap2", 				missileName = nil, 								radius = 0, 	delay = 0, 		spellType = "Suppress" 			},
-				{charName = "Malphite", 	spellName = "UFSlash", 					missileName = nil, 								radius = 163, 	delay = 200, 	spellType = "Knockup" 			},
-				{charName = "Alistar", 		spellName = "Pulverize", 				missileName = nil, 								radius = 183, 	delay = 0, 		spellType = "Knockup" 			},
-				{charName = "Vi", 			spellName = "ViR", 						missileName = nil, 								radius = 0, 	delay = 200, 	spellType = "Knockup" 			},
-				{charName = "FiddleSticks", spellName = "Terrify", 					missileName = nil, 								radius = 0, 	delay = 0, 		spellType = "Fear" 	 			},
-				{charName = "Nunu", 		spellName = "IceBlast", 				missileName = "yeti_iceBlast_mis.troy", 		radius = 0, 	delay = nil, 	spellType = "Slow" 				},
-				{charName = "Malphite", 	spellName = "SeismicShard", 			missileName = "SeismicShard_mis.troy", 			radius = 0, 	delay = nil, 	spellType = "Slow" 				},
-				{charName = "JarvanIV", 	spellName = "JarvanIVGoldenAegis", 		missileName = nil, 								radius = 300, 	delay = 0, 		spellType = "Slow"				},
-				{charName = "XinZhao", 		spellName = "XenZhaoSweep", 			missileName = nil, 								radius = 0, 	delay = 150, 	spellType = "Slow"				},
-				{charName = "Rengar", 		spellName = "RengarE", 					missileName = "missing_instant.troy", 			radius = 0, 	delay = nil, 	spellType = "Slow" 				},
-				{charName = "Shaco", 		spellName = "TwoShivPoison", 			missileName = "JesterDagger.troy", 				radius = 0,		delay = nil,	spellType = "Slow" 				},
-				{charName = "LeBlanc", 		spellName = "LeblancChaosOrb", 			missileName = "leBlanc_ChaosOrb_mis.troy", 		radius = 0, 	delay = nil,	spellType = "Silence" 			},
-				{charName = "Kassadin", 	spellName = "NullLance", 				missileName = "Null_Lance_mis.troy", 			radius = 0, 	delay = nil,	spellType = "Silence" 			},
-				{charName = "FiddleSticks", spellName = "FiddlesticksDarkWind", 	missileName = "DarkWind_mis.troy", 				radius = 0, 	delay = nil, 	spellType = "Silence"			},
-				{charName = "Talon", 		spellName = "TalonCutthroat", 			missileName = nil, 								radius = 0, 	delay = 0, 		spellType = "Silence" 	 		},
-				{charName = "Rammus", 		spellName = "PuncturingTaunt", 			missileName = nil, 								radius = 0, 	delay = 0,		spellType = "Taunt" 			},
-				{charName = "Shen", 		spellName = "ShenShadowDash", 			missileName = nil, 								radius = 100,	delay = 0, 		spellType = "Taunt" 			},
-				{charName = "Galio", 		spellName = "GalioIdolOfDurand", 		missileName = nil, 								radius = 600, 	delay = 0, 		spellType = "Taunt" 			},
-				{charName = "Teemo", 		spellName = "BlindingDart", 			missileName = "BlindShot_mis.troy", 			radius = 0, 	delay = nil, 	spellType = "Blind" 			},
-				{charName = "Veigar", 		spellName = "VeigarPrimordialBurst", 	missileName = "permission_mana_flare_mis.troy", radius = 0, 	delay = nil, 	spellType = "Massive Damage"	},
-				{charName = nil, 			spellName = "DeathfireGrasp", 			missileName = "missile", 						radius = 0, 	delay = nil, 	spellType = "Massive Damage"	},
-				{charName = "Lux", 			spellName = "LuxMaliceCannon", 			missileName = nil, 								radius = 0, 	delay = 250, 	spellType = "Massive Damage"	},
-				{charName = "Vladimir", 	spellName = "VladimirHemoplague", 		missileName = nil, 								radius = 175, 	delay = 0, 		spellType = "Massive Damage"	},
-				{charName = "XinZhao", 		spellName = "XenZhaoParry", 			missileName = nil, 								radius = 187.5, delay = 0, 		spellType = "Massive Damage"	},
-				{charName = "Graves", 		spellName = "GravesChargeShot", 		missileName = nil, 								radius = 0, 	delay = 200, 	spellType = "Massive Damage"	},
-				{charName = "Garen", 		spellName = "GarenJustice", 			missileName = nil, 								radius = 0, 	delay = 250, 	spellType = "Massive Damage"	},
-				{charName = "Evelynn", 		spellName = "EvelynnR", 				missileName = nil, 								radius = 250, 	delay = 0, 		spellType = "Massive Damage"	},
-				{charName = "Darius", 		spellName = "DariusExecute", 			missileName = nil, 								radius = 0, 	delay = 300, 	spellType = "Massive Damage"	},
-				{charName = "Zed", 			spellName = "ZedUlt", 					missileName = "Zed_R_Dash.troy", 				radius = 0, 	delay = nil, 	spellType = "Massive Damage"	}
-			},
-			targetedDistanceBuffer = 75 * 75,
-			spellCastTick = 0,
-			minDelay = 0,
-			maxDelay = 2000,
-			particleFound,
-			spellParticle = {valid = false},
-			maxParticleDistance = 250 * 250
-		}
-	---<
-	--- Skills Vars ---
-	--- Items Vars ---
-	--->
-		Items =
-		{
-					HealthPot		= {slot = nil, ready = false, inUse = false},
-					ManaPot			= {slot = nil, ready = false, inUse = false},
-					FlaskPot		= {slot = nil, ready = false			   }
-		}
-	---<
-	--- Items Vars ---
-	--- Orbwalking Vars ---
-	--->
-		lastAnimation = nil
-		lastAttack = 0
-		lastAttackCD = 0
-		lastWindUpTime = 0
-	---<
-	--- Orbwalking Vars ---
-	--- TickManager Vars ---
-	--->
-		TManager =
-		{
-			onTick	= TickManager(20),
-			onDraw	= TickManager(80),
-			onSpell	= TickManager(15)
-		}
-	---<
-	--- TickManager Vars ---
-	if VIP_USER then
-		--- LFC Vars ---
-		--->
-			_G.oldDrawCircle = rawget(_G, 'DrawCircle')
-			_G.DrawCircle = DrawCircle2
-		---<
-		--- LFC Vars ---
+	if heroManager.iCount < 10 then -- borrowed from Sidas Auto Carry, modified to 3v3
+			AutoupdaterMsg("Too few champions to arrange priorities")
+	elseif heroManager.iCount == 6 and TTMAP then
+		ArrangeTTPriorities()
+	else
+		ArrangePriorities()
 	end
-	--- Drawing Vars ---
-	--->
-		--TextList = {"Harass him", "Q = Kill", "E = Kill!", "E+Q = Kill", "E+Q+R: ", "Need CDs"}
-		KillText = {}
-		colorText = ARGB(255,255,204,0)
-	---<
-	--- Drawing Vars ---
-	--- Misc Vars ---
-	--->
-		Items.HealthPot.inUse = false
-		SkillR.castingUlt = false
-		attackCast = false
-		gameState = GetGame()
-		if gameState.map.shortName == "twistedTreeline" then
-			TTMAP = true
-		else
-			TTMAP = false
+end
+
+function OnTick()
+	ComboKey		= WukongMenu.combo.comboKey
+	HarassKey		= WukongMenu.harass.harassKey
+	FarmKey			= WukongMenu.farming.farmKey
+	JungleClearKey	= WukongMenu.jungle.jungleKey
+
+	if ComboKey then
+		Combo(Target)
+	end
+	if HarassKey then
+		Harass(Target)
+	end
+	if FarmKey then
+		Farm()
+	end
+	if JungleClearKey then
+		JungleClear()
+	end
+
+	if WukongMenu.harass.autoQ then
+		if (WukongMenu.harass.aQT and not InEnemyTurretRange(myHero)) or not WukongMenu.harass.aQT then
+			CastQ(Target)
 		end
-	---<
-	--- Misc Vars ---
-	--- Tables ---
-	--->
-		enemycombo = {}
-		allyHeroes = GetAllyHeroes()
-		enemyHeroes = GetEnemyHeroes()
-		enemyTable = {}
-		enemysInTable = 0
-		enemyMinions = minionManager(MINION_ENEMY, 1000, player, MINION_SORT_HEALTH_ASC)
-		JungleMobs = {}
-		JungleFocusMobs = {}
-		priorityTable = {
+	end
+
+	if WukongMenu.ks.killSteal then
+		KillSteal()
+	end
+
+	if WukongMenu.misc.ult.Enable then
+		if CountEnemyHeroInRange(SpellR.range) >= WukongMenu.misc.ult.minEnemies and not myHero:GetSpellData(_R).name == "monkeykingspintowinleave" then
+			CastSpell(_R)
+		end
+	end
+
+	TickChecks()
+end
+
+function Variables()
+	if GetGame().map.shortName == "twistedTreeline" then
+		TTMAP = true
+	else
+		TTMAP = false
+	end
+
+	SpellQ = { name = "Crushing Blow",	range = 300  , ready = false, dmg = 0, manaUsage = 0					}
+	SpellE = { name = "Nimbus Strike",	range = 625  , ready = false, dmg = 0, manaUsage = 0					}
+	SpellR = { name = "Cyclone",		range = 162.5, ready = false, dmg = 0, manaUsage = 0					}
+
+	SpellI = { name = "SummonerDot",	range = 600  , ready = false, dmg = 0,					variable = nil	}
+
+	vPred = VPrediction()
+
+	wSOW = SOW(vPred)
+
+	enemyMinions	= minionManager(MINION_ENEMY,	SpellQ.range, myHero.visionPos, MINION_SORT_HEALTH_ASC)
+
+	JungleMobs = {}
+	JungleFocusMobs = {}
+
+	priorityTable = {
 			AP = {
 				"Annie", "Ahri", "Akali", "Anivia", "Annie", "Brand", "Cassiopeia", "Diana", "Evelynn", "FiddleSticks", "Fizz", "Gragas", "Heimerdinger", "Karthus",
 				"Kassadin", "Katarina", "Kayle", "Kennen", "Leblanc", "Lissandra", "Lux", "Malzahar", "Mordekaiser", "Morgana", "Nidalee", "Orianna",
-				"Ryze", "Sion", "Swain", "Syndra", "Teemo", "TwistedFate", "Veigar", "Viktor", "Vladimir", "Xerath", "Ziggs", "Zyra",
+				"Ryze", "Sion", "Swain", "Syndra", "Teemo", "TwistedFate", "Veigar", "Viktor", "Vladimir", "Xerath", "Ziggs", "Zyra"
 			},
 			Support = {
-				"Alistar", "Blitzcrank", "Janna", "Karma", "Leona", "Lulu", "Nami", "Nunu", "Sona", "Soraka", "Taric", "Thresh", "Zilean",
+				"Alistar", "Blitzcrank", "Janna", "Karma", "Leona", "Lulu", "Nami", "Nunu", "Sona", "Soraka", "Taric", "Thresh", "Zilean"
 			},
 			Tank = {
 				"Amumu", "Chogath", "DrMundo", "Galio", "Hecarim", "Malphite", "Maokai", "Nasus", "Rammus", "Sejuani", "Nautilus", "Shen", "Singed", "Skarner", "Volibear",
-				"Warwick", "Yorick", "Zac",
+				"Warwick", "Yorick", "Zac"
 			},
 			AD_Carry = {
 				"Ashe", "Caitlyn", "Corki", "Draven", "Ezreal", "Graves", "Jayce", "Jinx", "KogMaw", "Lucian", "MasterYi", "MissFortune", "Pantheon", "Quinn", "Shaco", "Sivir",
-				"Talon","Tryndamere", "Tristana", "Twitch", "Urgot", "Varus", "Vayne", "Yasuo","Zed", 
+				"Talon","Tryndamere", "Tristana", "Twitch", "Urgot", "Varus", "Vayne", "Yasuo","Zed"
 			},
 			Bruiser = {
 				"Aatrox", "Darius", "Elise", "Fiora", "Gangplank", "Garen", "Irelia", "JarvanIV", "Jax", "Khazix", "LeeSin", "Nocturne", "Olaf", "Poppy",
-				"Renekton", "Rengar", "Riven", "Rumble", "Shyvana", "Trundle", "Udyr", "Vi", "MonkeyKing", "XinZhao",
-			},
+				"Renekton", "Rengar", "Riven", "Rumble", "Shyvana", "Trundle", "Udyr", "Vi", "MonkeyKing", "XinZhao"
+			}
 		}
-		if TTMAP then --
-			FocusJungleNames = {
-				["TT_NWraith1.1.1"] = true,
-				["TT_NGolem2.1.1"] = true,
-				["TT_NWolf3.1.1"] = true,
-				["TT_NWraith4.1.1"] = true,
-				["TT_NGolem5.1.1"] = true,
-				["TT_NWolf6.1.1"] = true,
-				["TT_Spiderboss8.1.1"] = true,
-			}		
-			JungleMobNames = {
-				["TT_NWraith21.1.2"] = true,
-				["TT_NWraith21.1.3"] = true,
-				["TT_NGolem22.1.2"] = true,
-				["TT_NWolf23.1.2"] = true,
-				["TT_NWolf23.1.3"] = true,
-				["TT_NWraith24.1.2"] = true,
-				["TT_NWraith24.1.3"] = true,
-				["TT_NGolem25.1.1"] = true,
-				["TT_NWolf26.1.2"] = true,
-				["TT_NWolf26.1.3"] = true,
-			}
-		else 
-			JungleMobNames = { 
-				["Wolf8.1.2"] = true,
-				["Wolf8.1.3"] = true,
-				["YoungLizard7.1.2"] = true,
-				["YoungLizard7.1.3"] = true,
-				["LesserWraith9.1.3"] = true,
-				["LesserWraith9.1.2"] = true,
-				["LesserWraith9.1.4"] = true,
-				["YoungLizard10.1.2"] = true,
-				["YoungLizard10.1.3"] = true,
-				["SmallGolem11.1.1"] = true,
-				["Wolf2.1.2"] = true,
-				["Wolf2.1.3"] = true,
-				["YoungLizard1.1.2"] = true,
-				["YoungLizard1.1.3"] = true,
-				["LesserWraith3.1.3"] = true,
-				["LesserWraith3.1.2"] = true,
-				["LesserWraith3.1.4"] = true,
-				["YoungLizard4.1.2"] = true,
-				["YoungLizard4.1.3"] = true,
-				["SmallGolem5.1.1"] = true,
-			}
-			FocusJungleNames = {
-				["Dragon6.1.1"] = true,
-				["Worm12.1.1"] = true,
-				["GiantWolf8.1.1"] = true,
-				["AncientGolem7.1.1"] = true,
-				["Wraith9.1.1"] = true,
-				["LizardElder10.1.1"] = true,
-				["Golem11.1.2"] = true,
-				["GiantWolf2.1.1"] = true,
-				["AncientGolem1.1.1"] = true,
- 				["Wraith3.1.1"] = true,
-				["LizardElder4.1.1"] = true,
-				["Golem5.1.2"] = true,
-				["GreatWraith13.1.1"] = true,
-				["GreatWraith14.1.1"] = true,
-			}
+
+	InterruptingSpells = {
+		["AbsoluteZero"]				= true,
+		["AlZaharNetherGrasp"]			= true,
+		["CaitlynAceintheHole"]			= true,
+		["Crowstorm"]					= true,
+		["DrainChannel"]				= true,
+		["FallenOne"]					= true,
+		["GalioIdolOfDurand"]			= true,
+		["InfiniteDuress"]				= true,
+		["KatarinaR"]					= true,
+		["MissFortuneBulletTime"]		= true,
+		["Teleport"]					= true,
+		["Pantheon_GrandSkyfall_Jump"]	= true,
+		["ShenStandUnited"]				= true,
+		["UrgotSwap2"]					= true
+	}
+
+	Items = {
+		["BLACKFIRE"]	= { id = 3188, range = 750 },
+		["BRK"]			= { id = 3153, range = 500 },
+		["BWC"]			= { id = 3144, range = 450 },
+		["DFG"]			= { id = 3128, range = 750 },
+		["HXG"]			= { id = 3146, range = 700 },
+		["ODYNVEIL"]	= { id = 3180, range = 525 },
+		["DVN"]			= { id = 3131, range = 200 },
+		["ENT"]			= { id = 3184, range = 350 },
+		["HYDRA"]		= { id = 3074, range = 350 },
+		["TIAMAT"]		= { id = 3077, range = 350 },
+		["YGB"]			= { id = 3142, range = 350 }
+	}
+
+	if TTMAP then --
+		FocusJungleNames = {
+			["TT_NWraith1.1.1"]		= true,
+			["TT_NGolem2.1.1"]		= true,
+			["TT_NWolf3.1.1"]		= true,
+			["TT_NWraith4.1.1"]		= true,
+			["TT_NGolem5.1.1"]		= true,
+			["TT_NWolf6.1.1"]		= true,
+			["TT_Spiderboss8.1.1"]	= true
+		}		
+		JungleMobNames = {
+			["TT_NWraith21.1.2"]	= true,
+			["TT_NWraith21.1.3"]	= true,
+			["TT_NGolem22.1.2"]		= true,
+			["TT_NWolf23.1.2"]		= true,
+			["TT_NWolf23.1.3"]		= true,
+			["TT_NWraith24.1.2"]	= true,
+			["TT_NWraith24.1.3"]	= true,
+			["TT_NGolem25.1.1"]		= true,
+			["TT_NWolf26.1.2"]		= true,
+			["TT_NWolf26.1.3"]		= true
+		}
+	else 
+		JungleMobNames = { 
+			["Wolf8.1.2"]			= true,
+			["Wolf8.1.3"]			= true,
+			["YoungLizard7.1.2"]	= true,
+			["YoungLizard7.1.3"]	= true,
+			["LesserWraith9.1.3"]	= true,
+			["LesserWraith9.1.2"]	= true,
+			["LesserWraith9.1.4"]	= true,
+			["YoungLizard10.1.2"]	= true,
+			["YoungLizard10.1.3"]	= true,
+			["SmallGolem11.1.1"]	= true,
+			["Wolf2.1.2"]			= true,
+			["Wolf2.1.3"]			= true,
+			["YoungLizard1.1.2"]	= true,
+			["YoungLizard1.1.3"]	= true,
+			["LesserWraith3.1.3"]	= true,
+			["LesserWraith3.1.2"]	= true,
+			["LesserWraith3.1.4"]	= true,
+			["YoungLizard4.1.2"]	= true,
+			["YoungLizard4.1.3"]	= true,
+			["SmallGolem5.1.1"]		= true
+		}
+		FocusJungleNames = {
+			["Dragon6.1.1"]			= true,
+			["Worm12.1.1"]			= true,
+			["GiantWolf8.1.1"]		= true,
+			["AncientGolem7.1.1"]	= true,
+			["Wraith9.1.1"]			= true,
+			["LizardElder10.1.1"]	= true,
+			["Golem11.1.2"]			= true,
+			["GiantWolf2.1.1"]		= true,
+			["AncientGolem1.1.1"]	= true,
+			["Wraith3.1.1"]			= true,
+			["LizardElder4.1.1"]	= true,
+			["Golem5.1.2"]			= true,
+			["GreatWraith13.1.1"]	= true,
+			["GreatWraith14.1.1"]	= true
+		}
+	end
+
+	enemyCount = 0
+	enemyTable = {}
+
+	for i = 1, heroManager.iCount do
+		local champ = heroManager:GetHero(i)
+        
+		if champ.team ~= player.team then
+			enemyCount = enemyCount + 1
+			enemyTable[enemyCount] = { player = champ, indicatorText = "", damageGettingText = "", ultAlert = false, ready = true}
 		end
-		for i = 0, objManager.maxObjects do
-			local object = objManager:getObject(i)
-			if object ~= nil then
-				if FocusJungleNames[object.name] then
-					table.insert(JungleFocusMobs, object)
-				elseif JungleMobNames[object.name] then
-					table.insert(JungleMobs, object)
+    end
+
+    for i = 0, objManager.maxObjects do
+		local object = objManager:getObject(i)
+		if object and object.valid and not object.dead then
+			if FocusJungleNames[object.name] then
+				JunglefocusMobs[#JungleFocusMobs+1] = object
+			elseif JungleMobNames[object.name] then
+				JungleMobs[#JungleMobs+1] = object
+			end
+		end
+	end
+end
+
+function Menu()
+	WukongMenu = scriptConfig("Wukong - The Monkey King", "Wu")
+	
+	WukongMenu:addSubMenu("["..myHero.charName.."] - Combo Settings", "combo")
+		WukongMenu.combo:addParam("comboKey", "Full Combo Key (SBTW)", SCRIPT_PARAM_ONKEYDOWN, false, 32)
+		WukongMenu.combo:addParam("smartCombo", "Use Smart Combo", SCRIPT_PARAM_ONOFF, true)
+		WukongMenu.combo:addParam("comboItems", "Use Items with Burst", SCRIPT_PARAM_ONOFF, true)
+		WukongMenu.combo:addParam("useUlt", SpellR.name.." (R): ", SCRIPT_PARAM_LIST, 3, { "Always", "If Killable", "No" })
+		WukongMenu.combo:permaShow("comboKey")
+	
+	WukongMenu:addSubMenu("["..myHero.charName.."] - Harass Settings", "harass")
+		WukongMenu.harass:addParam("harassKey", "Harass key (C)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("C"))
+		WukongMenu.harass:addParam("smartHarass", "Use Smart Harass", SCRIPT_PARAM_ONOFF, true)
+		WukongMenu.harass:addParam("hMode", "Harass Mode", SCRIPT_PARAM_LIST, 3, { "E + Q", "E", "Q+E" })
+		WukongMenu.harass:addParam("autoQ", "Auto-Q when Target in Range", SCRIPT_PARAM_ONKEYTOGGLE, false, GetKey('Z'))
+		WukongMenu.harass:addParam("aQT", "Don't Auto-Q if in enemy Turret Range", SCRIPT_PARAM_ONOFF, true)
+		WukongMenu.harass:addParam("harassMana", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
+		WukongMenu.harass:permaShow("harassKey")
+		
+	
+	WukongMenu:addSubMenu("["..myHero.charName.."] - Farm Settings", "farming")
+		WukongMenu.farming:addParam("farmKey", "Farming Key (X)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey('X'))
+		WukongMenu.farming:addParam("qFarm", "Farm with "..SpellQ.name.." (Q)", SCRIPT_PARAM_ONOFF, true)
+		WukongMenu.farming:addParam("eFarm", "Farm with "..SpellE.name.." (E)", SCRIPT_PARAM_ONOFF, true)
+		WukongMenu.farming:addParam("FarmMana", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
+		WukongMenu.farming:permaShow("farmKey")
+		
+	WukongMenu:addSubMenu("["..myHero.charName.."] - Jungle Clear Settings", "jungle")
+		WukongMenu.jungle:addParam("jungleKey", "Jungle Clear Key (V)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey('V'))
+		WukongMenu.jungle:addParam("smartClear", "Use Smart Jungle Clear", SCRIPT_PARAM_ONOFF, true)
+		WukongMenu.jungle:addParam("jungleQ", "Clear with "..SpellQ.name.." (Q)", SCRIPT_PARAM_ONOFF, true)
+		WukongMenu.jungle:addParam("jungleE", "Clear with "..SpellE.name.." (E)", SCRIPT_PARAM_ONOFF, true)
+		Wukongmenu.jungle:permaShow("jungleKey")
+		
+		
+	WukongMenu:addSubMenu("["..myHero.charName.."] - KillSteal Settings", "ks")
+		WukongMenu.ks:addParam("killSteal", "Use Smart Kill Steal", SCRIPT_PARAM_ONOFF, true)
+		WukongMenu.ks:addParam("useUlt", "Use "..SpellR.name.." (R) to KS", SCRIPT_PARAM_ONOFF, false)
+		WukongMenu.ks:addParam("autoIgnite", "Auto Ignite", SCRIPT_PARAM_ONOFF, true)
+		WukongMenu.ks:permaShow("killSteal")
+			
+	WukongMenu:addSubMenu("["..myHero.charName.."] - Draw Settings", "drawing")	
+		WukongMenu.drawing:addParam("mDraw", "Disable All Range Draws", SCRIPT_PARAM_ONOFF, false)
+		WukongMenu.drawing:addParam("cDraw", "Draw Damage Text", SCRIPT_PARAM_ONOFF, true)
+		WukongMenu.drawing:addParam("qDraw", "Draw "..SpellQ.name.." (Q) Range", SCRIPT_PARAM_ONOFF, true)
+		WukongMenu.drawing:addParam("eDraw", "Draw "..SpellE.name.." (E) Range", SCRIPT_PARAM_ONOFF, true)
+		WukongMenu.drawing:addParam("rDraw", "Draw "..SpellR.name.." (R) Range", SCRIPT_PARAM_ONOFF, true)
+	
+	WukongMenu:addSubMenu("["..myHero.charName.."] - Misc Settings", "misc")
+		WukongMenu.misc:addSubMenu("Spells - Misc Settings", "smisc")
+			WukongMenu.misc.smisc:addParam("stopChannel", "Interrupt Channeling Spells", SCRIPT_PARAM_ONOFF, true)
+		if VIP_USER then
+			WukongMenu.misc:addSubMenu("Spells - Cast Settings", "cast")
+				WukongMenu.misc.cast:addParam("usePackets", "Use Packets to Cast Spells", SCRIPT_PARAM_ONOFF, false)
+		end
+		WukongMenu.misc:addSubMenu("Spells - Ultimate Settings", "ult")
+			WukongMenu.misc.ult:addParam("Enable", "Enable Ult MEC", SCRIPT_PARAM_ONOFF, true)
+			WukongMenu.misc.ult:addParam("minEnemies", "Min. Enemies in Range: ", SCRIPT_PARAM_SLICE, 2, 2, 5, 0)
+
+		WukongMenu:addSubMenu("["..myHero.charName.."] - Orbwalking Settings", "Orbwalking")
+			wSOW:LoadToMenu(WukongMenu.Orbwalking)
+
+	TargetSelector = TargetSelector(TARGET_LESS_CAST, SpellE.range, DAMAGE_PHYSICAL)
+	TargetSelector.name = "Wukong"
+	WukongMenu:addTS(TargetSelector)
+
+	WukongMenu:addParam("wuVer", "Version: ", SCRIPT_PARAM_INFO, version)
+end
+
+function OnProcessSpell(unit, spell)
+	if WukongMenu.misc.smisc.stopChannel then
+		if GetDistanceSqr(unit) <= SpellR.range * SpellR.range and not myHero:GetSpellData(_R).name == "monkeykingspintowinleave" then
+			if InterruptingSpells[spell.name] then
+				CastSpell(_R)
+			end
+		end
+		if unit.isMe then 
+			if spell.name == "MonkeyKingDecoy" then
+				wSOW:DisableAttacks()
+				DelayAction(function()
+								wSOW:EnableAttacks()
+							end, 1.5)
+			end
+			if spell.name == "MonkeyKingSpinToWin" then
+				wSOW:DisableAttacks()
+				DelayAction(function()
+								wSOW:EnableAttacks()
+							end, 4.0)
+			end
+		end
+	end
+end
+
+function OnCreateObj(obj)
+	if FocusJungleNames[obj.name] then
+		JungleFocusMobs[#JungleFocusMobs+1] = obj
+	elseif JungleMobNames[obj.name] then
+		JungleMobs[#JungleMobs+1] = obj
+	end
+end
+
+function OnDeleteObj(obj)
+	for i, Mob in pairs(JungleMobs) do
+		if obj.name == Mob.name then
+			table.remove(JungleMobs, i)
+		end
+	end
+	for i, Mob in pairs(JungleFocusMobs) do
+		if obj.name == Mob.name then
+			table.remove(JungleFocusMobs, i)
+		end
+	end
+end
+
+function OnDraw()
+	if not myHero.dead then
+		if not WukongMenu.drawing.mDraw then
+			if WukongMenu.drawing.qDraw and SpellQ.ready then
+				DrawCircle(myHero.x, myHero.y, myHero.z, SpellQ.range, ARGB(255,178, 0 , 0 ))
+			end
+			if WukongMenu.drawing.eDraw and SpellE.ready then
+				DrawCircle(myHero.x, myHero.y, myHero.z, SpellE.range, ARGB(255, 32,178,170))
+			end
+			if WukongMenu.drawing.rDraw and SpellR.ready then
+				DrawCircle(myHero.x, myHero.y, myHero.z, SpellE.range, ARGB(255,128, 0 ,128))
+			end
+		end
+		if WukongMenu.drawing.cDraw then
+			for i = 1, enemyCount do
+				local enemy = enemyTable[i].player
+
+				if ValidTarget(enemy) and enemy.visible then
+					local barPos = WorldToScreen(D3DXVECTOR3(enemy.x, enemy.y, enemy.z))
+					local pos = { X = barPos.x - 35, Y = barPos.y - 50 }
+
+					DrawText(enemyTable[i].indicatorText, 15, pos.X, pos.Y, (enemyTable[i].ready and ARGB(255, 0, 255, 0)) or ARGB(255, 255, 220, 0))
+					DrawText(enemyTable[i].damageGettingText, 15, pos.X, pos.Y + 15, ARGB(255, 255, 0, 0))
 				end
 			end
 		end
-		for i = 1, heroManager.iCount do enemycombo[i] = 0 end
-		decoyClean()
-	---<
-	--- Tables ---
+	end
 end
--- / Variables Function / --
 
--- / Menu Function / --
-function WukongMenu()
-	--- Main Menu ---
-	--->
-		WukongMenu = scriptConfig("Wukong - The Monkey King", "Wukong")
-		---> Combo Menu
-		WukongMenu:addSubMenu("["..myHero.charName.." - Combo Settings]", "combo")
-			WukongMenu.combo:addParam("comboKey", "Full Combo Key (X)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("X"))
-			WukongMenu.combo:addParam("mecUlt", "Use MEC for "..SkillR.name.." (R)", SCRIPT_PARAM_ONOFF, true)
-			WukongMenu.combo:addParam("amecUlt", "MEC Amount with "..SkillR.name.." (R)",SCRIPT_PARAM_SLICE, 2, 1, 5, 0)
-			WukongMenu.combo:addParam("comboItems", "Use Items with Burst", SCRIPT_PARAM_ONOFF, true)
-			WukongMenu.combo:addParam("smartCombo", "Use Smart Combo", SCRIPT_PARAM_ONOFF, true)
-			WukongMenu.combo:addParam("comboOrbwalk", "Orbwalk in Combo", SCRIPT_PARAM_ONOFF, true)
-			WukongMenu.combo:permaShow("comboKey")
-			WukongMenu.combo:permaShow("mecUlt")
-		---<
-		---> Harass Menu
-		WukongMenu:addSubMenu("["..myHero.charName.." - Harass Settings]", "harass")
-			WukongMenu.harass:addParam("hMode", "Harass Mode", SCRIPT_PARAM_LIST, 1, { "E+Q+W", "E+W", "Q+E+W" })
-			WukongMenu.harass:addParam("harassKey", "Harass Hotkey (T)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("T"))
-			WukongMenu.harass:addParam("wEscape", "Use "..SkillW.name.." (W) after Harass", SCRIPT_PARAM_ONOFF, true)
-			WukongMenu.harass:addParam("qharass", "Always "..SkillQ.name.." (Q)", SCRIPT_PARAM_ONOFF, true)
-			WukongMenu.harass:addParam("harassOrbwalk", "Orbwalk in Harass", SCRIPT_PARAM_ONOFF, true)
-			WukongMenu.harass:permaShow("harassKey")
-		---<
-		---> Farming Menu
-		WukongMenu:addSubMenu("["..myHero.charName.." - Farming Settings]", "farming")
-			WukongMenu.farming:addParam("farmKey", "Farming ON/Off (Z)", SCRIPT_PARAM_ONKEYTOGGLE, true, GetKey("Z"))
-			WukongMenu.farming:addParam("lastHit", "Auto Last Hit on Hold", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("C"))
-			WukongMenu.farming:addParam("Mana", "Min Mana to Farm", SCRIPT_PARAM_SLICE, 35, 0, 100, -1)
-			WukongMenu.farming:addParam("qFarm", "Farm with "..SkillQ.name.." (Q)", SCRIPT_PARAM_ONOFF, true)
-			WukongMenu.farming:addParam("eFarm", "Farm with "..SkillE.name.." (E)", SCRIPT_PARAM_ONOFF, false)
-			WukongMenu.farming:permaShow("farmKey")
-		---<
-		---> Clear Menu		
-		WukongMenu:addSubMenu("["..myHero.charName.." - Clear Settings]", "clear")
-			WukongMenu.clear:addParam("clearKey", "Jungle/Lane Clear Key (V)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("V"))
-			WukongMenu.clear:addParam("Mana", "Min Mana to Jungle/Lane Clear", SCRIPT_PARAM_SLICE, 35, 0, 100, -1)
-			WukongMenu.clear:addParam("JungleFarm", "Use Skills to Farm Jungle", SCRIPT_PARAM_ONOFF, true)
-			WukongMenu.clear:addParam("ClearLane", "Use Skills to Clear Lane", SCRIPT_PARAM_ONOFF, true)
-			WukongMenu.clear:addParam("smartClear", "Use Smart Clear", SCRIPT_PARAM_ONOFF, true)
-			WukongMenu.clear:addParam("clearQ", "Clear with "..SkillQ.name.." (Q)", SCRIPT_PARAM_ONOFF, true)
-			WukongMenu.clear:addParam("clearE", "Clear with "..SkillE.name.." (E)", SCRIPT_PARAM_ONOFF, true)
-			WukongMenu.clear:addParam("clearOrbM", "OrbWalk Lane Clear", SCRIPT_PARAM_ONOFF, true)
-			WukongMenu.clear:addParam("clearOrbJ", "OrbWalk Jungle Clear", SCRIPT_PARAM_ONOFF, true)
-		---<
-		---> Decoy Menu
-		WukongMenu:addSubMenu("["..myHero.charName.." - Decoy Settings]", "decoy")
-			WukongMenu.decoy:addParam("enableDecoy", "Enable Auto "..SkillW.name.." (W)", SCRIPT_PARAM_ONOFF, true)
-			WukongMenu.decoy:addParam("StunSnare", "Use "..SkillW.name.." (W) against Stun / Snare", SCRIPT_PARAM_ONOFF, true)
-			WukongMenu.decoy:addParam("Knockback", "Use "..SkillW.name.." (W) against Knockback", SCRIPT_PARAM_ONOFF, true)
-			WukongMenu.decoy:addParam("Knockup", "Use "..SkillW.name.." (W) against Knockup", SCRIPT_PARAM_ONOFF, true)
-			WukongMenu.decoy:addParam("Fear", "Use "..SkillW.name.." (W) against Fear", SCRIPT_PARAM_ONOFF, true)
-			WukongMenu.decoy:addParam("Slow", "Use "..SkillW.name.." (W) against Slow", SCRIPT_PARAM_ONOFF, true)
-			WukongMenu.decoy:addParam("Silence", "Use "..SkillW.name.." (W) against Silence", SCRIPT_PARAM_ONOFF, true)
-			WukongMenu.decoy:addParam("Taunt", "Use "..SkillW.name.." (W) against Taunt", SCRIPT_PARAM_ONOFF, true)
-			WukongMenu.decoy:addParam("Blind", "Use "..SkillW.name.." (W) against Blind", SCRIPT_PARAM_ONOFF, true)
-			WukongMenu.decoy:addParam("MassiveDamage", "Use "..SkillW.name.." (W) against Mass Damage", SCRIPT_PARAM_ONOFF, true)
-			WukongMenu.decoy:permaShow("enableDecoy")
-		---<
-		---> KillSteal Menu
-		WukongMenu:addSubMenu("["..myHero.charName.." - KillSteal Settings]", "killsteal")
-			WukongMenu.killsteal:addParam("smartKS", "Use Smart Kill Steal", SCRIPT_PARAM_ONOFF, true)
-			WukongMenu.killsteal:addParam("ultKS", "Use "..SkillR.name.." (R) to KS", SCRIPT_PARAM_ONOFF, true)
-			WukongMenu.killsteal:addParam("itemsKS", "Use Items to KS", SCRIPT_PARAM_ONOFF, true)
-			WukongMenu.killsteal:addParam("Ignite", "Auto Ignite", SCRIPT_PARAM_ONOFF, true)
-			WukongMenu.killsteal:permaShow("smartKS")
-		---<
-		---> Drawing Menu			
-		WukongMenu:addSubMenu("["..myHero.charName.." - Drawing Settings]", "drawing")
-			if VIP_USER then
-				WukongMenu.drawing:addSubMenu("["..myHero.charName.." - LFC Settings]", "lfc")
-					WukongMenu.drawing.lfc:addParam("LagFree", "Activate Lag Free Circles", SCRIPT_PARAM_ONOFF, false)
-					WukongMenu.drawing.lfc:addParam("CL", "Length before Snapping", SCRIPT_PARAM_SLICE, 300, 75, 2000, 0)
-					WukongMenu.drawing.lfc:addParam("CLinfo", "Higher length = Lower FPS Drops", SCRIPT_PARAM_INFO, "")
-			end
-			WukongMenu.drawing:addParam("disableAll", "Disable All Ranges Drawing", SCRIPT_PARAM_ONOFF, false)
-			WukongMenu.drawing:addParam("drawTargetText", "Draw Who I'm Targetting", SCRIPT_PARAM_ONOFF, true)
-			WukongMenu.drawing:addParam("drawQ", "Draw "..SkillQ.name.." (Q) Range", SCRIPT_PARAM_ONOFF, true)
-			WukongMenu.drawing:addParam("drawW", "Draw "..SkillW.name.." (W) Range", SCRIPT_PARAM_ONOFF, false)
-			WukongMenu.drawing:addParam("drawE", "Draw "..SkillE.name.." (E) Range", SCRIPT_PARAM_ONOFF, true)
-		---<
-		---> Misc Menu	
-		WukongMenu:addSubMenu("["..myHero.charName.." - Misc Settings]", "misc")
-			WukongMenu.misc:addParam("ZWItems", "Auto Zhonyas/Wooglets", SCRIPT_PARAM_ONOFF, true)
-			WukongMenu.misc:addParam("ZWHealth", "Min Health % for Zhonyas/Wooglets", SCRIPT_PARAM_SLICE, 15, 0, 100, -1)
-			WukongMenu.misc:addParam("aHP", "Auto Health Pots", SCRIPT_PARAM_ONOFF, true)
-			WukongMenu.misc:addParam("pHealth", "Min % for Health Pots", SCRIPT_PARAM_SLICE, 50, 0, 100, -1)
-			WukongMenu.misc:addParam("aMP", "Auto Mana Pots", SCRIPT_PARAM_ONOFF, true)
-			WukongMenu.misc:addParam("pMana", "Min % for Mana Pots", SCRIPT_PARAM_SLICE, 35, 0, 100, -1)
-			WukongMenu.misc:addParam("uTM", "Use Tick Manager/FPS Improver (Requires Reload)",SCRIPT_PARAM_ONOFF, false)
-		---<
-		---> Target Selector		
-			TargetSelector = TargetSelector(TARGET_LESS_CAST_PRIORITY, SkillE.range, DAMAGE_PHYSICAL)
-			TargetSelector.name = "MonkeyKing"
-			WukongMenu:addTS(TargetSelector)
-		---<
-		---> Arrange Priorities
-			if heroManager.iCount < 10 then -- borrowed from Sidas Auto Carry, modified to 3v3
-	   			PrintChat(" >> Too few champions to arrange priority")
-			elseif heroManager.iCount == 6 and TTMAP then
-				ArrangeTTPriorities()
+function TickChecks()
+	-- Checks if Spells Ready
+	SpellQ.ready = (myHero:CanUseSpell(_Q) == READY)
+	SpellE.ready = (myHero:CanUseSpell(_E) == READY)
+	SpellR.ready = (myHero:CanUseSpell(_R) == READY)
+
+	SpellQ.manaUsage = myHero:GetSpellData(_Q).mana
+	SpellE.manaUsage = myHero:GetSpellData(_E).mana
+	SpellR.manaUsage = myHero:GetSpellData(_R).mana
+
+	if myHero:GetSpellData(SUMMONER_1).name:find(SpellI.name) then
+		SpellI.variable = SUMMONER_1
+	elseif myHero:GetSpellData(SUMMONER_2).name:find(SpellI.name) then
+		SpellI.variable = SUMMONER_2
+	end
+	SpellI.ready = (SpellI.variable ~= nil and myHero:CanUseSpell(SpellI.variable) == READY)
+
+	Target = GetCustomTarget()
+	wSOW:ForceTarget(Target)
+
+	DmgCalc()
+
+	if not ComboKey and not FarmKey and not HarassKey and not JungleClearKey then
+		for i, cb in ipairs(wSOW.AfterAttackCallbacks) do
+			table.remove(wSOW.AfterAttackCallbacks, i)
+		end
+	end
+end
+
+function GetCustomTarget()
+	TargetSelector:update()
+    if _G.MMA_Target and _G.MMA_Target.type == myHero.type then
+    	return _G.MMA_Target
+   	elseif _G.AutoCarry and _G.AutoCarry.Crosshair and _G.AutoCarry.Attack_Crosshair then
+   		return _G.AutoCarry.Attack_Crosshair.target
+   	elseif TargetSelector.target and not TargetSelector.target.dead and TargetSelector.target.type  == "obj_AI_Hero" then
+    	return TargetSelector.target
+    else
+    	return nil
+    end
+end
+
+function UseItems(unit)
+	for i, Item in pairs(Items) do
+		local Item = Items[i]
+		if GetInventoryItemIsCastable(Item.id) and GetDistanceSqr(unit) <= Item.range*Item.range then
+			CastItem(Item.id, unit)
+		end
+	end
+end
+
+function Combo(unit)
+	if ValidTarget(unit) and unit ~= nil and unit.type == myHero.type then
+		if WukongMenu.combo.comboItems then
+			UseItems(unit)
+		end
+		
+		if WukongMenu.combo.smartCombo then
+			if GetDistanceSqr(unit) > wSOW:MyRange(unit) * wSOW:MyRange(unit) then
+				CastE(unit)
+				wSOW:RegisterAfterAttackCallback(CastQ)
 			else
-				ArrangePriorities()
-			end
-		---<
-	---<
-	--- Main Menu ---
-end
--- / Menu Function / --
-
--- / Full Combo Function / --
-function FullCombo()
-	--- Combo While Not Channeling --
-	--->
-		if not isChanneling("Spell4") then
-			SkillR.castingUlt = false
-		end
-		if not Target and attackCast then
-			attackCast = false
-		end
-		if not isChanneling("Spell4") and not SkillR.castingUlt then
-			if Target then
-				if WukongMenu.combo.comboOrbwalk then
-					OrbWalking(Target)
-				end
-				if WukongMenu.combo.comboItems then
-					UseItems(Target)
-				end
-				if not SkillR.castingUlt and ((not attackCast and WukongMenu.combo.smartCombo) or not WukongMenu.combo.smartCombo) then
-					CastE(Target)
-					if not SkillE.ready then
-						CastQ(Target)
-					end
-					if not WukongMenu.combo.mecUlt then
-						if GetDistance(Target) <= SkillR.range then
-							CastR(Target)
-						end
-					end
-				end
-			else
-				if WukongMenu.combo.comboOrbwalk then
-					moveToCursor()
+				wSOW:RegisterAfterAttackCallback(CastQ)
+				if not SpellQ.ready then
+					DelayAction(function()
+									wSOW:RegisterAfterAttackCallback(CastE)
+								end, 0.3)
 				end
 			end
-		end
-	---<
-	--- Combo While Not Channeling --
-end
--- / Full Combo Function / --
-
--- / Harass Combo Function / --
-function HarassCombo()
-	--- Smart Harass --
-	--->
-		if Target then
-			if WukongMenu.harass.harassOrbwalk then
-				OrbWalking(Target)
-			end
-			--- Harass Mode 1 E+Q+W ---
-			if WukongMenu.harass.hMode == 1 then
-				if WukongMenu.harass.wEscape then
-					if SkillW.ready then
-						CastE(Target)
-						if not SkillE.ready then CastQ(Target) end
-						if not SkillQ.ready and not SkillE.ready then CastSpell(_W) end
-					end
-				else
-					CastE(Target)
-					if not SkillE.ready then CastQ(Target) end
-				end
-			end
-			--- Harass Mode 1 ---
-			--- Harass Mode 2 E+W ---
-			if WukongMenu.harass.hMode == 2 then
-				if WukongMenu.harass.wEscape then
-					if SkillW.ready then
-						CastE(Target)
-						if not SkillE.ready then CastSpell(_W) end
-					end
-				else
-					CastE(Target)
-				end
-			end
-			--- Harass Mode 2 ---
-			--- Harass Mode 3 Q+E+W ---
-			if WukongMenu.harass.hMode == 3 then
-				if WukongMenu.harass.wEscape then
-					if SkillW.ready then
-						CastQ(Target)
-						if not SkillQ.ready then CastE(Target) end
-						if not SkillQ.ready and not SkillE.ready then CastSpell(_W) end
-					end
-				else
-					CastQ(Target)
-					if not SkillQ.ready then CastE(Target) end
-				end
-			end
-			--- Harass Mode 3 ---
 		else
-			if WukongMenu.harass.harassOrbwalk then
-				moveToCursor()
+			if GetDistanceSqr(unit) > wSOW:MyRange(unit) * wSOW:MyRange(unit) then
+				CastE(unit)
+				CastQ(unit)
+			else
+				CastQ(unit)
+				if not SpellQ.ready then
+					CastE(unit)
+				end
 			end
 		end
-	---<
-	--- Smart Harass ---
-end
--- / Harass Combo Function / --
 
--- / Farm Function / --
-function Farm()
-	--->
-		for _, minion in pairs(enemyMinions.objects) do
-			--- Minion Damages ---
-			local qMinionDmg 	= getDmg("Q",  minion, myHero)
-			local eMinionDmg	= getDmg("E",  minion, myHero)
-			local aaMinionDmg	= getDmg("AD", minion, myHero)
-			--- Minion Damages ---
-			--- Minion Keys ---
-			local qFarmKey = WukongMenu.farming.qFarm
-			local eFarmKey = WukongMenu.farming.eFarm
-			--- Minion Keys ---
-			--- Farming Minions ---
-			if ValidTarget(minion) then
-				if GetDistance(minion) <= SkillQ.range then
-					if qFarmKey and eFarmKey then
-						if SkillQ.ready and SkillE.ready then
-							if minion.health <= (eMinionDmg + qMinionDmg) and minion.health > qMinionDmg then
-								CastE(minion)
-								CastQ(minion)
-							end
-						elseif SkillE.ready and not SkillQ.ready then
-							if minion.health <= (eMinionDmg) then
-								CastE(minion)
-							end
-						elseif SkillQ.ready and not SkillE.ready then
-							if minion.health <= (qMinionDmg) then
-								CastQ(minion)
-							end
-						elseif GetDistance(minion) <= myHero.range and not SkillQ.ready and not SkillE.ready then
-							if minion.health <= aaMinionDmg then
-								myHero:Attack(minion)
-							end
-						end
-					elseif qFarmKey and not eFarmKey then
-						if SkillQ.ready then
-							if minion.health <= (qMinionDmg) then
-								CastQ(minion)
-							end
-						elseif GetDistance(minion) <= myHero.range and not SkillQ.ready then
-							if minion.health <= aaMinionDmg then
-								myHero:Attack(minion)
-							end
-						end
+		if WukongMenu.combo.useUlt ~= 3 then
+			if WukongMenu.combo.useUlt ~= 1 then
+				if GetDistanceSqr(unit) <= SpellR.range * SpellR.range and not myHero:GetSpellData(_R).name == "monkeykingspintowinleave" then
+					CastSpell(_R)
+				end
+			else
+				if unit.health < SpellR.dmg and GetDistanceSqr(unit) <= SpellR.range * SpellR.range and not myHero:GetSpellData(_R).name == "monkeykingspintowinleave" then
+					CastSpell(_R)
+				end
+			end
+		end
+	end
+end
+
+function Harass(unit)
+	if ValidTarget(unit) and unit ~= nil and unit.type == myHero.type then
+		if not isLow('Mana', myHero, WukongMenu.harass.harassMana) then
+			--- Harass Mode 1 E + Q ---
+			if WukongMenu.harass.hMode == 1 then
+				if WukongMenu.harass.smartHarass then
+					if GetDistanceSqr(unit) > wSOW:MyRange(unit) * wSOW:MyRange(unit) then
+						CastE(unit)
+					else
+						wSOW:RegisterAfterAttackCallback(CastE)
 					end
-				elseif (GetDistance(minion) > SkillQ.range) and (GetDistance(minion) <= SkillE.range) then
-					if eFarmKey then
-						if minion.health <= eMinionDmg then
-							CastE(minion)
-						end
+					wSOW:RegisterAfterAttackCallback(CastQ)
+				else
+					CastE(unit)
+					CastQ(unit)
+				end
+			end
+
+			--- Harass Mode 2 E ---
+			if WukongMenu.harass.hMode == 2 then
+				if WukongMenu.harass.smartHarass then
+					if GetDistanceSqr(unit) > wSOW:MyRange(unit) * wSOW:MyRange(unit) then
+						CastE(unit)
+					else
+						wSOW:RegisterAfterAttackCallback(CastE)
+					end
+				else
+					CastE(unit)
+				end
+			end
+
+			--- Harass Mode 3 Q + E ---
+			if WukongMenu.harass.hMode == 3 then
+				if WukongMenu.harass.smartHarass then
+					wSOW:RegisterAfterAttackCallback(CastQ)
+					if not SpellQ.ready then
+						wSOW:RegisterAfterAttackCallback(CastE)
+					end
+				else
+					if GetDistanceSqr(unit) < wSOW:MyRange(unit) * wSOW:MyRange(unit) then
+						CastQ(unit)
+						CastE(unit)
 					end
 				end
 			end
-			break									
 		end
-		--- Farming Minions ---
-	---<
+	end
 end
--- / Farm Function / --
 
--- / Last Hit Function / --
-local nextTick = 0
-function lastHit()
+function Farm()
 	enemyMinions:update()
-	if GetTickCount() > nextTick then
-		myHero:MoveTo(mousePos.x, mousePos.z)
-	end						
-	for index, minion in pairs(enemyMinions.objects) do
-		if ValidTarget(minion) then
-			local aaMinionDmg = getDmg("AD",minion,myHero)
-			if minion.health <= aaMinionDmg and GetDistance(minion) <= (myHero.range + SkillE.range) and GetTickCount() > nextTick then
-				myHero:Attack(minion)
-				nextTick = GetTickCount() + 450
+	for i, minion in pairs(enemyMinions.objects) do
+		if ValidTarget(minion) and minion ~= nil then
+			if minion.health <= SpellQ.dmg and not wSOW:CanAttack() and WukongMenu.farming.qFarm and not isLow('Mana', myHero, WukongMenu.farming.FarmMana) then
+				CastQ(minion)
+			end
+			if minion.health <= SpellE.dmg and (GetDistanceSqr(minion) > wSOW:MyRange(minion) * wSOW:MyRange(minion) or not wSOW:CanAttack()) and WukongMenu.farming.eFarm and not isLow('Mana', myHero, WukongMenu.farming.FarmMana) then
+				CastE(minion)
 			end
 		end		 
 	end
 end
--- / Last Hit Function / --
 
--- / Clear Function / --
-function MixedClear()
-	--- Jungle Clear ---
-	--->
-		if WukongMenu.clear.JungleFarm then
-			local JungleMob = GetJungleMob()
-			if JungleMob ~= nil then
-				if WukongMenu.clear.clearOrbJ then
-					OrbWalking(JungleMob)
-				end
-				if (not attackCast and WukongMenu.clear.smartClear) or not WukongMenu.clear.smartClear then
-					if WukongMenu.clear.clearQ and SkillQ.ready and GetDistance(JungleMob) <= SkillQ.range then
-						CastQ(JungleMob)
-					end
-					if WukongMenu.clear.clearE and SkillE.ready and GetDistance(JungleMob) <= SkillE.range then
-						CastE(JungleMob)
-					end
-				end
-				if tmtReady and GetDistance(JungleMob) <= 185 then CastSpell(tmtSlot) end
-				if hdrReady and GetDistance(JungleMob) <= 185 then CastSpell(hdrSlot) end
-			else
-				if attackCast then
-					attackCast = false
-				end
-				if WukongMenu.clear.clearOrbJ then
-					moveToCursor()
-				end
-			end
-		end
-	---<
-	--- Jungle Clear ---
-	--- Lane Clear ---
-	--->
-		if WukongMenu.clear.ClearLane then
-			for _, minion in pairs(enemyMinions.objects) do
-				if  ValidTarget(minion) then
-					if WukongMenu.clear.clearOrbM then
-						OrbWalking(minion)
-					end
-					if (not attackCast and WukongMenu.clear.smartClear) or not WukongMenu.clear.smartClear then
-						if WukongMenu.clear.clearQ and SkillQ.ready and GetDistance(minion) <= SkillQ.range then
-							CastQ(minion)
-						end
-						if WukongMenu.clear.clearE and SkillE.ready and GetDistance(minion) <= SkillE.range then 
-							CastE(minion)
-						end
-					end
-					if tmtReady and GetDistance(minion) <= 185 then CastSpell(tmtSlot) end
-					if hdrReady and GetDistance(minion) <= 185 then CastSpell(hdrSlot) end
+function JungleClear()
+	if WukongMenu.jungle.jungleKey then
+		local JungleMob = GetJungleMob()
+		if JungleMob ~= nil then
+			if WukongMenu.jungle.jungleQ and GetDistanceSqr(JungleMob) <= SpellQ.range * SpellQ.range then
+				if WukongMenu.jungle.smartClear then
+					wSOW:RegisterAfterAttackCallback(CastQ)
 				else
-					if attackCast then
-						attackCast = false
-					end
-					if WukongMenu.clear.clearOrbM then
-						moveToCursor()
-					end
+					CastQ(unit)
 				end
 			end
-		end
-	---<
-	--- Lane Clear ---
-end
--- / Clear Function / --
-
--- / Casting Q Function / --
-function CastQ(enemy)
-	--- Dynamic Q Cast ---
-	--->
-		if (not SkillQ.ready or (GetDistance(enemy) > SkillQ.range)) then
-			return false
-		end
-		if (not attackCast and WukongMenu.combo.smartCombo) or not WukongMenu.combo.smartCombo then
-			if ValidTarget(enemy) then 
-				CastSpell(_Q)
-				myHero:Attack(enemy)
-				
-				return true
-			end
-		end
-		return false
-	---<
-	--- Dynamic Q Cast ---
-end
--- / Casting Q Function / --
-
--- / Casting E Function / --
-function CastE(enemy)
-	--- Dynamic E Cast ---
-	--->
-		if (not SkillE.ready or (GetDistance(enemy) > SkillE.range)) then
-			return false
-		end
-		if (not attackCast and WukongMenu.combo.smartCombo) or not WukongMenu.combo.smartCombo then
-			if ValidTarget(enemy) then 
-				if VIP_USER then
-					Packet("S_CAST", {spellId = _E, targetNetworkId = enemy.networkID}):send()
-					return true
+			if WukongMenu.jungle.jungleE and GetDistanceSqr(JungleMob) <= SpellE.range * SpellE.range then
+				if WukongMenu.jungle.smartClear then
+					DelayAction(function()
+									if GetDistanceSqr(JungleMob) > wSOW:MyRange(JungleMob) * wSOW:MyRange(JungleMob) and not SpellQ.ready then
+										CastE(JungleMob)
+									else
+										wSOW:RegisterAfterAttackCallback(CastE)
+									end
+								end, 0.3)
 				else
-					CastSpell(_E, enemy)
-					return true
+					CastE(JungleMob)
 				end
-			end
-		end
-		return false
-	---<
-	--- Dynamic E Cast ---
-end
--- / Casting E Function / --
-
--- / Casting R Function / --
-function CastR(enemy)
-	--- Dynamic R Cast ---
-	--->
-		if (SkillQ.ready or SkillE.ready or (GetDistance(enemy) > SkillR.range)) or not SkillR.ready then
-			return false
-		end
-		if ValidTarget(enemy) then
-			CastSpell(_R)
-			SkillR.castingUlt = true
-		end
-	---<
-	--- Dymanic R Cast --
-end
--- / Casting R Function / --
-
--- / Use Items Function / --
-function UseItems(enemy)
-	--- Use Items ---
-	--->
-		if not enemy then
-			enemy = Target
-		end
-		if ValidTarget(enemy) then
-			if dfgReady and GetDistance(enemy) <= 600 then CastSpell(dfgSlot, enemy) end
-			if hxgReady and GetDistance(enemy) <= 600 then CastSpell(hxgSlot, enemy) end
-			if bwcReady and GetDistance(enemy) <= 450 then CastSpell(bwcSlot, enemy) end
-			if brkReady and GetDistance(enemy) <= 450 then CastSpell(brkSlot, enemy) end
-			if tmtReady and GetDistance(enemy) <= 185 then CastSpell(tmtSlot) end
-			if hdrReady and GetDistance(enemy) <= 185 then CastSpell(hdrSlot) end
-		end
-	---<
-	--- Use Items ---
-end
--- / Use Items Function / --
-
-function UseConsumables()
-	--- Check if Zhonya/Wooglets Needed --
-	--->
-		if WukongMenu.misc.ZWItems and isLow('Wooglets') and Target and (znaReady or wgtReady) then
-			CastSpell((wgtSlot or znaSlot))
-		end
-	---<
-	--- Check if Zhonya/Wooglets Needed --
-	--- Check if HP Potions Needed --
-	--->
-		if WukongMenu.misc.aHP and isLow('Health') and not Items.HealthPot.inUse and (Items.HealthPot.ready or Items.FlaskPot.ready) then
-			CastSpell((Items.HealthPot.slot or Items.FlaskPot.slot))
-		end
-	---<
-	--- Check if HP Potions Needed --
-	--- Check if MP Potions Needed --
-	--->
-		if WukongMenu.misc.aMP and isLow('Mana') and not Items.ManaPot.inUse and (Items.ManaPot.ready or Items.FlaskPot.ready) then
-			CastSpell((Items.ManaPot.slot or Items.FlaskPot.slot))
-		end
-	---<
-	--- Check if MP Potions Needed --
-end	
-
--- / Auto Ignite Function / --
-function AutoIgnite(enemy)
-	--- Simple Auto Ignite ---
-	--->
-		if enemy.health <= iDmg and GetDistance(enemy) <= 600 then
-			if iReady then CastSpell(ignite, enemy) end
-		end
-	---<
-	--- Simple Auto Ignite ---
-end
--- / Auto Ignite Function / --
-
--- / Damage Calculation Function / --
-function DamageCalculation()
-	--- Calculate our Damage On Enemies ---
-	--->
- 		for i=1, heroManager.iCount do
-			local enemy = heroManager:GetHero(i)
-			if ValidTarget(enemy) then
-				dfgDmg, bftDmg, hxgDmg, bwcDmg, tmtDmg, hdrDmg, iDmg = 0, 0, 0, 0, 0, 0, 0
-				qDmg =		(SkillQ.ready and	getDmg("Q",			enemy, myHero) or 0)
-				eDmg =		(SkillE.ready and	getDmg("E",			enemy, myHero) or 0)
-				rDmg =							getDmg("R",			enemy, myHero) * 4
-				dfgDmg =	(dfgSlot and		getDmg("DFG",		enemy, myHero) or 0)
-				bftdmg =	(bftSlot and		getDmg("BLACKFIRE",	enemy, myHero) or 0)
-				hxgDmg =	(hxgSlot and		getDmg("HXG",		enemy, myHero) or 0)
-				bwcDmg =	(bwcSlot and		getDmg("BWC",		enemy, myHero) or 0)
-				tmtDmg =	(tmtSlot and		getDmg("TIAMAT",	enemy, myHero) or 0)
-				hdrDmg =	(tmtSlot and		getDmg("HYDRA",		enemy, myHero) or 0)
-				iDmg =		(ignite and			getDmg("IGNITE",	enemy, myHero) or 0)
-				
-				onspellDmg = bftDmg
-				itemsDmg = dfgDmg + hxgDmg + bwcDmg + tmtDmg + hdrDmg + iDmg + onspellDmg
-			end
-		end
-	---<
-	--- Calculate our Damage On Enemies ---
-end
--- / Damage Calculation Function / --
-
--- / KillSteal Function / --
-function KillSteal()
-	--- KillSteal ---
-	--->
-		if Target then
-			local distance = GetDistance(Target)
-			local health = Target.health
-			if health <= qDmg and SkillQ.ready and (distance < SkillQ.range) then
-				CastQ(Target)
-			elseif health <= eDmg and SkillE.ready and (distance < SkillE.range) then
-				CastE(Target)
-			elseif health <= (qDmg + eDmg) and SkillQ.ready and SkillE.ready and (distance < SkillE.range) then
-				CastE(Target)
-			elseif WukongMenu.killsteal.itemsKS then
-				if health <= (qDmg + eDmg + itemsDmg) and health > (qDmg + eDmg) then
-					if SkillQ.ready and SkillE.ready then
-						UseItems(Target)
-					end
-				end
-			end
-		end
-	---<
-	--- KillSteal ---
-end
--- / KillSteal Function / --
-
--- / Misc Functions / --
---- On Animation (Setting our last Animation) ---
---->
-	function OnAnimation(unit, animationName)
-		if unit.isMe and lastAnimation ~= animationName then 
-			lastAnimation = animationName
-			if (animationName == "Crit" or animationName == "Spell1") and not attackCast then
-				attackCast = true
-			elseif animationName:find("Attack") and attackCast then
-				attackCast = false
 			end
 		end
 	end
----<
---- On Animation (Setting our last Animation) ---
---- isChanneling Function (Checks if Animation is Channeling) ---
---->
-	function isChanneling(animationName)
-		if lastAnimation == animationName then
+end
+
+function CastQ(unit)
+	if unit == nil or not SpellQ.ready or (GetDistanceSqr(unit, myHero) > SpellQ.range * SpellQ.range) then
+		return false
+	end
+
+	if not VIP_USER or not WukongMenu.misc.cast.usePackets then
+		CastSpell(_Q, unit)
+	elseif VIP_USER and WukongMenu.misc.cast.usePackets then
+		Packet("S_CAST", { spellId = _Q, targetNetworkId = unit.networkID }):send()
+	end
+	myHero:Attack(unit)
+end
+
+function CastE(unit)
+	if unit == nil or not SpellE.ready or (GetDistanceSqr(unit) > SpellE.range * SpellE.range) then
+		return false
+	end
+
+	if not VIP_USER or not WukongMenu.misc.cast.usePackets then
+		CastSpell(_E, unit)
+	else
+		Packet("S_CAST", { spellId = _E, targetNetworkId = unit.networkID }):send()
+	end
+end
+
+function ArrangePriorities()
+	for i = 1, enemyCount do
+		local enemy = enemyTable[i].player
+		SetPriority(priorityTable.AD_Carry, enemy, 1)
+		SetPriority(priorityTable.AP, enemy, 2)
+		SetPriority(priorityTable.Support, enemy, 3)
+		SetPriority(priorityTable.Bruiser, enemy, 4)
+		SetPriority(priorityTable.Tank, enemy, 5)
+	end
+end
+
+function ArrangeTTPriorities()
+	for i = 1, enemyCount do
+		local enemy = enemyTable[i].player
+		SetPriority(priorityTable.AD_Carry, enemy, 1)
+		SetPriority(priorityTable.AP, enemy, 1)
+		SetPriority(priorityTable.Support, enemy, 2)
+		SetPriority(priorityTable.Bruiser, enemy, 2)
+		SetPriority(priorityTable.Tank, enemy, 3)
+	end
+end
+function SetPriority(table, hero, priority)
+	for i = 1, #table do
+		if hero.charName:find(table[i]) ~= nil then
+			TS_SetHeroPriority(priority, hero.charName)
+		end
+	end
+end
+
+function GetJungleMob()
+		for _, Mob in pairs(JungleFocusMobs) do
+			if ValidTarget(Mob, SpellQ.range) then return Mob end
+		end
+		for _, Mob in pairs(JungleMobs) do
+			if ValidTarget(Mob, SpellQ.range) then return Mob end
+		end
+	end
+
+function DmgCalc()
+	for i = 1, enemyCount do
+		local enemy = enemyTable[i].player
+		if ValidTarget(enemy) and enemy.visible then
+			SpellQ.dmg = (SpellQ.ready and getDmg("Q",		enemy, myHero	)) or 0
+			SpellE.dmg = (SpellE.ready and getDmg("E",		enemy, myHero	)) or 0
+			SpellR.dmg = (SpellR.ready and getDmg("R",		enemy, myHero, 3)) or 0
+			SpellI.dmg = (SpellI.ready and getDmg("IGNITE", enemy, myHero	)) or 0
+
+			if enemy.health < SpellQ.dmg then
+				enemyTable[i].indicatorText = "Q Kill"
+				enemyTable[i].ready = SpellQ.ready and SpellQ.manaUsage <= myHero.mana
+			elseif enemy.health < SpellQ.dmg + SpellI.dmg then
+				enemyTable[i].indicatorText = "Q + Ign Kill"
+				enemyTable[i].ready = SpellQ.ready and SpellI.ready and SpellQ.manaUsage <= myHero.mana
+			elseif enemy.health < SpellE.dmg then
+				enemyTable[i].indicatorText = "E Kill"
+				enemyTable[i].ready = SpellE.ready and SpellE.manaUsage <= myHero.mana
+			elseif enemy.health < SpellE.dmg + SpellI.dmg then
+				enemyTable[i].indicatorText = "E + Ign Kill"
+				enemyTable[i].ready = SpellE.ready and SpellI.ready and SpellE.manaUsage <= myHero.mana
+			elseif enemy.health < SpellR.dmg then
+				enemyTable[i].indicatorText = "R Kill"
+				enemyTable[i].ready = SpellR.ready and SpellR.manaUsage <= myHero.mana
+			elseif enemy.health < SpellR.dmg + SpellI.dmg then
+				enemyTable[i].indicatorText = "R + Ign Kill"
+				enemyTable[i].ready = SpellR.ready and SpellI.ready and SpellR.manaUsage <= myHero.mana
+			elseif enemy.health < SpellQ.dmg + SpellE.dmg then
+				enemyTable[i].indicatorText = "E + Q Kill"
+				enemyTable[i].ready = SpellQ.ready and SpellE.ready and SpellQ.manaUsage + SpellE.manaUsage <= myHero.mana
+			elseif enemy.health < SpellQ.dmg + SpellE.dmg + SpellI.dmg then
+				enemyTable[i].indicatorText = "E + Q + Ign Kill"
+				enemyTable[i].ready = SpellQ.ready and SpellE.ready and SpellI.ready and SpellQ.manaUsage + SpellE.manaUsage <= myHero.mana
+			elseif enemy.health < SpellQ.dmg + SpellE.dmg + SpellR.dmg then
+				enemyTable[i].indicatorText = "E + Q + R Kill"
+				enemyTable[i].ready = SpellQ.ready and SpellE.ready and SpellR.ready and SpellQ.manaUsage + SpellE.manaUsage + SpellR.manaUsage <= myHero.mana
+			elseif enemy.health < SpellQ.dmg + SpellE.dmg + SpellR.dmg + SpellI.dmg then
+				enemyTable[i].indicatorText = "E + Q + R + Ign Kill"
+				enemyTable[i].ready = SpellQ.ready and SpellE.ready and SpellR.ready and SpellI.ready and SpellQ.manaUsage + SpellE.manaUsage + SpellR.manaUsage <= myHero.mana
+			else
+				local dmgTotal = SpellQ.dmg + SpellE.dmg + SpellR.dmg
+				local hpLeft = math.round(enemy.health - dmgTotal)
+				local percentLeft = math.round(hpLeft / enemy.maxHealth * 100)
+
+				enemyTable[i].indicatorText = percentLeft .. "% Harass"
+				enemyTable[i].ready = SpellQ.ready and SpellE.ready and SpellR.ready
+			end
+
+			local enemyAD = getDmg("AD", myHero, enemy)
+
+			enemyTable[i].damageGettingText = enemy.charName.." kills me with "..math.ceil(myHero.health / enemyAD).." hits"
+		end
+	end
+end
+
+function KillSteal()
+	for i = 1, enemyCount do
+		local enemy = enemyTable[i].player
+		if ValidTarget(enemy) and enemy.visible then
+			if enemy.health < SpellQ.dmg and SpellQ.ready then
+				CastQ(enemy)
+			elseif enemy.health < SpellE.dmg and SpellE.ready then
+				CastE(enemy)
+			elseif enemy.health < SpellR.dmg and SpellR.ready and WukongMenu.ks.useUlt then
+				CastR(enemy)
+			elseif enemy.health < SpellQ.dmg + SpellE.dmg and SpellQ.ready and SpellE.ready then
+				CastE(enemy)
+			elseif enemy.health < SpellQ.dmg + SpellE.dmg + SpellR.dmg and SpellQ.ready and SpellE.ready and SpellR.ready and WukongMenu.ks.useUlt then
+				CastE(enemy)
+				DelayAction(function()
+								CastQ(enemy)
+							end, 0.3)
+			end
+
+			if WukongMenu.ks.autoIgnite then
+				AutoIgnite(enemy)
+			end
+		end
+	end
+end
+
+function AutoIgnite(unit)
+	if unit.health < SpellI.dmg and GetDistanceSqr(unit) <= SpellI.range * SpellI.range then
+		if SpellI.ready then
+			CastSpell(SpellI.variable, unit)
+		end
+	end
+end
+
+function isLow(what, unit, slider)
+	if what == 'Mana' then
+		if unit.mana < (unit.maxMana * (slider / 100)) then
+			return true
+		else
+			return false
+		end
+	elseif what == 'HP' then
+		if unit.health < (unit.maxHealth * (slider / 100)) then
 			return true
 		else
 			return false
 		end
 	end
----<
---- isChanneling Function (Checks if Animation is Channeling) ---
---- Get Jungle Mob Function by Apple ---
---->
-	function GetJungleMob()
-		for _, Mob in pairs(JungleFocusMobs) do
-			if ValidTarget(Mob, q1Range) then return Mob end
-		end
-		for _, Mob in pairs(JungleMobs) do
-			if ValidTarget(Mob, q1Range) then return Mob end
-		end
-	end
----<
---- Get Jungle Mob Function by Apple ---
---- Arrange Priorities 5v5 ---
---->
-	function ArrangePriorities()
-		for i, enemy in pairs(enemyHeroes) do
-			SetPriority(priorityTable.AD_Carry, enemy, 1)
-			SetPriority(priorityTable.AP, enemy, 2)
-			SetPriority(priorityTable.Support, enemy, 3)
-			SetPriority(priorityTable.Bruiser, enemy, 4)
-			SetPriority(priorityTable.Tank, enemy, 5)
-		end
-	end
----<
---- Arrange Priorities 5v5 ---
---- Arrange Priorities 3v3 ---
---->
-	function ArrangeTTPriorities()
-		for i, enemy in pairs(enemyHeroes) do
-			SetPriority(priorityTable.AD_Carry, enemy, 1)
-			SetPriority(priorityTable.AP, enemy, 1)
-			SetPriority(priorityTable.Support, enemy, 2)
-			SetPriority(priorityTable.Bruiser, enemy, 2)
-			SetPriority(priorityTable.Tank, enemy, 3)
-		end
-	end
----<
---- Arrange Priorities 3v3 ---
---- Set Priorities ---
---->
-	function SetPriority(table, hero, priority)
-		for i=1, #table, 1 do
-			if hero.charName:find(table[i]) ~= nil then
-				TS_SetHeroPriority(priority, hero.charName)
-			end
-		end
-	end
----<
---- Set Priorities ---
--- / Misc Functions / --
-
--- / On Send Packet Function / --
-function OnSendPacket(packet)
-	-- Block Packets if Channeling --
-	--->
-		for _, enemy in pairs(enemyHeroes) do
-			if isChanneling("Spell4") then
-				local packet = Packet(packet)
-				if packet:get('name') == 'S_CAST' and (packet:get('spellId') ~= SUMMONER_1 and packet:get('spellId') ~= SUMMONER_2) and packet:get('sourceNetworkId') == myHero.networkID then
-					if enemy and GetDistance(enemy) < SkillR.range then
-						packet:block()
-					end
-				end
-			end
-		end
-	---<
-	--- Block Packets if Channeling --
-end
--- / On Send Packet Function / --
-
--- / On Create Obj Function / --
-function OnCreateObj(obj)
-	--- All of Our Objects (CREATE) --
-	-->
-		if obj ~= nil then
-			if obj.name:find("Global_Item_HealthPotion.troy") then
-				if GetDistance(obj, myHero) <= 70 then
-					Items.HealthPot.inUse = true
-				end
-			end
-			if obj.name:find("Global_Item_ManaPotion.troy") then
-				if GetDistance(obj, myHero) <= 70 then
-					Items.ManaPot.inUse = true
-				end
-			end
-			if FocusJungleNames[obj.name] then
-				table.insert(JungleFocusMobs, obj)
-			elseif JungleMobNames[obj.name] then
-				table.insert(JungleMobs, obj)
-			end
-			if not Decoy.spellParticle.valid and obj.team ~= player.team and obj.name == Decoy.particleFound then
-				Decoy.spellParticle = obj
-				Decoy.particleFound = nil
-			end
-		end
-	---<
-	--- All of Our Objects (CREATE) --
-end
--- / On Create Obj Function / --
-
--- / On Delete Obj Function / --
-function OnDeleteObj(obj)
-	--- All of Our Objects (CLEAR) --
-	--->
-		if obj ~= nil then
-			if obj.name:find("Global_Item_HealthPotion.troy") then
-				Items.HealthPot.inUse = false
-			end
-			if obj.name:find("Global_Item_ManaPotion.troy") then
-				Items.ManaPot.inUse = false
-			end
-			for i, Mob in pairs(JungleMobs) do
-				if obj.name == Mob.name then
-					table.remove(JungleMobs, i)
-				end
-			end
-			for i, Mob in pairs(JungleFocusMobs) do
-				if obj.name == Mob.name then
-					table.remove(JungleFocusMobs, i)
-				end
-			end
-		end
-	--- All of Our Objects (CLEAR) --
-	---<
-end
---- All The Objects in The World Literally ---
--- / On Delete Obj Function / --
-
--- / Plugin On Draw / --
-function OnDraw()
-	--- Tick Manager Check ---
-	--->
-		if not TManager.onDraw:isReady() and WukongMenu.misc.uTM then return end
-	---<
-	--->
-	--- Drawing Our Ranges ---
-	--->
-		if not myHero.dead then
-			if not WukongMenu.drawing.disableAll then
-				if SkillQ.ready and WukongMenu.drawing.drawQ then 
-					DrawCircle(myHero.x, myHero.y, myHero.z, SkillQ.range, SkillQ.color)
-				end
-				if SkillW.ready and WukongMenu.drawing.drawW then
-					DrawCircle(myHero.x, myHero.y, myHero.z, SkillW.range, SkillW.color)
-				end
-				if SkillE.ready and WukongMenu.drawing.drawE then
-					DrawCircle(myHero.x, myHero.y, myHero.z, SkillE.range, SkillE.color)
-				end
-			end
-		end
-	---<
-	--- Drawing Our Ranges ---
-	--- Draw Enemy Target ---
-	--->
-		if Target then
-			if WukongMenu.drawing.drawTargetText then
-				DrawText("Targeting: " .. Target.charName, 12, 100, 100, colorText)
-			end
-		end
-	---<
-	--- Draw Enemy Target ---
-end
--- / Plugin On Draw / --
-
--- / OrbWalking Functions / --
---- Orbwalking Target ---
---->
-	function OrbWalking(Target)
-		if not isChanneling("Spell4") then
-			if TimeToAttack() and GetDistance(Target) <= myHero.range + GetDistance(myHero.minBBox) then
-				myHero:Attack(Target)
-			elseif heroCanMove() then
-				moveToCursor()
-			end
-		else
-			moveToCursor()
-		end
-	end
----<
---- Orbwalking Target ---
---- Check When Its Time To Attack ---
---->
-	function TimeToAttack()
-		return (GetTickCount() + GetLatency()*0.5 > lastAttack + lastAttackCD)
-	end
----<
---- Check When Its Time To Attack ---
---- Prevent AA Canceling ---
---->
-	function heroCanMove()
-		return (GetTickCount() + GetLatency()*0.5 > lastAttack + lastWindUpTime + 20)
-	end
----<
---- Prevent AA Canceling ---
---- Move to Mouse ---
---->
-	function moveToCursor()
-		if GetDistance(mousePos) > 1 or lastAnimation == "Idle1" then
-			local moveToPos = myHero + (Vector(mousePos) - myHero):normalized()*300
-			if not VIP_USER then
-				myHero:MoveTo(moveToPos.x, moveToPos.z)
-			else
-				Packet('S_MOVE', {x = moveToPos.x, y = moveToPos.z}):send()
-			end
-		end
-	end
----<
---- Move to Mouse ---
---- On Process Spell ---
---->
-	function OnProcessSpell(unit, spell)
-		--- Tick Manager Check ---
-		--->
-			if not TManager.onSpell:isReady() and WukongMenu.misc.uTM then return end
-		---<
-		--- Tick Manager Check ---
-		--- Orbwalker Checks ---
-		--->
-			if unit.isMe then
-				if spell.name:find("Attack") then
-					lastAttack = GetTickCount() - GetLatency()/2
-					lastWindUpTime = spell.windUpTime*1000
-					lastAttackCD = spell.animationTime*1000
-					if (not spell.name:find("MonkeyKingDoubleAttack") and not spell.name:find("MonkeyKingQAttack")) and attackCast then
-						attackCast = false
-					end
-				end
-			end
-		---<
-		--- Orbwalker Checks ---
-		--- Decoy Checks ---
-		--->
-			if WukongMenu.decoy.enableDecoy then
-				if unit.team ~= player.team and string.find(spell.name, "Basic") == nil then
-					avoidSpell, spellRadius, spellDelay, particleName = spellInfo(spell)
-					if avoidSpell then
-						if affectsMe(spell, spellRadius) or spell.target == myHero then
-							if particleName then
-								Decoy.particleFound = particleName
-							else
-								Decoy.spellCastTick = GetTickCount()
-								Decoy.minDelay = spellDelay
-							end
-						end
-					end
-				end
-			end
-		---<
-		--- Decoy Checks ---
-	end
----<
---- On Process Spell ---
--- / OrbWalking Functions / --
-
--- / FPS Manager Functions / --
-class 'TickManager'
---- TM Init Function ---
---->
-	function TickManager:__init(ticksPerSecond)
-		self.TPS = ticksPerSecond
-		self.lastClock = 0
-		self.currentClock = 0
-	end
----<
---- TM Init Function ---
---- TM Type Function ---
---->
-	function TickManager:__type()
-		return "TickManager"
-	end
----<
---- TM Init Function ---
---- Set TPS Function ---
---->
-	function TickManager:setTPS(ticksPerSecond)
-		self.TPS = ticksPerSecond
-	end
----<
---- Set TPS Function ---
---- Get TPS Function ---
---->
-	function TickManager:getTPS(ticksPerSecond)
-		return self.TPS
-	end
----<
---- Get TPS Function ---
---- TM Ready Function ---
---->
-	function TickManager:isReady()
-		self.currentClock = os.clock()
-		if self.currentClock < self.lastClock + (1 / self.TPS) then return false end
-		self.lastClock = self.currentClock
-		return true
-	end
----<
---- TM Ready Function ---
--- / FPS Manager Functions / --
-if VIP_USER then
-	-- / Lag Free Circles Functions / --
-	--- Draw Cicle Next Level Function ---
-	--->
-		function DrawCircleNextLvl(x, y, z, radius, width, color, chordlength)
-			radius = radius or 300
-			quality = math.max(8, round(180 / math.deg((math.asin((chordlength / (2 * radius)))))))
-			quality = 2 * math.pi / quality
-			radius = radius * .92
-			local points = {}
-			
-			for theta = 0, 2 * math.pi + quality, quality do
-				local c = WorldToScreen(D3DXVECTOR3(x + radius * math.cos(theta), y, z - radius * math.sin(theta)))
-				points[#points + 1] = D3DXVECTOR2(c.x, c.y)
-			end
-			
-			DrawLines2(points, width or 1, color or 4294967295)
-		end
-	---<
-	--- Draw Cicle Next Level Function ---
-	--- Round Function ---
-	--->
-		function round(num) 
-			if num >= 0 then return math.floor(num+.5) else return math.ceil(num-.5) end
-		end
-	---<
-	--- Round Function ---
-	--- Draw Cicle 2 Function ---
-	--->
-		function DrawCircle2(x, y, z, radius, color)
-			local vPos1 = Vector(x, y, z)
-			local vPos2 = Vector(cameraPos.x, cameraPos.y, cameraPos.z)
-			local tPos = vPos1 - (vPos1 - vPos2):normalized() * radius
-			local sPos = WorldToScreen(D3DXVECTOR3(tPos.x, tPos.y, tPos.z))
-			
-			if OnScreen({ x = sPos.x, y = sPos.y }, { x = sPos.x, y = sPos.y }) then
-				DrawCircleNextLvl(x, y, z, radius, 1, color, WukongMenu.drawing.lfc.CL) 
-			end
-		end
-	---<
-	--- Draw Cicle 2 Function ---
-	-- / Lag Free Circles Functions / --
 end
 
--- / Checks Function / --
-function Checks()
-	--- Tick Manager Check ---
-	--->
-		if not TManager.onTick:isReady() and WukongMenu.misc.uTM then return end
-	---<
-	--- Tick Manager Check ---
-	if VIP_USER then
-		--- LFC Checks ---
-		--->
-			if not WukongMenu.drawing.lfc.LagFree then 
-				_G.DrawCircle = _G.oldDrawCircle 
-			else
-				_G.DrawCircle = DrawCircle2
-			end
-		---<
-		--- LFC Checks ---
-	end
-	--- Updates & Checks if Target is Valid ---
-	--->
-		TargetSelector:update()
-		tsTarget = GetTarget()
-		if tsTarget and tsTarget.type == "obj_AI_Hero" then
-			Target = tsTarget
-		else
-			Target = nil
-		end
-	---<
-	--- Updates & Checks if Target is Valid ---	
-	--- Checks and finds Ignite ---
-	--->
-		if myHero:GetSpellData(SUMMONER_1).name:find("SummonerDot") then
-			ignite = SUMMONER_1
-		elseif myHero:GetSpellData(SUMMONER_2).name:find("SummonerDot") then
-			ignite = SUMMONER_2
-		end
-	---<
-	--- Checks and finds Ignite ---
-	--- Slots for Items ---
-	--->
-		rstSlot, ssSlot, swSlot, vwSlot =								GetInventorySlotItem(2045),
-																		GetInventorySlotItem(2049),
-																		GetInventorySlotItem(2044),
-																		GetInventorySlotItem(2043)
-		dfgSlot, hxgSlot, bwcSlot, brkSlot =							GetInventorySlotItem(3128),
-																		GetInventorySlotItem(3146),
-																		GetInventorySlotItem(3144),
-																		GetInventorySlotItem(3153)
-		Items.HealthPot.slot, Items.ManaPot.slot, Items.FlaskPot.slot =	GetInventorySlotItem(2003),
-																		GetInventorySlotItem(2004),
-																		GetInventorySlotItem(2041)
-		znaSlot, wgtSlot, bftSlot =										GetInventorySlotItem(3157),
-																		GetInventorySlotItem(3090),
-																		GetInventorySlotItem(3188)
-		tmtSlot, hdrSlot =												GetInventorySlotItem(3077),
-																		GetInventorySlotItem(3074)
-	---<
-	--- Slots for Items ---
-	--- Checks if Spells are Ready ---
-	--->
-		SkillQ.ready = (myHero:CanUseSpell(_Q) == READY)
-		SkillW.ready = (myHero:CanUseSpell(_W) == READY)
-		SkillE.ready = (myHero:CanUseSpell(_E) == READY)
-		SkillR.ready = (myHero:CanUseSpell(_R) == READY)
-		iReady = (ignite ~= nil and myHero:CanUseSpell(ignite) == READY)
-	---<
-	--- Checks if Active Items are Ready ---
-	--->
-		dfgReady = (dfgSlot ~= nil and myHero:CanUseSpell(dfgSlot) == READY)
-		hxgReady = (hxgSlot ~= nil and myHero:CanUseSpell(hxgSlot) == READY)
-		bwcReady = (bwcSlot ~= nil and myHero:CanUseSpell(bwcSlot) == READY)
-		brkReady = (brkSlot ~= nil and myHero:CanUseSpell(brkSlot) == READY)
-		znaReady = (znaSlot ~= nil and myHero:CanUseSpell(znaSlot) == READY)
-		wgtReady = (wgtSlot ~= nil and myHero:CanUseSpell(wgtSlot) == READY)
-		bftReady = (bftSlot ~= nil and myHero:CanUseSpell(bftSlot) == READY)
-		tmtReady = (tmtSlot ~= nil and myHero:CanUseSpell(tmtSlot) == READY)
-		hdrReady = (hdrSlot ~= nil and myHero:CanUseSpell(hdrSlot) == READY)
-	---<
-	--- Checks if Items are Ready ---
-	--- Checks if Health Pots / Mana Pots are Ready ---
-	--->
-		Items.HealthPot.ready	= (Items.HealthPot.slot	~= nil and myHero:CanUseSpell(Items.HealthPot.slot)	== READY)
-		Items.ManaPot.ready		= (Items.ManaPot.slot	~= nil and myHero:CanUseSpell(Items.ManaPot.slot)	== READY)
-		Items.FlaskPot.ready	= (Items.FlaskPot.slot	~= nil and myHero:CanUseSpell(Items.FlaskPot.slot)	== READY)
-	---<
-	--- Checks if Health Pots / Mana Pots are Ready ---	
-	--- Updates Minions ---
-	--->
-		enemyMinions:update()
-	---<
-	--- Updates Minions ---
-	--- Setting Cast of Ult ---
-	--->
-		if SkillR.ready then SkillR.castingUlt = false end
-		if WukongMenu.combo.mecUlt then
-			if CountEnemyHeroInRange(SkillR.range) >=  WukongMenu.combo.amecUlt then
-				CastR(Target)
-			end
-		end
-	---<
-	--- Setting Cast of Ult ---
-	--- Setting Auto-Decoy ---
-	--->
-		if (GetTickCount() - Decoy.spellCastTick >= Decoy.minDelay and GetTickCount() - Decoy.spellCastTick <= Decoy.maxDelay) or (Decoy.spellParticle.valid and GetDistanceSqr(Decoy.spellParticle) <= Decoy.maxParticleDistance) and SkillW.ready then 
-			CastSpell(_W, mousePos.x, mousePos.z) 
-		end
-	---<
-	--- Setting Auto-Decoy ---
-end
--- / Checks Function / --
-
--- / isEnemy Function / --
-function isEnemy(charName)
-	local onEnemyTeam = false
-	local hero
-	local i = 1
-	
-	while i <= heroManager.iCount and not onEnemyTeam do
-		hero = heroManager:GetHero(i)
-		if hero.team ~= player.team and hero.charName == charName then onEnemyTeam = true end
-		i = i + 1
-	end
-		
-	return onEnemyTeam
-end
--- / isEnemy Function / --
-
--- / decoyClean Function / --
-function decoyClean()
-	local i = 1
-	
-	while i <= #Decoy.spellList do
-		if not isEnemy(Decoy.spellList[i].charName) then
-			table.remove(Decoy.spellList, i)
-		else 
-			i = i + 1 
-		end
-	end
-end
--- / decoyClean Function / --
-
--- / checkType Function / --
-function checkType(spellType)
-	local typeEnabled = false
-	
-	if spellType == "Stun / Snare" then
-		typeEnabled = WukongMenu.decoy.StunSnare
-	elseif spellType == "Knockback" then
-		typeEnabled = WukongMenu.decoy.Knockback
-	elseif spellType == "Knockup" then
-		typeEnabled = WukongMenu.decoy.Knockup
-	elseif spellType == "Fear" then
-		typeEnabled = WukongMenu.decoy.Fear
-	elseif spellType == "Slow" then
-		typeEnabled = WukongMenu.decoy.Slow
-	elseif spellType == "Silence" then
-		typeEnabled = WukongMenu.decoy.Silence
-	elseif spellType == "Taunt" then
-		typeEnabled = WukongMenu.decoy.Taunt
-	elseif spellType == "Blind" then
-		typeEnabled = WukongMenu.decoy.Blind
-	elseif spellType == "Massive Damage" then
-		typeEnabled = WukongMenu.decoy.MassiveDamage
-	end
-	
-	return typeEnabled
-end
--- / checkType Function / --
-
--- / spellInfo Function / --
-function spellInfo(spell)
-	local detected = false
-	local avoidSpell = false
-	local radius
-	local spellDelay
-	local particleName
-	local i = 1
-	
-	while i <= #Decoy.spellList and not detected do
-		if Decoy.spellList[i].spellName == spell.name then
-			detected = true
-			radius = Decoy.spellList[i].radius
-			spellDelay = Decoy.spellList[i].delay
-			particleName = Decoy.spellList[i].missileName
-			avoidSpell = checkType(Decoy.spellList[i].spellType)
-		end
-		i = i + 1
-	end
-	
-	return avoidSpell, radius, spellDelay, particleName
-end
--- / spellInfo Function / --
-
--- / affectsMe Function / --
-function affectsMe(spell, spellRadius)
-	local willAffectMe
-	
-	if spellRadius == 0 then
-		willAffectMe = GetDistanceSqr(spell.endPos) <= Decoy.targetedDistanceBuffer
-	else
-		willAffectMe = GetDistanceSqr(spell.endPos) <= spellRadius*spellRadius
-	end
-	
-	return willAffectMe
-end
--- / affectsMe Function / --
-
--- / isLow Function / --
-function isLow(Name)
-	--- Check Zhonya/Wooglets HP ---
-	--->
-		if Name == 'Zhonya' or Name == 'Wooglets' then
-			if (myHero.health / myHero.maxHealth) <= (WukongMenu.misc.ZWHealth / 100) then
+function InEnemyTurretRange(unit)
+	for i, turret in pairs(GetTurrets()) do
+		if turret ~= nil and turret.team ~= myHero.team then
+			if GetDistanceSqr(unit) <= turret.range * turret.range then
 				return true
-			else
-				return false
 			end
 		end
-	---<
-	--- Check Zhonya/Wooglets HP ---
-	--- Check Potions HP ---
-	--->
-		if Name == 'Health' then
-			if (myHero.health / myHero.maxHealth) <= (WukongMenu.misc.pHealth / 100) then
-				return true
-			else
-				return false
-			end
-		end
-	---<
-	--- Check Potions HP ---
-	--- Check Potions MP ---
-	--->
-		if Name == 'Mana' then
-			if (myHero.mana / myHero.maxMana) <= (WukongMenu.misc.pMana / 100) then
-				return true
-			else
-				return false
-			end
-		end
-	---<
-	--- Check Potions MP ---
+	end
+	return false
 end
--- / isLow Function / --
-
--- / GetTarget Function / --
-function GetTarget()
-	TargetSelector:update()
-
-	if _G.MMA_Target ~= nil and _G.MMA_Target.type:lower() == "obj_ai_hero" then return _G.MMA_Target end
-	if _G.AutoCarry and _G.AutoCarry.Crosshair and _G.AutoCarry.Attack_Crosshair and _G.AutoCarry.Attack_Crosshair.target and _G.AutoCarry.Attack_Crosshair.target.type == myHero.type then return _G.AutoCarry.Attack_Crosshair.target end
-
-	return TargetSelector.target
-end
--- / GetTarget Function / --
