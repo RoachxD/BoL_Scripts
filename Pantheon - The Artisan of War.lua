@@ -1,4 +1,4 @@
-local version = "4.06"
+local version = "4.07"
 --[[
 
 
@@ -27,6 +27,7 @@ local version = "4.06"
 				- Fixed E before W Bug
 				- Added AA Range on Draw
 				- Fixed 'InTurretRange' Function
+				- Fixed Spamming Errors
 
 			3.3
 				- Added Support for SAC Target Selector
@@ -557,7 +558,7 @@ function OnDeleteObj(obj)
 end
 
 function OnDraw()
-	wSOW:DrawAARange(1, ARGB(255, 0, 189, 22))
+	pSOW:DrawAARange(1, ARGB(255, 0, 189, 22))
 	if not myHero.dead then
 		if not PanthMenu.drawing.mDraw then
 			if PanthMenu.drawing.qDraw and SpellQ.ready then
