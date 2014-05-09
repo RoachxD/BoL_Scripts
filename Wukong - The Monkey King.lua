@@ -1,4 +1,4 @@
-local version = "3.02"
+local version = "3.03"
 --[[
 
 
@@ -24,6 +24,7 @@ local version = "3.02"
 				- Fixed Typo
 				- Added AA Range on Draw
 				- Fixed 'InTurretRange' Function
+				- Fixed Spammine Errors
 
 			2.6
 				- Added Support for SAC and MMA Target Selector
@@ -853,7 +854,7 @@ function KillSteal()
 			elseif enemy.health < SpellE.dmg and SpellE.ready then
 				CastE(enemy)
 			elseif enemy.health < SpellR.dmg and SpellR.ready and WukongMenu.ks.useUlt then
-				CastR(enemy)
+				CastSpell(_R)
 			elseif enemy.health < SpellQ.dmg + SpellE.dmg and SpellQ.ready and SpellE.ready then
 				CastE(enemy)
 			elseif enemy.health < SpellQ.dmg + SpellE.dmg + SpellR.dmg and SpellQ.ready and SpellE.ready and SpellR.ready and WukongMenu.ks.useUlt then
