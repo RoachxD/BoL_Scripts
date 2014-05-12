@@ -1,4 +1,4 @@
-local MF_Ver = "1.022"
+local MF_Ver = "1.023"
 --[[
 
 
@@ -411,7 +411,7 @@ function CheckDashes()
 		if not IsDashing or not CanHit or GetDistanceSqr(myHero, Position) > Spells.E.range*Spells.E.range or not Spells.E.ready then return end
 
 		if Config.Extras.usePackets then
-			Packet("S_CAST", {spellId = Spells.E.key, toX = Position.x, toY = Position.z, fromX = Position.x, fronY = Position.z}):send()
+			Packet("S_CAST", {spellId = Spells.E.key, toX = Position.x, toY = Position.z, fromX = Position.x, fromY = Position.z}):send()
 		else
 			CastSpell(Spells.E.key, Position.x, Position.z)
 		end
