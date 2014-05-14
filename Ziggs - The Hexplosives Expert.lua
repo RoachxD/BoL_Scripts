@@ -1,4 +1,4 @@
-local Ziggs_Ver = "1.045"
+local Ziggs_Ver = "1.046"
 --[[
 
 
@@ -24,6 +24,7 @@ local Ziggs_Ver = "1.045"
 			- Fixed Auto-Ignite not Working Properly
 			- Updated Variables, some of them were missing in the Tables
 			- Fixed MEC Ult Errors
+			- Fixed Spamming Errors (after re-load)
 
 		1.03
 			- Added 'Alert Option' for Ult if an enemy is Killable
@@ -362,7 +363,7 @@ function Variables()
 		local object = objManager:getObject(i)
 		if object and object.valid and not object.dead then
 			if FocusJungleNames[object.name] then
-				JunglefocusMobs[#JungleFocusMobs+1] = object
+				JungleFocusMobs[#JungleFocusMobs+1] = object
 			elseif JungleMobNames[object.name] then
 				JungleMobs[#JungleMobs+1] = object
 			end
