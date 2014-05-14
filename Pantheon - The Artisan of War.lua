@@ -1,4 +1,4 @@
-local version = "4.07"
+local version = "4.08"
 --[[
 
 
@@ -28,6 +28,7 @@ local version = "4.07"
 				- Added AA Range on Draw
 				- Fixed 'InTurretRange' Function
 				- Fixed Spamming Errors
+				- Fixed Spamming Errors (after re-load)
 
 			3.3
 				- Added Support for SAC Target Selector
@@ -437,7 +438,7 @@ function Variables()
 		local object = objManager:getObject(i)
 		if object and object.valid and not object.dead then
 			if FocusJungleNames[object.name] then
-				JunglefocusMobs[#JungleFocusMobs+1] = object
+				JungleFocusMobs[#JungleFocusMobs+1] = object
 			elseif JungleMobNames[object.name] then
 				JungleMobs[#JungleMobs+1] = object
 			end
