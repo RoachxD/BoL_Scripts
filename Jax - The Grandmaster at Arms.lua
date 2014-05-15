@@ -1,4 +1,4 @@
-local version = "1.16"
+local version = "1.17"
 --[[
 
 
@@ -21,6 +21,8 @@ local version = "1.16"
 				- Added Q Options in the Misc Menu
 				- Added Ward-Jump
 				- Improved & Fixed Ward-Jump Problems
+				- Improved Harass Function
+				- Added Q toggle in Harass
 
 			1.0
 				- First Release
@@ -321,6 +323,7 @@ function Menu()
 	
 	JaxMenu:addSubMenu("["..myHero.charName.."] - Harass Settings", "harass")
 		JaxMenu.harass:addParam("harassKey", "Harass key (C)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("C")) -- Done
+		JaxMenu.harass:addParam("useQ", "Use "..SpellQ.name.." (Q) in Harass", SCRIPT_PARAM_ONOFF, true)
 		JaxMenu.harass:addParam("useE", "Use "..SpellE.name.." (E) in Harass", SCRIPT_PARAM_ONOFF, true) -- Done
 		JaxMenu.harass:addParam("harassMana", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 50, 0, 100, 0) -- Done
 		JaxMenu.harass:permaShow("harassKey")
@@ -539,13 +542,19 @@ end
 function Harass(unit)
 	if ValidTarget(unit) and unit ~= nil and unit.type == myHero.type then
 		if not isLow('Mana', myHero, JaxMenu.harass.harassMana) then
-			if GetDistanceSqr(unit, myHero) <= SpellQ.range * SpellQ.range then
+			if GetDistanceSqr(unit, myHero) <= SpellQ.range * SpellQ.range and JaxMenu.harass.useQ and SpellQ.ready then
 				CastSpell(_W)
+			elseif not JaxMenu.harass.useQ then
+				jSOW:RegisterAfterAttackCallback(function()
+												CastSpell(_W)
+											end)
 			end
 			if JaxMenu.harass.useE then
 				CastE(unit)
 			end
-			CastQ(unit)
+			if JaxMenu.harass.useQ then
+				CastQ(unit)
+			end
 		end
 	end
 end
@@ -633,7 +642,7 @@ function wardJump(x, y)
 					MousePos = getMousePos()
 					if GetDistanceSqr(obj, MousePos) <= WardDistance * WardDistance then
 						CastSpell(_Q, obj)
-						SpellW_.lastJump = os.clock + 2
+						SpellW_.lastJump = os.clock() + 2
 					 end
 				end
 			end
@@ -643,13 +652,13 @@ function wardJump(x, y)
 			if Wards.TrinketWard.ready then
 				SpellW_.itemSlot = ITEM_7
 			elseif Wards.RubySightStone.ready then
-				SpellW_.itemSlot = rstSlot
+				SpellW_.itemSlot = Wards.RubySightStone.slot
 			elseif Wards.SightStone.ready then 
-				SpellW_.itemSlot = ssSlot
+				SpellW_.itemSlot = Wards.SightStone.slot
 			elseif Wards.SightWard.ready then
-				SpellW_.itemSlot = swSlot
+				SpellW_.itemSlot = Wards.SightWard.slot
 			elseif Wards.VisionWard.ready then
-				SpellW_.itemSlot = vwSlot
+				SpellW_.itemSlot = Wards.VisionWard.slot
 			end
 			
 			if SpellW_.itemSlot ~= nil then
