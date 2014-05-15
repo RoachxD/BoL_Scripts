@@ -1,4 +1,4 @@
-local version = "1.14"
+local version = "1.15"
 --[[
 
 
@@ -20,6 +20,7 @@ local version = "1.14"
 				- Fixed Target Selector Range
 				- Added Q Options in the Misc Menu
 				- Added Ward-Jump
+				- Improved & Fixed Ward-Jump Problems
 
 			1.0
 				- First Release
@@ -638,7 +639,7 @@ function wardJump(x, y)
 			end
 		end
 
-		if os.clock >= SpellW_.lastJump then
+		if os.clock() >= SpellW_.lastJump then
 			if Items.TrinketWard.ready then
 				SpellW_.itemSlot = ITEM_7
 			elseif Items.RubySightStone.ready then
@@ -653,7 +654,7 @@ function wardJump(x, y)
 			
 			if SpellW_.itemSlot ~= nil then
 				CastItem(SpellW_.itemSlot, x, y)
-				SpellW_.lastJump = os.clock + 2
+				SpellW_.lastJump = os.clock() + 2
 				SpellW_.itemSlot = nil
 			end
 		end
