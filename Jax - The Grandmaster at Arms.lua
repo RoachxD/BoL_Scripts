@@ -1,4 +1,4 @@
-local version = "1.11"
+local version = "1.12"
 --[[
 
 
@@ -102,6 +102,7 @@ function OnTick()
 	HarassKey		= JaxMenu.harass.harassKey
 	FarmKey			= JaxMenu.farming.farmKey
 	JungleClearKey	= JaxMenu.jungle.jungleKey
+	WardJumpKey		= JaxMenu.misc.wardJump
 
 	if ComboKey then
 		Combo(Target)
@@ -118,6 +119,11 @@ function OnTick()
 
 	if JaxMenu.ks.killSteal then
 		KillSteal()
+	end
+	if WardJumpKey then
+		moveToCursor()
+		local WardPos = GetDistanceSqr(mousePos) <= SpellW_.range * SpellW_.range and mousePos or getMousePos()
+		wardJump(WardPos.x, WardPos.z)
 	end
 
 	if JaxMenu.misc.ult.Enable then
@@ -346,13 +352,14 @@ function Menu()
 		JaxMenu.drawing:addParam("eDraw", "Draw "..SpellE.name.." (E) Range", SCRIPT_PARAM_ONOFF, true) -- Done
 	
 	JaxMenu:addSubMenu("["..myHero.charName.."] - Misc Settings", "misc")
+		JaxMenu.misc:addParam("wardJump", "Ward Jump (G)", SCRIPT_PARAM_ONKEYDOWN, false)
 		JaxMenu.misc:addSubMenu("Spells - Misc Settings", "smisc")
 			JaxMenu.misc.smisc:addParam("stopChannel", "Interrupt Channeling Spells", SCRIPT_PARAM_ONOFF, true) -- Done
 		if VIP_USER then
 			JaxMenu.misc:addSubMenu("Spells - Cast Settings", "cast")
 				JaxMenu.misc.cast:addParam("usePackets", "Use Packets to Cast Spells", SCRIPT_PARAM_ONOFF, false) -- Done
 		end
-		JaxMenu.misc:addSubMenu("Spells - "..SpellQ.name.." (Q) Settings", "q"
+		JaxMenu.misc:addSubMenu("Spells - "..SpellQ.name.." (Q) Settings", "q")
 			JaxMenu.misc.q:addParam("howTo", "Use "..SpellQ.name.." (Q): ", SCRIPT_PARAM_LIST, 1, { "Always", "Only as a Gap-Closer" })
 		JaxMenu.misc:addSubMenu("Spells - "..SpellW.name.." (W) Settings", "w")
 			JaxMenu.misc.w:addParam("howTo", "Use "..SpellW.name.." (W): ", SCRIPT_PARAM_LIST, 2, { "After every AA", "After every third AA" })
@@ -697,6 +704,17 @@ function getMousePos(range)
 	local MousePos = Vector(mousePos.x, mousePos.y, mousePos.z)
 
 	return MyPos - (MyPos - MousePos):normalized() * SpellW_.range
+end
+
+function moveToCursor()
+	if GetDistance(mousePos) then
+		local moveToPos = myHero + (Vector(mousePos) - myHero):normalized()*300
+		if not VIP_USER then
+			myHero:MoveTo(moveToPos.x, moveToPos.z)
+		else
+			Packet('S_MOVE', {x = moveToPos.x, y = moveToPos.z}):send()
+		end
+	end		
 end
 
 function DmgCalc()
