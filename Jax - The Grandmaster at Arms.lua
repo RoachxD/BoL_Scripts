@@ -1,4 +1,4 @@
-local version = "1.12"
+local version = "1.13"
 --[[
 
 
@@ -472,11 +472,11 @@ function TickChecks()
 	Wards.SightWard.slot = GetInventorySlotItem(2044)
 	Wards.VisionWard.slot = GetInventorySlotItem(2043)
 
-	Items.TrinketWard.ready		= (myHero:CanUseSpell(ITEM_7) == READY and myHero:getItem(ITEM_7).id == 3340) or (myHero:CanUseSpell(ITEM_7) == READY and myHero:getItem(ITEM_7).id == 3350) or (myHero:CanUseSpell(ITEM_7) == READY and myHero:getItem(ITEM_7).id == 3361) or (myHero:CanUseSpell(ITEM_7) == READY and myHero:getItem(ITEM_7).id == 3362)
-	Items.RubySightStone.ready	= (rstSlot ~= nil and	myHero:CanUseSpell(Wards.RubySightStone.slot)	== READY)
-	Items.SightStone.ready		= (ssSlot ~= nil and	myHero:CanUseSpell(Wards.SightStone.slot)		== READY)
-	Items.SightWard.ready		= (swSlot ~= nil and	myHero:CanUseSpell(Wards.SightWard.slot)		== READY)
-	Items.VisionWard.ready		= (vwSlot ~= nil and	myHero:CanUseSpell(Wards.VisionWard.slot)		== READY)
+	Wards.TrinketWard.ready		= (myHero:CanUseSpell(ITEM_7) == READY and myHero:getItem(ITEM_7).id == 3340) or (myHero:CanUseSpell(ITEM_7) == READY and myHero:getItem(ITEM_7).id == 3350) or (myHero:CanUseSpell(ITEM_7) == READY and myHero:getItem(ITEM_7).id == 3361) or (myHero:CanUseSpell(ITEM_7) == READY and myHero:getItem(ITEM_7).id == 3362)
+	Wards.RubySightStone.ready	= (rstSlot ~= nil and	myHero:CanUseSpell(Wards.RubySightStone.slot)	== READY)
+	Wards.SightStone.ready		= (ssSlot ~= nil and	myHero:CanUseSpell(Wards.SightStone.slot)		== READY)
+	Wards.SightWard.ready		= (swSlot ~= nil and	myHero:CanUseSpell(Wards.SightWard.slot)		== READY)
+	Wards.VisionWard.ready		= (vwSlot ~= nil and	myHero:CanUseSpell(Wards.VisionWard.slot)		== READY)
 
 	if myHero:GetSpellData(SUMMONER_1).name:find(SpellI.name) then
 		SpellI.variable = SUMMONER_1
