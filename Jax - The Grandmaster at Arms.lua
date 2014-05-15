@@ -382,7 +382,6 @@ function OnProcessSpell(unit, spell)
 		end
 		if unit.isMe then
 			if spell.name ~= "jaxrelentlessattack" and JaxMenu.misc.w.howTo == 2 then
-				print("Debug: OnProcessSpell")
 				for i, cb in ipairs(jSOW.AfterAttackCallbacks) do
 					table.remove(jSOW.AfterAttackCallbacks, i)
 				end
