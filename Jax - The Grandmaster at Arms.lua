@@ -1,4 +1,4 @@
-local version = "1.13"
+local version = "1.14"
 --[[
 
 
@@ -352,7 +352,7 @@ function Menu()
 		JaxMenu.drawing:addParam("eDraw", "Draw "..SpellE.name.." (E) Range", SCRIPT_PARAM_ONOFF, true) -- Done
 	
 	JaxMenu:addSubMenu("["..myHero.charName.."] - Misc Settings", "misc")
-		JaxMenu.misc:addParam("wardJump", "Ward Jump (G)", SCRIPT_PARAM_ONKEYDOWN, false)
+		JaxMenu.misc:addParam("wardJump", "Ward Jump (G)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey('G'))
 		JaxMenu.misc:addSubMenu("Spells - Misc Settings", "smisc")
 			JaxMenu.misc.smisc:addParam("stopChannel", "Interrupt Channeling Spells", SCRIPT_PARAM_ONOFF, true) -- Done
 		if VIP_USER then
