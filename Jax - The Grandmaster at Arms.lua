@@ -1,4 +1,4 @@
-local version = "1.1"
+local version = "1.11"
 --[[
 
 
@@ -18,6 +18,9 @@ local version = "1.1"
 		Changelog:
 			1.1
 				- Fixed Target Selector Range
+				- Added Q Options in the Misc Menu
+				- Added Ward-Jump
+
 			1.0
 				- First Release
 
@@ -139,6 +142,16 @@ function Variables()
 	SpellR = { name = "Grandmaster's Might",	range = 700																			}
 
 	SpellI = { name = "SummonerDot",			range = 600,			ready = false, dmg = 0,					variable = nil		}
+
+	SpellW_= {									range = 600, 									lastJump = 0,	itemSlot = nil		}
+
+	Wards = {
+		TrinketWard		= { slot = nil, ready = false },
+		RubySightStone	= { slot = nil, ready = false },
+		SightStone		= { slot = nil, ready = false },
+		SightWard		= { slot = nil, ready = false },
+		VisionWard		= { slot = nil, ready = false }
+	}
 
 	vPred = VPrediction()
 
@@ -339,6 +352,8 @@ function Menu()
 			JaxMenu.misc:addSubMenu("Spells - Cast Settings", "cast")
 				JaxMenu.misc.cast:addParam("usePackets", "Use Packets to Cast Spells", SCRIPT_PARAM_ONOFF, false) -- Done
 		end
+		JaxMenu.misc:addSubMenu("Spells - "..SpellQ.name.." (Q) Settings", "q"
+			JaxMenu.misc.q:addParam("howTo", "Use "..SpellQ.name.." (Q): ", SCRIPT_PARAM_LIST, 1, { "Always", "Only as a Gap-Closer" })
 		JaxMenu.misc:addSubMenu("Spells - "..SpellW.name.." (W) Settings", "w")
 			JaxMenu.misc.w:addParam("howTo", "Use "..SpellW.name.." (W): ", SCRIPT_PARAM_LIST, 2, { "After every AA", "After every third AA" })
 		JaxMenu.misc:addSubMenu("Spells - "..SpellE.name.." (E) Settings", "e")
@@ -377,10 +392,16 @@ function OnProcessSpell(unit, spell)
 end
 
 function OnCreateObj(obj)
-	if FocusJungleNames[obj.name] then
-		JungleFocusMobs[#JungleFocusMobs+1] = obj
-	elseif JungleMobNames[obj.name] then
-		JungleMobs[#JungleMobs+1] = obj
+	if obj.valid then
+		if FocusJungleNames[obj.name] then
+			JungleFocusMobs[#JungleFocusMobs+1] = obj
+		elseif JungleMobNames[obj.name] then
+			JungleMobs[#JungleMobs+1] = obj
+		end
+
+		if string.find(obj.name, "Ward") ~= nil or string.find(obj.name, "Wriggle") ~= nil or string.find(obj.name, "Trinket") then 
+			Wards[#Wards+1] = obj
+		end
 	end
 end
 
@@ -393,6 +414,12 @@ function OnDeleteObj(obj)
 	for i, Mob in pairs(JungleFocusMobs) do
 		if obj.name == Mob.name then
 			table.remove(JungleFocusMobs, i)
+		end
+	end
+
+	for i, ward in pairs(Wards) do
+		if obj.name == ward.name and obj.x == ward.x and obj.z == ward.z then
+			table.remove(Wards, i)
 		end
 	end
 end
@@ -433,6 +460,17 @@ function TickChecks()
 	SpellQ.manaUsage = myHero:GetSpellData(_Q).mana
 	SpellE.manaUsage = myHero:GetSpellData(_E).mana
 	SpellR.manaUsage = myHero:GetSpellData(_R).mana
+
+	Wards.RubySightStone.slot = GetInventorySlotItem(2045)
+	Wards.SightStone.slot = GetInventorySlotItem(2049)
+	Wards.SightWard.slot = GetInventorySlotItem(2044)
+	Wards.VisionWard.slot = GetInventorySlotItem(2043)
+
+	Items.TrinketWard.ready		= (myHero:CanUseSpell(ITEM_7) == READY and myHero:getItem(ITEM_7).id == 3340) or (myHero:CanUseSpell(ITEM_7) == READY and myHero:getItem(ITEM_7).id == 3350) or (myHero:CanUseSpell(ITEM_7) == READY and myHero:getItem(ITEM_7).id == 3361) or (myHero:CanUseSpell(ITEM_7) == READY and myHero:getItem(ITEM_7).id == 3362)
+	Items.RubySightStone.ready	= (rstSlot ~= nil and	myHero:CanUseSpell(Wards.RubySightStone.slot)	== READY)
+	Items.SightStone.ready		= (ssSlot ~= nil and	myHero:CanUseSpell(Wards.SightStone.slot)		== READY)
+	Items.SightWard.ready		= (swSlot ~= nil and	myHero:CanUseSpell(Wards.SightWard.slot)		== READY)
+	Items.VisionWard.ready		= (vwSlot ~= nil and	myHero:CanUseSpell(Wards.VisionWard.slot)		== READY)
 
 	if myHero:GetSpellData(SUMMONER_1).name:find(SpellI.name) then
 		SpellI.variable = SUMMONER_1
@@ -540,10 +578,12 @@ function CastQ(unit)
 	if unit == nil or not SpellQ.ready or (GetDistanceSqr(unit, myHero) > SpellQ.range * SpellQ.range) then
 		return false
 	end
-	if not VIP_USER or not JaxMenu.misc.cast.usePackets then
-		CastSpell(_Q, unit)
-	elseif VIP_USER and JaxMenu.misc.cast.usePackets then
-		Packet("S_CAST", { spellId = _Q, targetNetworkId = unit.networkID }):send()
+	if JaxMenu.misc.q.howTo == 1 or (JaxMenu.misc.q.howTo == 2 and GetDistanceSqr(unit, myHero) > jSOW:MyRange(unit) * jSOW:MyRange(unit)) then
+		if not VIP_USER or not JaxMenu.misc.cast.usePackets then
+			CastSpell(_Q, unit)
+		elseif VIP_USER and JaxMenu.misc.cast.usePackets then
+			Packet("S_CAST", { spellId = _Q, targetNetworkId = unit.networkID }):send()
+		end
 	end
 end
 
@@ -572,6 +612,44 @@ function ActivateE(unit)
 			CastSpell(_E)
 
 			SpellE.variable = false
+		end
+	end
+end
+
+function wardJump(x, y)
+	if SpellQ.ready then
+		local WardDistance = 300
+
+		if next(Wards) ~= nil then
+			for i, obj in pairs(Wards) do 
+				if obj.valid then
+					MousePos = getMousePos()
+					if GetDistanceSqr(obj, MousePos) <= WardDistance * WardDistance then
+						CastSpell(_Q, obj)
+						SpellW_.lastJump = os.clock + 2
+					 end
+				end
+			end
+		end
+
+		if os.clock >= SpellW_.lastJump then
+			if Items.TrinketWard.ready then
+				SpellW_.itemSlot = ITEM_7
+			elseif Items.RubySightStone.ready then
+				SpellW_.itemSlot = rstSlot
+			elseif Items.SightStone.ready then 
+				SpellW_.itemSlot = ssSlot
+			elseif Items.SightWard.ready then
+				SpellW_.itemSlot = swSlot
+			elseif Items.VisionWard.ready then
+				SpellW_.itemSlot = vwSlot
+			end
+			
+			if SpellW_.itemSlot ~= nil then
+				CastItem(SpellW_.itemSlot, x, y)
+				SpellW_.lastJump = os.clock + 2
+				SpellW_.itemSlot = nil
+			end
 		end
 	end
 end
@@ -606,13 +684,21 @@ function SetPriority(table, hero, priority)
 end
 
 function GetJungleMob()
-		for _, Mob in pairs(JungleFocusMobs) do
-			if ValidTarget(Mob, SpellQ.range) then return Mob end
-		end
-		for _, Mob in pairs(JungleMobs) do
-			if ValidTarget(Mob, SpellQ.range) then return Mob end
-		end
+	for _, Mob in pairs(JungleFocusMobs) do
+		if ValidTarget(Mob, SpellQ.range) then return Mob end
 	end
+	for _, Mob in pairs(JungleMobs) do
+		if ValidTarget(Mob, SpellQ.range) then return Mob end
+	end
+end
+
+function getMousePos(range)
+	local temprange = range or SpellW_.range
+	local MyPos = Vector(myHero.x, myHero.y, myHero.z)
+	local MousePos = Vector(mousePos.x, mousePos.y, mousePos.z)
+
+	return MyPos - (MyPos - MousePos):normalized() * SpellW_.range
+end
 
 function DmgCalc()
 	for i = 1, enemyCount do
