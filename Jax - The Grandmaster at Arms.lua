@@ -1,4 +1,4 @@
-local version = "1.01"
+local version = "1.1"
 --[[
 
 
@@ -16,6 +16,8 @@ local version = "1.01"
 			- Nothing
 
 		Changelog:
+			1.1
+				- Fixed Target Selector Range
 			1.0
 				- First Release
 
@@ -162,7 +164,7 @@ function Variables()
 			},
 			ADC = {
 				"Ashe", "Caitlyn", "Corki", "Draven", "Ezreal", "Graves", "Jayce", "Jinx", "KogMaw", "Lucian", "MasterYi", "MissFortune", "Pantheon", "Quinn", "Shaco", "Sivir",
-				"Talon","Tryndamere", "Tristana", "Twitch", "Urgot", "Varus", "Vayne", "Yasuo","Zed"
+				"Talon","Tryndamere", "Tristana", "Twitch", "Urgot", "Varus", "Vayne", "Yasuo", "Zed"
 			},
 			Bruiser = {
 				"Aatrox", "Darius", "Elise", "Fiora", "Gangplank", "Garen", "Irelia", "JarvanIV", "Jax", "Khazix", "LeeSin", "Nocturne", "Olaf", "Poppy",
@@ -349,7 +351,7 @@ function Menu()
 		JaxMenu:addSubMenu("["..myHero.charName.."] - Orbwalking Settings", "Orbwalking")
 			jSOW:LoadToMenu(JaxMenu.Orbwalking)
 
-	TargetSelector = TargetSelector(TARGET_LESS_CAST, SpellE.range, DAMAGE_PHYSICAL)
+	TargetSelector = TargetSelector(TARGET_LESS_CAST, SpellQ.range, DAMAGE_PHYSICAL)
 	TargetSelector.name = "Jax"
 	JaxMenu:addTS(TargetSelector)
 
@@ -365,6 +367,7 @@ function OnProcessSpell(unit, spell)
 		end
 		if unit.isMe then
 			if spell.name ~= "jaxrelentlessattack" and JaxMenu.misc.w.howTo == 2 then
+				print("Debug: OnProcessSpell")
 				for i, cb in ipairs(jSOW.AfterAttackCallbacks) do
 					table.remove(jSOW.AfterAttackCallbacks, i)
 				end
