@@ -1,4 +1,4 @@
-local version = "1.15"
+local version = "1.16"
 --[[
 
 
@@ -640,15 +640,15 @@ function wardJump(x, y)
 		end
 
 		if os.clock() >= SpellW_.lastJump then
-			if Items.TrinketWard.ready then
+			if Wards.TrinketWard.ready then
 				SpellW_.itemSlot = ITEM_7
-			elseif Items.RubySightStone.ready then
+			elseif Wards.RubySightStone.ready then
 				SpellW_.itemSlot = rstSlot
-			elseif Items.SightStone.ready then 
+			elseif Wards.SightStone.ready then 
 				SpellW_.itemSlot = ssSlot
-			elseif Items.SightWard.ready then
+			elseif Wards.SightWard.ready then
 				SpellW_.itemSlot = swSlot
-			elseif Items.VisionWard.ready then
+			elseif Wards.VisionWard.ready then
 				SpellW_.itemSlot = vwSlot
 			end
 			
