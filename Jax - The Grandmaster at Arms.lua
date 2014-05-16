@@ -1,4 +1,4 @@
-local version = "1.19"
+local version = "1.191"
 --[[
 
 
@@ -163,7 +163,7 @@ function Variables()
 		VisionWard		= { slot = nil, ready = false }
 	}
 
-	Wards_ = ()
+	Wards_ = {}
 
 	vPred = VPrediction()
 
