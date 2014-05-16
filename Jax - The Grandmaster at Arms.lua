@@ -1,4 +1,4 @@
-local version = "1.17"
+local version = "1.18"
 --[[
 
 
@@ -161,6 +161,8 @@ function Variables()
 		SightWard		= { slot = nil, ready = false },
 		VisionWard		= { slot = nil, ready = false }
 	}
+
+	Wards_ = ()
 
 	vPred = VPrediction()
 
@@ -410,7 +412,7 @@ function OnCreateObj(obj)
 		end
 
 		if string.find(obj.name, "Ward") ~= nil or string.find(obj.name, "Wriggle") ~= nil or string.find(obj.name, "Trinket") then 
-			Wards[#Wards+1] = obj
+			Wards_[#Wards_+1] = obj
 		end
 	end
 end
@@ -427,9 +429,9 @@ function OnDeleteObj(obj)
 		end
 	end
 
-	for i, ward in pairs(Wards) do
+	for i, ward in pairs(Wards_) do
 		if obj.name == ward.name and obj.x == ward.x and obj.z == ward.z then
-			table.remove(Wards, i)
+			table.remove(Wards_, i)
 		end
 	end
 end
@@ -636,8 +638,8 @@ function wardJump(x, y)
 	if SpellQ.ready then
 		local WardDistance = 300
 
-		if next(Wards) ~= nil then
-			for i, obj in pairs(Wards) do 
+		if next(Wards_) ~= nil then
+			for i, obj in pairs(Wards_) do 
 				if obj.valid then
 					MousePos = getMousePos()
 					if GetDistanceSqr(obj, MousePos) <= WardDistance * WardDistance then
