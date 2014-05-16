@@ -1,4 +1,4 @@
-local version = "1.18"
+local version = "1.19"
 --[[
 
 
@@ -23,6 +23,7 @@ local version = "1.18"
 				- Improved & Fixed Ward-Jump Problems
 				- Improved Harass Function
 				- Added Q toggle in Harass
+				- Fixed E Activation
 
 			1.0
 				- First Release
@@ -532,7 +533,10 @@ function Combo(unit)
 		end
 		
 		CastE(unit)
+		ActivateE(unit)
+
 		CastQ(unit)
+
 		if JaxMenu.combo.useW then
 			jSOW:RegisterAfterAttackCallback(function()
 												CastSpell(_W)
@@ -553,6 +557,7 @@ function Harass(unit)
 			end
 			if JaxMenu.harass.useE then
 				CastE(unit)
+				ActivateE(unit)
 			end
 			if JaxMenu.harass.useQ then
 				CastQ(unit)
