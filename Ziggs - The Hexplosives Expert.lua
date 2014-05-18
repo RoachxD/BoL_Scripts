@@ -1,4 +1,4 @@
-local Ziggs_Ver = "1.046"
+local Ziggs_Ver = "1.047"
 --[[
 
 
@@ -25,6 +25,8 @@ local Ziggs_Ver = "1.046"
 			- Updated Variables, some of them were missing in the Tables
 			- Fixed MEC Ult Errors
 			- Fixed Spamming Errors (after re-load)
+			- Added a check to Enable/Disable myHero.range in the Draw Menu
+			- Added an Option to see who are you Targeting
 
 		1.03
 			- Added 'Alert Option' for Ult if an enemy is Killable
@@ -409,7 +411,9 @@ function Menu()
 			
 	ZiggsMenu:addSubMenu("["..myHero.charName.."] - Draw Settings", "drawing")	
 		ZiggsMenu.drawing:addParam("mDraw", "Disable All Range Draws", SCRIPT_PARAM_ONOFF, false)
+		ZiggsMenu.drawing:addParam("Target", "Draw Circle on Target", SCRIPT_PARAM_ONOFF, true)
 		ZiggsMenu.drawing:addParam("cDraw", "Draw Damage Text", SCRIPT_PARAM_ONOFF, true)
+		ZiggsMenu.drawing:addParam("myHero", "Draw My Hero's Range", SCRIPT_PARAM_ONOFF, true)
 		ZiggsMenu.drawing:addParam("qDraw", "Draw "..SpellQ.name.." (Q) Range", SCRIPT_PARAM_ONOFF, true)
 		ZiggsMenu.drawing:addParam("wDraw", "Draw "..SpellW.name.." (W) Range", SCRIPT_PARAM_ONOFF, false)
 		ZiggsMenu.drawing:addParam("eDraw", "Draw "..SpellE.name.." (E) Range", SCRIPT_PARAM_ONOFF, true)
@@ -543,6 +547,10 @@ function OnDeleteObj(obj)
 end
 
 function OnDraw()
+	if ZiggsMenu.drawing.myHero then
+		jSOW:DrawAARange(1, ARGB(255, 0, 189, 22))
+	end
+
 	if not myHero.dead then
 		if not ZiggsMenu.drawing.mDraw then
 			if ZiggsMenu.drawing.qDraw and SpellQ.ready then
@@ -556,6 +564,11 @@ function OnDraw()
 			end
 			if ZiggsMenu.drawing.rDraw and SpellR.ready then
 				DrawCircleMinimap(myHero.x, myHero.y, myHero.z, SpellR.range)
+			end
+		end
+		if ZiggsMenu.drawing.Target then
+			if Target ~= nil then
+				DrawCircle3D(Target.x, Target.y, Target.z, 70, 1, ARGB(255, 255, 0, 0))
 			end
 		end
 		if ZiggsMenu.drawing.cDraw then
@@ -661,14 +674,12 @@ function Harass(unit)
 	end
 end
 
-local nextTick = 0
 function Farm()
 	enemyMinions:update()
 	for i, minion in pairs(enemyMinions.objects) do
 		if ValidTarget(minion) and minion ~= nil then
-			if minion.health <= SpellQ.dmg and (GetDistanceSqr(minion) > myHero.range*myHero.range or not zSOW:CanAttack()) and GetDistanceSqr(minion) <= SpellQ.minrange*SpellQ.minrange and ZiggsMenu.farming.qFarm and not isLow('Mana', myHero, ZiggsMenu.farming.qFarmMana) then
+			if minion.health <= SpellQ.dmg and (GetDistanceSqr(minion) > myHero.range * myHero.range or not zSOW:CanAttack()) and GetDistanceSqr(minion) <= SpellQ.minrange * SpellQ.minrange and ZiggsMenu.farming.qFarm and not isLow('Mana', myHero, ZiggsMenu.farming.qFarmMana) then
 				CastQ(minion)
-				nextTick = GetTickCount() + 450
 			end
 		end		 
 	end
