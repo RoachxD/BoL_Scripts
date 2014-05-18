@@ -1,4 +1,4 @@
-local Ziggs_Ver = "1.047"
+local Ziggs_Ver = "1.048"
 --[[
 
 
@@ -548,7 +548,7 @@ end
 
 function OnDraw()
 	if ZiggsMenu.drawing.myHero then
-		jSOW:DrawAARange(1, ARGB(255, 0, 189, 22))
+		zSOW:DrawAARange(1, ARGB(255, 0, 189, 22))
 	end
 
 	if not myHero.dead then
