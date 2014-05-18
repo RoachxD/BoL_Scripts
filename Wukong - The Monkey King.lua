@@ -1,4 +1,4 @@
-local version = "3.04"
+local version = "3.05"
 --[[
 
 
@@ -25,6 +25,8 @@ local version = "3.04"
 				- Added AA Range on Draw
 				- Fixed 'InTurretRange' Function
 				- Fixed Spammine Errors
+				- Added a check to Enable/Disable myHero.range in the Draw Menu
+				- Added an Option to see who are you Targetting
 
 			2.6
 				- Added Support for SAC and MMA Target Selector
@@ -440,7 +442,9 @@ function Menu()
 			
 	WukongMenu:addSubMenu("["..myHero.charName.."] - Draw Settings", "drawing")	
 		WukongMenu.drawing:addParam("mDraw", "Disable All Range Draws", SCRIPT_PARAM_ONOFF, false)
+		WukongMenu.drawing:addParam("Target", "Draw Circle on Target", SCRIPT_PARAM_ONOFF, true)
 		WukongMenu.drawing:addParam("cDraw", "Draw Damage Text", SCRIPT_PARAM_ONOFF, true)
+		WukongMenu.drawing:addParam("myHero", "Draw My Hero's Range", SCRIPT_PARAM_ONOFF, true)
 		WukongMenu.drawing:addParam("qDraw", "Draw "..SpellQ.name.." (Q) Range", SCRIPT_PARAM_ONOFF, true)
 		WukongMenu.drawing:addParam("eDraw", "Draw "..SpellE.name.." (E) Range", SCRIPT_PARAM_ONOFF, true)
 		WukongMenu.drawing:addParam("rDraw", "Draw "..SpellR.name.." (R) Range", SCRIPT_PARAM_ONOFF, true)
@@ -512,7 +516,9 @@ function OnDeleteObj(obj)
 end
 
 function OnDraw()
-	wSOW:DrawAARange(1, ARGB(255, 0, 189, 22))
+	if WukongMenu.drawing.myHero then
+		wSOW:DrawAARange(1, ARGB(255, 0, 189, 22))
+	end
 	if not myHero.dead then
 		if not WukongMenu.drawing.mDraw then
 			if WukongMenu.drawing.qDraw and SpellQ.ready then
@@ -523,6 +529,11 @@ function OnDraw()
 			end
 			if WukongMenu.drawing.rDraw and SpellR.ready then
 				DrawCircle(myHero.x, myHero.y, myHero.z, SpellE.range, ARGB(255,128, 0 ,128))
+			end
+		end
+		if WukongMenu.drawing.Target then
+			if Target ~= nil then
+				DrawCircle3D(Target.x, Target.y, Target.z, 70, 1, ARGB(255, 255, 0, 0))
 			end
 		end
 		if WukongMenu.drawing.cDraw then
