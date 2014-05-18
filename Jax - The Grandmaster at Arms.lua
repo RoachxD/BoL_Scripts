@@ -1,4 +1,4 @@
-local version = "1.191"
+local version = "1.2"
 --[[
 
 
@@ -16,6 +16,11 @@ local version = "1.191"
 			- Nothing
 
 		Changelog:
+			1.2
+				- Fixed Ward-Jump Problems
+				- Added a check to Enable/Disable myHero.range in the Draw Menu
+				- Added an Option to see who are you Targetting
+
 			1.1
 				- Fixed Target Selector Range
 				- Added Q Options in the Misc Menu
@@ -319,60 +324,62 @@ function Menu()
 	JaxMenu = scriptConfig("Jax - The Grandmaster at Arms", "Jax")
 	
 	JaxMenu:addSubMenu("["..myHero.charName.."] - Combo Settings", "combo")
-		JaxMenu.combo:addParam("comboKey", "Full Combo Key (SBTW)", SCRIPT_PARAM_ONKEYDOWN, false, 32) -- Done
-		JaxMenu.combo:addParam("useW", "Use "..SpellW.name.." (W) in Combo", SCRIPT_PARAM_ONOFF, true) -- Done
-		JaxMenu.combo:addParam("comboItems", "Use Items in Combo", SCRIPT_PARAM_ONOFF, true) -- Done
+		JaxMenu.combo:addParam("comboKey", "Full Combo Key (SBTW)", SCRIPT_PARAM_ONKEYDOWN, false, 32)
+		JaxMenu.combo:addParam("useW", "Use "..SpellW.name.." (W) in Combo", SCRIPT_PARAM_ONOFF, true)
+		JaxMenu.combo:addParam("comboItems", "Use Items in Combo", SCRIPT_PARAM_ONOFF, true)
 		JaxMenu.combo:permaShow("comboKey")
 	
 	JaxMenu:addSubMenu("["..myHero.charName.."] - Harass Settings", "harass")
-		JaxMenu.harass:addParam("harassKey", "Harass key (C)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("C")) -- Done
+		JaxMenu.harass:addParam("harassKey", "Harass key (C)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("C"))
 		JaxMenu.harass:addParam("useQ", "Use "..SpellQ.name.." (Q) in Harass", SCRIPT_PARAM_ONOFF, true)
-		JaxMenu.harass:addParam("useE", "Use "..SpellE.name.." (E) in Harass", SCRIPT_PARAM_ONOFF, true) -- Done
-		JaxMenu.harass:addParam("harassMana", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 50, 0, 100, 0) -- Done
+		JaxMenu.harass:addParam("useE", "Use "..SpellE.name.." (E) in Harass", SCRIPT_PARAM_ONOFF, true)
+		JaxMenu.harass:addParam("harassMana", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
 		JaxMenu.harass:permaShow("harassKey")
 		
 	
 	JaxMenu:addSubMenu("["..myHero.charName.."] - Farm Settings", "farming")
 		JaxMenu.farming:addParam("farmKey", "Farming Key (X)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey('X'))
-		JaxMenu.farming:addParam("qFarm", "Farm with "..SpellQ.name.." (Q)", SCRIPT_PARAM_ONOFF, true) -- Done
-		JaxMenu.farming:addParam("FarmMana", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 50, 0, 100, 0) -- Done
+		JaxMenu.farming:addParam("qFarm", "Farm with "..SpellQ.name.." (Q)", SCRIPT_PARAM_ONOFF, true)
+		JaxMenu.farming:addParam("FarmMana", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
 		JaxMenu.farming:permaShow("farmKey")
 		
 	JaxMenu:addSubMenu("["..myHero.charName.."] - Jungle Clear Settings", "jungle")
-		JaxMenu.jungle:addParam("jungleKey", "Jungle Clear Key (V)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey('V')) -- Done
-		JaxMenu.jungle:addParam("jungleQ", "Clear with "..SpellQ.name.." (Q)", SCRIPT_PARAM_ONOFF, true) -- Done
-		JaxMenu.jungle:addParam("jungleW", "Clear with "..SpellW.name.." (W)", SCRIPT_PARAM_ONOFF, true) -- Done
-		JaxMenu.jungle:addParam("jungleE", "Clear with "..SpellE.name.." (E)", SCRIPT_PARAM_ONOFF, true) -- Done
+		JaxMenu.jungle:addParam("jungleKey", "Jungle Clear Key (V)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey('V'))
+		JaxMenu.jungle:addParam("jungleQ", "Clear with "..SpellQ.name.." (Q)", SCRIPT_PARAM_ONOFF, true)
+		JaxMenu.jungle:addParam("jungleW", "Clear with "..SpellW.name.." (W)", SCRIPT_PARAM_ONOFF, true)
+		JaxMenu.jungle:addParam("jungleE", "Clear with "..SpellE.name.." (E)", SCRIPT_PARAM_ONOFF, true)
 		JaxMenu.jungle:permaShow("jungleKey")
 		
 		
 	JaxMenu:addSubMenu("["..myHero.charName.."] - KillSteal Settings", "ks")
-		JaxMenu.ks:addParam("killSteal", "Use Smart Kill Steal", SCRIPT_PARAM_ONOFF, true) -- Done
-		JaxMenu.ks:addParam("useW", "Use "..SpellW.name.." (W) to KS", SCRIPT_PARAM_ONOFF, false) -- Done
-		JaxMenu.ks:addParam("autoIgnite", "Auto Ignite", SCRIPT_PARAM_ONOFF, true) -- Done
+		JaxMenu.ks:addParam("killSteal", "Use Smart Kill Steal", SCRIPT_PARAM_ONOFF, true)
+		JaxMenu.ks:addParam("useW", "Use "..SpellW.name.." (W) to KS", SCRIPT_PARAM_ONOFF, false)
+		JaxMenu.ks:addParam("autoIgnite", "Auto Ignite", SCRIPT_PARAM_ONOFF, true)
 		JaxMenu.ks:permaShow("killSteal")
 			
 	JaxMenu:addSubMenu("["..myHero.charName.."] - Draw Settings", "drawing")	
-		JaxMenu.drawing:addParam("mDraw", "Disable All Range Draws", SCRIPT_PARAM_ONOFF, false) -- Done
-		JaxMenu.drawing:addParam("cDraw", "Draw Damage Text", SCRIPT_PARAM_ONOFF, true) -- Done
-		JaxMenu.drawing:addParam("qDraw", "Draw "..SpellQ.name.." (Q) Range", SCRIPT_PARAM_ONOFF, true) -- Done
-		JaxMenu.drawing:addParam("eDraw", "Draw "..SpellE.name.." (E) Range", SCRIPT_PARAM_ONOFF, true) -- Done
+		JaxMenu.drawing:addParam("mDraw", "Disable All Range Draws", SCRIPT_PARAM_ONOFF, false)
+		JaxMenu.drawing:addParam("Target", "Draw Circle on Target", SCRIPT_PARAM_ONOFF, true)
+		JaxMenu.drawing:addParam("cDraw", "Draw Damage Text", SCRIPT_PARAM_ONOFF, true)
+		JaxMenu.drawing:addParam("myHero", "Draw My Hero's Range", SCRIPT_PARAM_ONOFF, true)
+		JaxMenu.drawing:addParam("qDraw", "Draw "..SpellQ.name.." (Q) Range", SCRIPT_PARAM_ONOFF, true)
+		JaxMenu.drawing:addParam("eDraw", "Draw "..SpellE.name.." (E) Range", SCRIPT_PARAM_ONOFF, true)
 	
 	JaxMenu:addSubMenu("["..myHero.charName.."] - Misc Settings", "misc")
 		JaxMenu.misc:addParam("wardJump", "Ward Jump (G)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey('G'))
 		JaxMenu.misc:addSubMenu("Spells - Misc Settings", "smisc")
-			JaxMenu.misc.smisc:addParam("stopChannel", "Interrupt Channeling Spells", SCRIPT_PARAM_ONOFF, true) -- Done
+			JaxMenu.misc.smisc:addParam("stopChannel", "Interrupt Channeling Spells", SCRIPT_PARAM_ONOFF, true)
 		if VIP_USER then
 			JaxMenu.misc:addSubMenu("Spells - Cast Settings", "cast")
-				JaxMenu.misc.cast:addParam("usePackets", "Use Packets to Cast Spells", SCRIPT_PARAM_ONOFF, false) -- Done
+				JaxMenu.misc.cast:addParam("usePackets", "Use Packets to Cast Spells", SCRIPT_PARAM_ONOFF, false)
 		end
 		JaxMenu.misc:addSubMenu("Spells - "..SpellQ.name.." (Q) Settings", "q")
 			JaxMenu.misc.q:addParam("howTo", "Use "..SpellQ.name.." (Q): ", SCRIPT_PARAM_LIST, 1, { "Always", "Only as a Gap-Closer" })
 		JaxMenu.misc:addSubMenu("Spells - "..SpellW.name.." (W) Settings", "w")
 			JaxMenu.misc.w:addParam("howTo", "Use "..SpellW.name.." (W): ", SCRIPT_PARAM_LIST, 2, { "After every AA", "After every third AA" })
 		JaxMenu.misc:addSubMenu("Spells - "..SpellE.name.." (E) Settings", "e")
-			JaxMenu.misc.e:addParam("howTo", "Cast "..SpellE.name.." (E): ", SCRIPT_PARAM_LIST, 1, { "If in Q Range and Q Ready", "Only if in Melee Range" }) -- Done
-			JaxMenu.misc.e:addParam("whenTo", "Activate "..SpellE.name.." (E): ", SCRIPT_PARAM_LIST, 3, { "Instantly", "If target in Max Radius", "No" }) -- Done
+			JaxMenu.misc.e:addParam("howTo", "Cast "..SpellE.name.." (E): ", SCRIPT_PARAM_LIST, 1, { "If in Q Range and Q Ready", "Only if in Melee Range" })
+			JaxMenu.misc.e:addParam("whenTo", "Activate "..SpellE.name.." (E): ", SCRIPT_PARAM_LIST, 3, { "Instantly", "If target in Max Radius", "No" })
 		JaxMenu.misc:addSubMenu("Spells - "..SpellR.name.." (R) Settings", "ult")
 			JaxMenu.misc.ult:addParam("Enable", "Enable Auto Ult", SCRIPT_PARAM_ONOFF, true)
 			JaxMenu.misc.ult:addParam("minEnemies", "Min. Enemies in Range: ", SCRIPT_PARAM_SLICE, 2, 2, 5, 0)
@@ -438,7 +445,10 @@ function OnDeleteObj(obj)
 end
 
 function OnDraw()
-	jSOW:DrawAARange(1, ARGB(255, 0, 189, 22))
+	if JaxMenu.drawing.myHero then
+		jSOW:DrawAARange(1, ARGB(255, 0, 189, 22))
+	end
+
 	if not myHero.dead then
 		if not JaxMenu.drawing.mDraw then
 			if JaxMenu.drawing.qDraw and SpellQ.ready then
@@ -446,6 +456,11 @@ function OnDraw()
 			end
 			if JaxMenu.drawing.eDraw and SpellE.ready then
 				DrawCircle(myHero.x, myHero.y, myHero.z, SpellE.range, ARGB(255, 32,178,170))
+			end
+		end
+		if JaxMenu.drawing.Target then
+			if Target ~= nil then
+				DrawCircle3D(Target.x, Target.y, Target.z, 70, 1, ARGB(255, 255, 0, 0))
 			end
 		end
 		if JaxMenu.drawing.cDraw then
@@ -669,7 +684,7 @@ function wardJump(x, y)
 			end
 			
 			if SpellW_.itemSlot ~= nil then
-				CastItem(SpellW_.itemSlot, x, y)
+				CastSpell(SpellW_.itemSlot, x, y)
 				SpellW_.lastJump = os.clock() + 2
 				SpellW_.itemSlot = nil
 			end
