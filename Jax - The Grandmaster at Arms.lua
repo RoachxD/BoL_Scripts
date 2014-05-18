@@ -1,4 +1,4 @@
-local version = "1.2"
+local version = "1.21"
 --[[
 
 
@@ -19,7 +19,7 @@ local version = "1.2"
 			1.2
 				- Fixed Ward-Jump Problems
 				- Added a check to Enable/Disable myHero.range in the Draw Menu
-				- Added an Option to see who are you Targetting
+				- Added an Option to see who are you Targeting
 
 			1.1
 				- Fixed Target Selector Range
@@ -161,7 +161,7 @@ function Variables()
 	SpellW_= {									range = 600, 									lastJump = 0,	itemSlot = nil		}
 
 	Wards = {
-		TrinketWard		= { slot = nil, ready = false },
+		TrinketWard		= { 			ready = false },
 		RubySightStone	= { slot = nil, ready = false },
 		SightStone		= { slot = nil, ready = false },
 		SightWard		= { slot = nil, ready = false },
@@ -495,10 +495,10 @@ function TickChecks()
 	Wards.VisionWard.slot = GetInventorySlotItem(2043)
 
 	Wards.TrinketWard.ready		= (myHero:CanUseSpell(ITEM_7) == READY and myHero:getItem(ITEM_7).id == 3340) or (myHero:CanUseSpell(ITEM_7) == READY and myHero:getItem(ITEM_7).id == 3350) or (myHero:CanUseSpell(ITEM_7) == READY and myHero:getItem(ITEM_7).id == 3361) or (myHero:CanUseSpell(ITEM_7) == READY and myHero:getItem(ITEM_7).id == 3362)
-	Wards.RubySightStone.ready	= (rstSlot ~= nil and	myHero:CanUseSpell(Wards.RubySightStone.slot)	== READY)
-	Wards.SightStone.ready		= (ssSlot ~= nil and	myHero:CanUseSpell(Wards.SightStone.slot)		== READY)
-	Wards.SightWard.ready		= (swSlot ~= nil and	myHero:CanUseSpell(Wards.SightWard.slot)		== READY)
-	Wards.VisionWard.ready		= (vwSlot ~= nil and	myHero:CanUseSpell(Wards.VisionWard.slot)		== READY)
+	Wards.RubySightStone.ready	= (Wards.RubySightStone.slot	~= nil and	myHero:CanUseSpell(Wards.RubySightStone.slot)	== READY)
+	Wards.SightStone.ready		= (Wards.SightStone.slot		~= nil and	myHero:CanUseSpell(Wards.SightStone.slot)		== READY)
+	Wards.SightWard.ready		= (Wards.SightWard.slot			~= nil and	myHero:CanUseSpell(Wards.SightWard.slot)		== READY)
+	Wards.VisionWard.ready		= (Wards.VisionWard.slot		~= nil and	myHero:CanUseSpell(Wards.VisionWard.slot)		== READY)
 
 	if myHero:GetSpellData(SUMMONER_1).name:find(SpellI.name) then
 		SpellI.variable = SUMMONER_1
