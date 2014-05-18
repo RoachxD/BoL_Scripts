@@ -1,4 +1,4 @@
-local version = "4.08"
+local version = "4.09"
 --[[
 
 
@@ -29,6 +29,8 @@ local version = "4.08"
 				- Fixed 'InTurretRange' Function
 				- Fixed Spamming Errors
 				- Fixed Spamming Errors (after re-load)
+				- Added a check to Enable/Disable myHero.range in the Draw Menu
+				- Added an Option to see who are you Targeting
 
 			3.3
 				- Added Support for SAC Target Selector
@@ -484,7 +486,9 @@ function Menu()
 			
 	PanthMenu:addSubMenu("["..myHero.charName.."] - Draw Settings", "drawing")	
 		PanthMenu.drawing:addParam("mDraw", "Disable All Range Draws", SCRIPT_PARAM_ONOFF, false)
+		PanthMenu.drawing:addParam("Target", "Draw Circle on Target", SCRIPT_PARAM_ONOFF, true)
 		PanthMenu.drawing:addParam("cDraw", "Draw Damage Text", SCRIPT_PARAM_ONOFF, true)
+		PanthMenu.drawing:addParam("myHero", "Draw My Hero's Range", SCRIPT_PARAM_ONOFF, true)
 		PanthMenu.drawing:addParam("qDraw", "Draw "..SpellQ.name.." (Q) Range", SCRIPT_PARAM_ONOFF, true)
 		PanthMenu.drawing:addParam("wDraw", "Draw "..SpellW.name.." (W) Range", SCRIPT_PARAM_ONOFF, false)
 		PanthMenu.drawing:addParam("eDraw", "Draw "..SpellE.name.." (E) Range", SCRIPT_PARAM_ONOFF, true)
@@ -559,7 +563,9 @@ function OnDeleteObj(obj)
 end
 
 function OnDraw()
-	pSOW:DrawAARange(1, ARGB(255, 0, 189, 22))
+	if PanthMenu.drawing.myHero then
+		pSOW:DrawAARange(1, ARGB(255, 0, 189, 22))
+	end
 	if not myHero.dead then
 		if not PanthMenu.drawing.mDraw then
 			if PanthMenu.drawing.qDraw and SpellQ.ready then
@@ -573,6 +579,11 @@ function OnDraw()
 			end
 			if PanthMenu.drawing.rDraw and SpellR.ready then
 				DrawCircleMinimap(myHero.x, myHero.y, myHero.z, SpellR.range)
+			end
+		end
+		if PanthMenu.drawing.Target then
+			if Target ~= nil then
+				DrawCircle3D(Target.x, Target.y, Target.z, 70, 1, ARGB(255, 255, 0, 0))
 			end
 		end
 		if PanthMenu.drawing.cDraw then
