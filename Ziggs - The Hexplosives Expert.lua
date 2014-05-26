@@ -1,4 +1,4 @@
-local Ziggs_Ver = "1.048"
+local Ziggs_Ver = "1.049"
 --[[
 
 
@@ -27,6 +27,7 @@ local Ziggs_Ver = "1.048"
 			- Fixed Spamming Errors (after re-load)
 			- Added a check to Enable/Disable myHero.range in the Draw Menu
 			- Added an Option to see who are you Targeting
+			- Fixed Auto-Interup Option
 
 		1.03
 			- Added 'Alert Option' for Ult if an enemy is Killable
@@ -464,7 +465,7 @@ end
 function OnProcessSpell(unit, spell)
 	if ZiggsMenu.misc.smisc.stopChannel then
 		if GetDistanceSqr(unit) <= SpellW.range*SpellW.range and SpellW.ready then
-			if InterruptingSpells[spell.name] then
+			if InterruptingSpells[spell.name] and unit.team ~= myHero.team then
 				CastSpell(_W, unit.visionPos.x, unit.visionPos.z)
 			end
 		end
