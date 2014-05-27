@@ -1,4 +1,4 @@
-local MF_Ver = "1.023"
+local MF_Ver = "1.022"
 --[[
 
 
@@ -20,7 +20,7 @@ local MF_Ver = "1.023"
 				- Fixed Script not Drawing circles
 				- Fixed Ult Cancelling
 				- Fixed Casting E at Mouse Pos Bug
-				- Fixed Casting Ult at Mouse Pos Bug
+				- Fixed Spamming Errors about 'block'
 
 			1.01
 				- Fixed spamming errors to Random Users
@@ -386,8 +386,9 @@ end
 
 function OnSendPacket(p)
 	if Spells.R.casting then
-		if (p.header == Packet.headers.S_MOVE or p.header == Packet.headers.S_CAST) and (Packet(p):get('spellId') ~= SUMMONER_1 and Packet(p):get('spellId') ~= SUMMONER_2) then
-			Packet(p):Block()
+		local SendP = Packet(packet)
+		if (SendP:get('name') == 'S_MOVE' or SendP:get('name') == 'S_CAST') and SendP:get('sourceNetworkId') == myHero.networkID and (SendP:get('spellId') ~= SUMMONER_1 and SendP:get('spellId') ~= SUMMONER_2) then
+			SendP:block()
 		end
 	end
 end
@@ -411,7 +412,7 @@ function CheckDashes()
 		if not IsDashing or not CanHit or GetDistanceSqr(myHero, Position) > Spells.E.range*Spells.E.range or not Spells.E.ready then return end
 
 		if Config.Extras.usePackets then
-			Packet("S_CAST", {spellId = Spells.E.key, toX = Position.x, toY = Position.z, fromX = Position.x, fromY = Position.z}):send()
+			Packet("S_CAST", {spellId = Spells.E.key, toX = Position.x, toY = Position.z, fromX = Position.x, fronY = Position.z}):send()
 		else
 			CastSpell(Spells.E.key, Position.x, Position.z)
 		end
