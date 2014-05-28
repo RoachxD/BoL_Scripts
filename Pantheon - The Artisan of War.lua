@@ -1,4 +1,4 @@
-local version = "4.09"
+local version = "4.1"
 --[[
 
 
@@ -10,12 +10,16 @@ local version = "4.09"
 			88      YP   YP VP   V8P    YP    YP   YP Y88888P  `Y88P'  VP   V8P
 
 
-		Script - Pantheon - The Artisan of War 4.00 by Roach
+		Script - Pantheon - The Artisan of War 4.1 by Roach
 
 		Dependency / Requirements: 
 			- Nothing
 
 		Changelog:
+			4.1
+				- Fixed Items interrupting E and Ult
+				- Improved Performance
+
 			4.0
 				- Re-wrote the whole Script
 				- Added a lot of features
@@ -641,10 +645,12 @@ function GetCustomTarget()
 end
 
 function UseItems(unit)
-	for i, Item in pairs(Items) do
-		local Item = Items[i]
-		if GetInventoryItemIsCastable(Item.id) and GetDistanceSqr(unit) <= Item.range*Item.range then
-			CastItem(Item.id, unit)
+	if pSOW.Move then
+		for i, Item in pairs(Items) do
+			local Item = Items[i]
+			if GetInventoryItemIsCastable(Item.id) and GetDistanceSqr(unit) <= Item.range*Item.range then
+				CastItem(Item.id, unit)
+			end
 		end
 	end
 end
