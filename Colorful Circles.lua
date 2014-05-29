@@ -18,14 +18,19 @@
 local rClock = 0
 
 function OnLoad()
-	RAINBOW = ARGB(255, math.random(1, 255), math.random(1, 255), math.random(1, 255))
-	
+	smoothColors = {
+		{ current = 255, min = 0, max = 255, mode = -1 },
+		{ current = 255, min = 0, max = 255, mode = -1 },
+		{ current = 255, min = 0, max = 255, mode = -1 },
+	}
+
 	_G.oldDrawCircle = rawget(_G, 'DrawCircle')
 	_G.DrawCircle = DrawRainbowCircle
 
 	ColorfulMenu = scriptConfig("Colorful Circles", "HF")
 		ColorfulMenu:addParam("Enable", "ENABLEEE!!", SCRIPT_PARAM_ONOFF, true)
 		ColorfulMenu:addParam("interval", "Interval to change colors: ", SCRIPT_PARAM_SLICE, 0.1, 0.1, 10, -1)
+		ColorfulMenu:addParam("mode", "Color Change Mode: ", SCRIPT_PARAM_LIST, 1, { "Rainbow", "Smooth Changing" })
 		ColorfulMenu:addParam("haveFun", "Have fun!", SCRIPT_PARAM_INFO, "")
 end
 
@@ -34,7 +39,9 @@ function OnTick()
 		_G.DrawCircle = DrawRainbowCircle
 
 		if os.clock() >= rClock then
-			RAINBOW = ARGB(255, math.random(1, 255), math.random(1, 255), math.random(1, 255))
+			mixColors()
+
+			RAINBOW = (ColorfulMenu.mode == 1 and ARGB(255, math.random(1, 255), math.random(1, 255), math.random(1, 255))) or ARGB(255, smoothColors[1].current, smoothColors[2].current, smoothColors[3].current)
 			rClock = os.clock() + ColorfulMenu.interval
 		end
 	else
@@ -44,4 +51,19 @@ end
 
 function DrawRainbowCircle(x, y, z, range)
 	return _G.oldDrawCircle(x, y, z, range, RAINBOW)
+end
+
+function mixColors()
+	for i = 1, #smoothColors do
+		local color = smoothColors[i]
+		
+		color.current = color.current + color.mode * i
+		if color.current < color.min then
+			color.current = color.min
+			color.mode = 1
+		elseif color.current > color.max then
+			color.current = color.max
+			color.mode = -1
+		end
+	end
 end
