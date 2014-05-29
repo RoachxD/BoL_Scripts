@@ -18,6 +18,11 @@
 local rClock = 0
 
 function OnLoad()
+	RAINBOW = ARGB(255, math.random(1, 255), math.random(1, 255), math.random(1, 255))
+	
+	_G.oldDrawCircle = rawget(_G, 'DrawCircle')
+	_G.DrawCircle = DrawRainbowCircle
+
 	ColorfulMenu = scriptConfig("Colorful Circles", "HF")
 		ColorfulMenu:addParam("Enable", "ENABLEEE!!", SCRIPT_PARAM_ONOFF, true)
 		ColorfulMenu:addParam("interval", "Interval to change colors: ", SCRIPT_PARAM_SLICE, 0.1, 0.1, 10, -1)
