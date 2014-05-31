@@ -1,4 +1,4 @@
-local version = "4.1"
+local version = "4.11"
 --[[
 
 
@@ -19,6 +19,7 @@ local version = "4.1"
 			4.1
 				- Fixed Items interrupting E and Ult
 				- Improved Performance
+				- Fixed Jungle Clear
 
 			4.0
 				- Re-wrote the whole Script
@@ -705,7 +706,7 @@ function JungleClear()
 			if PanthMenu.jungle.jungleQ and GetDistanceSqr(JungleMob) <= SpellQ.range * SpellQ.range then
 				CastQ(JungleMob)
 			end
-			if PanthMenu.jungle.jungleQ and GetDistanceSqr(JungleMob) <= SpellQ.range * SpellQ.range then
+			if PanthMenu.jungle.jungleW and GetDistanceSqr(JungleMob) <= SpellQ.range * SpellQ.range then
 				CastW(JungleMob)
 			end
 			if PanthMenu.jungle.jungleE and GetDistanceSqr(JungleMob) <= SpellE.range * SpellE.range then
