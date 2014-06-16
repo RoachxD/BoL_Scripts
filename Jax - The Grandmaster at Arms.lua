@@ -1,4 +1,4 @@
-local version = "1.21"
+local version = "1.22"
 --[[
 
 
@@ -20,6 +20,8 @@ local version = "1.21"
 				- Fixed Ward-Jump Problems
 				- Added a check to Enable/Disable myHero.range in the Draw Menu
 				- Added an Option to see who are you Targeting
+				- Added one more Q option: (Use) If target not in E Range
+				- Added one more W option: (Use) When Available
 
 			1.1
 				- Fixed Target Selector Range
@@ -374,9 +376,9 @@ function Menu()
 				JaxMenu.misc.cast:addParam("usePackets", "Use Packets to Cast Spells", SCRIPT_PARAM_ONOFF, false)
 		end
 		JaxMenu.misc:addSubMenu("Spells - "..SpellQ.name.." (Q) Settings", "q")
-			JaxMenu.misc.q:addParam("howTo", "Use "..SpellQ.name.." (Q): ", SCRIPT_PARAM_LIST, 1, { "Always", "Only as a Gap-Closer" })
+			JaxMenu.misc.q:addParam("howTo", "Use "..SpellQ.name.." (Q): ", SCRIPT_PARAM_LIST, 1, { "Always", "Only as a Gap-Closer", "If target not in E Range" })
 		JaxMenu.misc:addSubMenu("Spells - "..SpellW.name.." (W) Settings", "w")
-			JaxMenu.misc.w:addParam("howTo", "Use "..SpellW.name.." (W): ", SCRIPT_PARAM_LIST, 2, { "After every AA", "After every third AA" })
+			JaxMenu.misc.w:addParam("howTo", "Use "..SpellW.name.." (W): ", SCRIPT_PARAM_LIST, 2, { "After every AA", "After every third AA", "When Available" })
 		JaxMenu.misc:addSubMenu("Spells - "..SpellE.name.." (E) Settings", "e")
 			JaxMenu.misc.e:addParam("howTo", "Cast "..SpellE.name.." (E): ", SCRIPT_PARAM_LIST, 1, { "If in Q Range and Q Ready", "Only if in Melee Range" })
 			JaxMenu.misc.e:addParam("whenTo", "Activate "..SpellE.name.." (E): ", SCRIPT_PARAM_LIST, 3, { "Instantly", "If target in Max Radius", "No" })
@@ -553,9 +555,15 @@ function Combo(unit)
 		CastQ(unit)
 
 		if JaxMenu.combo.useW then
-			jSOW:RegisterAfterAttackCallback(function()
-												CastSpell(_W)
-											end)
+			if JaxMenu.misc.w.howTo ~= 3 then
+				jSOW:RegisterAfterAttackCallback(function()
+													CastSpell(_W)
+												end)
+			else
+				if GetDistanceSqr(unit, myHero) <= jSOW:MyRange(unit) * jSOW:MyRange(unit)
+					CastSpell(_W)
+				end
+			end
 		end
 	end
 end
@@ -616,7 +624,7 @@ function CastQ(unit)
 	if unit == nil or not SpellQ.ready or (GetDistanceSqr(unit, myHero) > SpellQ.range * SpellQ.range) then
 		return false
 	end
-	if JaxMenu.misc.q.howTo == 1 or (JaxMenu.misc.q.howTo == 2 and GetDistanceSqr(unit, myHero) > jSOW:MyRange(unit) * jSOW:MyRange(unit)) then
+	if JaxMenu.misc.q.howTo == 1 or (JaxMenu.misc.q.howTo == 2 and GetDistanceSqr(unit, myHero) > jSOW:MyRange(unit) * jSOW:MyRange(unit)) or (JaxMenu.misc.q.howTo == 3 and GetDistanceSqr(unit, myHero) > SpellE.range * SpellE.range) then
 		if not VIP_USER or not JaxMenu.misc.cast.usePackets then
 			CastSpell(_Q, unit)
 		elseif VIP_USER and JaxMenu.misc.cast.usePackets then
