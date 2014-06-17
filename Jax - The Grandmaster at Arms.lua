@@ -1,4 +1,4 @@
-local version = "1.22"
+local version = "1.23"
 --[[
 
 
@@ -560,7 +560,7 @@ function Combo(unit)
 													CastSpell(_W)
 												end)
 			else
-				if GetDistanceSqr(unit, myHero) <= jSOW:MyRange(unit) * jSOW:MyRange(unit)
+				if GetDistanceSqr(unit, myHero) <= jSOW:MyRange(unit) * jSOW:MyRange(unit) then
 					CastSpell(_W)
 				end
 			end
@@ -611,11 +611,17 @@ function JungleClear()
 			if JaxMenu.jungle.jungleQ then
 				CastQ(JungleMob)
 			end
-			if JaxMenu.jungle.jungleW then
+			if JaxMenu.combo.useW then
+			if JaxMenu.misc.w.howTo ~= 3 then
 				jSOW:RegisterAfterAttackCallback(function()
 													CastSpell(_W)
 												end)
+			else
+				if GetDistanceSqr(JungleMob, myHero) <= jSOW:MyRange(JungleMob) * jSOW:MyRange(JungleMob) then
+					CastSpell(_W)
+				end
 			end
+		end
 		end
 	end
 end
