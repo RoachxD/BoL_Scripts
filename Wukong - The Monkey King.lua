@@ -1,4 +1,4 @@
-local version = "3.05"
+local version = "3.06"
 --[[
 
 
@@ -26,7 +26,8 @@ local version = "3.05"
 				- Fixed 'InTurretRange' Function
 				- Fixed Spammine Errors
 				- Added a check to Enable/Disable myHero.range in the Draw Menu
-				- Added an Option to see who are you Targetting
+				- Added an Option to see who are you Targeting
+				- Fixed Target Type Selection
 
 			2.6
 				- Added Support for SAC and MMA Target Selector
@@ -282,94 +283,94 @@ function Variables()
 		}
 
 	InterruptingSpells = {
-		["AbsoluteZero"]				= true,
-		["AlZaharNetherGrasp"]			= true,
-		["CaitlynAceintheHole"]			= true,
-		["Crowstorm"]					= true,
-		["DrainChannel"]				= true,
-		["FallenOne"]					= true,
-		["GalioIdolOfDurand"]			= true,
-		["InfiniteDuress"]				= true,
-		["KatarinaR"]					= true,
-		["MissFortuneBulletTime"]		= true,
-		["Teleport"]					= true,
+		["AbsoluteZero"]								= true,
+		["AlZaharNetherGrasp"]					= true,
+		["CaitlynAceintheHole"]					= true,
+		["Crowstorm"]										= true,
+		["DrainChannel"]								= true,
+		["FallenOne"]										= true,
+		["GalioIdolOfDurand"]						= true,
+		["InfiniteDuress"]							= true,
+		["KatarinaR"]										= true,
+		["MissFortuneBulletTime"]				= true,
+		["Teleport"]										= true,
 		["Pantheon_GrandSkyfall_Jump"]	= true,
-		["ShenStandUnited"]				= true,
-		["UrgotSwap2"]					= true
+		["ShenStandUnited"]							= true,
+		["UrgotSwap2"]									= true
 	}
 
 	Items = {
 		["BLACKFIRE"]	= { id = 3188, range = 750 },
-		["BRK"]			= { id = 3153, range = 500 },
-		["BWC"]			= { id = 3144, range = 450 },
-		["DFG"]			= { id = 3128, range = 750 },
-		["HXG"]			= { id = 3146, range = 700 },
+		["BRK"]				= { id = 3153, range = 500 },
+		["BWC"]				= { id = 3144, range = 450 },
+		["DFG"]				= { id = 3128, range = 750 },
+		["HXG"]				= { id = 3146, range = 700 },
 		["ODYNVEIL"]	= { id = 3180, range = 525 },
-		["DVN"]			= { id = 3131, range = 200 },
-		["ENT"]			= { id = 3184, range = 350 },
-		["HYDRA"]		= { id = 3074, range = 350 },
+		["DVN"]				= { id = 3131, range = 200 },
+		["ENT"]				= { id = 3184, range = 350 },
+		["HYDRA"]			= { id = 3074, range = 350 },
 		["TIAMAT"]		= { id = 3077, range = 350 },
-		["YGB"]			= { id = 3142, range = 350 }
+		["YGB"]				= { id = 3142, range = 350 }
 	}
 
 	if TTMAP then --
 		FocusJungleNames = {
-			["TT_NWraith1.1.1"]		= true,
-			["TT_NGolem2.1.1"]		= true,
-			["TT_NWolf3.1.1"]		= true,
-			["TT_NWraith4.1.1"]		= true,
-			["TT_NGolem5.1.1"]		= true,
-			["TT_NWolf6.1.1"]		= true,
+			["TT_NWraith1.1.1"]			= true,
+			["TT_NGolem2.1.1"]			= true,
+			["TT_NWolf3.1.1"]				= true,
+			["TT_NWraith4.1.1"]			= true,
+			["TT_NGolem5.1.1"]			= true,
+			["TT_NWolf6.1.1"]				= true,
 			["TT_Spiderboss8.1.1"]	= true
 		}		
 		JungleMobNames = {
-			["TT_NWraith21.1.2"]	= true,
-			["TT_NWraith21.1.3"]	= true,
-			["TT_NGolem22.1.2"]		= true,
-			["TT_NWolf23.1.2"]		= true,
-			["TT_NWolf23.1.3"]		= true,
-			["TT_NWraith24.1.2"]	= true,
-			["TT_NWraith24.1.3"]	= true,
-			["TT_NGolem25.1.1"]		= true,
-			["TT_NWolf26.1.2"]		= true,
-			["TT_NWolf26.1.3"]		= true
+			["TT_NWraith21.1.2"]		= true,
+			["TT_NWraith21.1.3"]		= true,
+			["TT_NGolem22.1.2"]			= true,
+			["TT_NWolf23.1.2"]			= true,
+			["TT_NWolf23.1.3"]			= true,
+			["TT_NWraith24.1.2"]		= true,
+			["TT_NWraith24.1.3"]		= true,
+			["TT_NGolem25.1.1"]			= true,
+			["TT_NWolf26.1.2"]			= true,
+			["TT_NWolf26.1.3"]			= true
 		}
 	else 
 		JungleMobNames = { 
-			["Wolf8.1.2"]			= true,
-			["Wolf8.1.3"]			= true,
-			["YoungLizard7.1.2"]	= true,
-			["YoungLizard7.1.3"]	= true,
-			["LesserWraith9.1.3"]	= true,
-			["LesserWraith9.1.2"]	= true,
-			["LesserWraith9.1.4"]	= true,
-			["YoungLizard10.1.2"]	= true,
-			["YoungLizard10.1.3"]	= true,
-			["SmallGolem11.1.1"]	= true,
-			["Wolf2.1.2"]			= true,
-			["Wolf2.1.3"]			= true,
-			["YoungLizard1.1.2"]	= true,
-			["YoungLizard1.1.3"]	= true,
-			["LesserWraith3.1.3"]	= true,
-			["LesserWraith3.1.2"]	= true,
-			["LesserWraith3.1.4"]	= true,
-			["YoungLizard4.1.2"]	= true,
-			["YoungLizard4.1.3"]	= true,
-			["SmallGolem5.1.1"]		= true
+			["Wolf8.1.2"]						= true,
+			["Wolf8.1.3"]						= true,
+			["YoungLizard7.1.2"]		= true,
+			["YoungLizard7.1.3"]		= true,
+			["LesserWraith9.1.3"]		= true,
+			["LesserWraith9.1.2"]		= true,
+			["LesserWraith9.1.4"]		= true,
+			["YoungLizard10.1.2"]		= true,
+			["YoungLizard10.1.3"]		= true,
+			["SmallGolem11.1.1"]		= true,
+			["Wolf2.1.2"]						= true,
+			["Wolf2.1.3"]						= true,
+			["YoungLizard1.1.2"]		= true,
+			["YoungLizard1.1.3"]		= true,
+			["LesserWraith3.1.3"]		= true,
+			["LesserWraith3.1.2"]		= true,
+			["LesserWraith3.1.4"]		= true,
+			["YoungLizard4.1.2"]		= true,
+			["YoungLizard4.1.3"]		= true,
+			["SmallGolem5.1.1"]			= true
 		}
 		FocusJungleNames = {
-			["Dragon6.1.1"]			= true,
-			["Worm12.1.1"]			= true,
+			["Dragon6.1.1"]				= true,
+			["Worm12.1.1"]				= true,
 			["GiantWolf8.1.1"]		= true,
 			["AncientGolem7.1.1"]	= true,
-			["Wraith9.1.1"]			= true,
+			["Wraith9.1.1"]				= true,
 			["LizardElder10.1.1"]	= true,
-			["Golem11.1.2"]			= true,
+			["Golem11.1.2"]				= true,
 			["GiantWolf2.1.1"]		= true,
 			["AncientGolem1.1.1"]	= true,
-			["Wraith3.1.1"]			= true,
+			["Wraith3.1.1"]				= true,
 			["LizardElder4.1.1"]	= true,
-			["Golem5.1.2"]			= true,
+			["Golem5.1.2"]				= true,
 			["GreatWraith13.1.1"]	= true,
 			["GreatWraith14.1.1"]	= true
 		}
@@ -587,7 +588,7 @@ function GetCustomTarget()
     	return _G.MMA_Target
    	elseif _G.AutoCarry and _G.AutoCarry.Crosshair and _G.AutoCarry.Attack_Crosshair then
    		return _G.AutoCarry.Attack_Crosshair.target
-   	elseif TargetSelector.target and not TargetSelector.target.dead and TargetSelector.target.type  == "obj_AI_Hero" then
+   	elseif TargetSelector.target and not TargetSelector.target.dead and TargetSelector.target.type  == myHero.type then
     	return TargetSelector.target
     else
     	return nil
