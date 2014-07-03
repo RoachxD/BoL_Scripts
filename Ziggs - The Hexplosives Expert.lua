@@ -1,4 +1,4 @@
-local Ziggs_Ver = "1.049"
+local Ziggs_Ver = "1.05"
 --[[
 
 
@@ -12,6 +12,9 @@ local Ziggs_Ver = "1.049"
 	Script - Ziggs - The Hexplosives Expert 1.04
 
 	Changelog:
+		1.05
+			- Fixed Target Type Selection
+			- Updated Q's Width for a better Collision
 		1.04
 			- Added Custom Collision
 			- Improved Orbwalker
@@ -477,7 +480,7 @@ function OnGainBuff(unit, buff)
 		SpellP.ready = true
 	end
 	if ZiggsMenu.misc.smisc.AutoQ then
-		if unit.team ~= myHero.team and unit.type == "obj_AI_Hero" then
+		if unit.team ~= myHero.team and unit.type == myHero.type then
 			for i = 1, #buffTypes do
 				local buffType = buffTypes[i]
 				if buff.type == buffType then
