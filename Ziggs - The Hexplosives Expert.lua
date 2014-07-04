@@ -1,4 +1,4 @@
-local Ziggs_Ver = "1.05"
+local Ziggs_Ver = "1.051"
 --[[
 
 
