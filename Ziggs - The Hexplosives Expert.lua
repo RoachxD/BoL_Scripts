@@ -622,7 +622,7 @@ function GetCustomTarget()
     	return _G.MMA_Target
    	elseif _G.AutoCarry and _G.AutoCarry.Crosshair and _G.AutoCarry.Attack_Crosshair then
    		return _G.AutoCarry.Attack_Crosshair.target
-   	elseif TargetSelector.target and not TargetSelector.target.dead and TargetSelector.target.type  == "obj_AI_Hero" then
+   	elseif TargetSelector.target and not TargetSelector.target.dead and TargetSelector.target.type  == myHero.type then
     	return TargetSelector.target
     else
     	return nil
