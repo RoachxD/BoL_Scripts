@@ -1,4 +1,4 @@
-local MF_Ver = "1.022"
+local MF_Ver = "1.023"
 --[[
 
 
@@ -21,6 +21,9 @@ local MF_Ver = "1.022"
 				- Fixed Ult Cancelling
 				- Fixed Casting E at Mouse Pos Bug
 				- Fixed Spamming Errors about 'block'
+				- Fixed Spamming Errors
+				- Fixed Target Type Error
+				- Fixed 'OnRecvPacket' Bug Spamming Errors
 
 			1.01
 				- Fixed spamming errors to Random Users
@@ -196,7 +199,7 @@ function GetCustomTarget()
 		return _G.MMA_Target
 	elseif _G.AutoCarry and _G.AutoCarry.Crosshair and _G.AutoCarry.Attack_Crosshair then
 		return _G.AutoCarry.Attack_Crosshair.target
-	elseif TargetSelector.target and not TargetSelector.target.dead and TargetSelector.target.type  == "obj_AI_Hero" then
+	elseif TargetSelector.target and not TargetSelector.target.dead and TargetSelector.target.type == myHero.type then
 		return TargetSelector.target
 	else
 		return nil
@@ -272,7 +275,7 @@ function CastQ(unit)
 	if unit == nil or not ValidTarget(unit, Spells.Q.range) or not Spells.Q.ready then return end
 
 	if Config.Extras.usePackets then
-		Packet("S_CAST", {spellId = Spells.Q.key, targetNetworkId = unit.networkID}):send()
+		Packet("S_CAST", { spellId = Spells.Q.key, targetNetworkId = unit.networkID }):send()
 	else
 		CastSpell(Spells.Q.key, unit)
 	end
@@ -283,10 +286,10 @@ function CastbQ(unit)
 
 	for i, minion in pairs(EnemyMinions.objects) do
 		Position, HitChance = VP:GetPredictedPos(unit, Spells.Q.delay, Spells.Q.speed, myHero, false)
-		if unit == nil or minion == nil or GetDistanceSqr(Position, minion) > Spells.Q.bRange*Spells.Q.bRange or not GetQPriorities(minion, unit) then return end
+		if unit == nil or minion == nil or GetDistanceSqr(Position, minion) > Spells.Q.bRange * Spells.Q.bRange or not GetQPriorities(minion, unit) then return end
 
 		if Config.Extras.usePackets then
-			Packet("S_CAST", {spellId = Spells.Q.key, targetNetworkId = minion.networkID}):send()
+			Packet("S_CAST", { spellId = Spells.Q.key, targetNetworkId = minion.networkID }):send()
 		else
 			CastSpell(Spells.Q.key, minion)
 		end
@@ -303,10 +306,10 @@ function CastE(unit)
 	if unit == nil or not ValidTarget(unit, Spells.E.range) or not Spells.E.ready then return end
 
 	local AOECastPosition, MainTargetHitChance, nTargets = VP:GetCircularAOECastPosition(Target, Spells.E.delay, Spells.E.width, Spells.E.range, Spells.E.speed, myHero)
-	if MainTargetHitChance < 2 and GetDistanceSqr(myHero, AOECastPosition) > Spells.E.range*Spells.E.range then return end
+	if MainTargetHitChance < 2 and GetDistanceSqr(myHero, AOECastPosition) > Spells.E.range * Spells.E.range then return end
 
 	if Config.Extras.usePackets then
-		Packet("S_CAST", {spellId = Spells.E.key, toX = AOECastPosition.x, toY = AOECastPosition.z, fromX = AOECastPosition.x, fromy = AOECastPosition.z}):send()
+		Packet("S_CAST", { spellId = Spells.E.key, toX = AOECastPosition.x, toY = AOECastPosition.z, fromX = AOECastPosition.x, fromy = AOECastPosition.z }):send()
 	else
 		CastSpell(Spells.E.key, AOECastPosition.x, AOECastPosition.z)
 	end
@@ -319,7 +322,7 @@ function CastR(unit)
 	if mainHitChance < 2 or maxHit < Config.Ultimate.minEnemies then return end
 
 	if Config.Extras.usePackets then
-		Packet("S_CAST", {spellId = Spells.R.key, toX = mainCastPosition.x, toY = mainCastPosition.z, fromX = mainCastPosition.x, fromY = mainCastPosition.z}):send()
+		Packet("S_CAST", { spellId = Spells.R.key, toX = mainCastPosition.x, toY = mainCastPosition.z, fromX = mainCastPosition.x, fromY = mainCastPosition.z }):send()
 	else
 		CastSpell(Spells.R.key, mainCastPosition.x, mainCastPosition.z)
 	end
@@ -329,7 +332,7 @@ end
 function KillSteal()
 	local Enemies = GetEnemyHeroes()
 	for _, enemy in pairs(Enemies) do
-		if not ValidTarget(enemy) or enemy == nil or enemy.dead or GetDistanceSqr(myHero, enemy) > 1400*1400 then return end
+		if not ValidTarget(enemy) or enemy == nil or enemy.dead or GetDistanceSqr(myHero, enemy) > 1400 * 1400 then return end
 
 		if getDmg("Q", enemy, myHero) > enemy.health and Config.Killsteal.useQ then
 			CastQ(enemy)
@@ -386,9 +389,9 @@ end
 
 function OnSendPacket(p)
 	if Spells.R.casting then
-		local SendP = Packet(packet)
+		local SendP = Packet(p)
 		if (SendP:get('name') == 'S_MOVE' or SendP:get('name') == 'S_CAST') and SendP:get('sourceNetworkId') == myHero.networkID and (SendP:get('spellId') ~= SUMMONER_1 and SendP:get('spellId') ~= SUMMONER_2) then
-			SendP:block()
+			SendP:Block()
 		end
 	end
 end
@@ -406,13 +409,13 @@ end
 function CheckDashes()
 	local Enemies = GetEnemyHeroes()
 	for _, enemy in pairs(Enemies) do
-		if enemy.dead or not ValidTarget(enemy) or GetDistanceSqr(myHero, enemy) > Spells.E.range*Spells.E.range  then return end
+		if enemy.dead or not ValidTarget(enemy) or GetDistanceSqr(myHero, enemy) > Spells.E.range * Spells.E.range  then return end
 
 		local IsDashing, CanHit, Position = VP:IsDashing(enemy, Spells.E.delay, Spells.E.width, Spells.E.speed, myHero)
-		if not IsDashing or not CanHit or GetDistanceSqr(myHero, Position) > Spells.E.range*Spells.E.range or not Spells.E.ready then return end
+		if not IsDashing or not CanHit or GetDistanceSqr(myHero, Position) > Spells.E.range * Spells.E.range or not Spells.E.ready then return end
 
 		if Config.Extras.usePackets then
-			Packet("S_CAST", {spellId = Spells.E.key, toX = Position.x, toY = Position.z, fromX = Position.x, fronY = Position.z}):send()
+			Packet("S_CAST", { spellId = Spells.E.key, toX = Position.x, toY = Position.z, fromX = Position.x, fronY = Position.z }):send()
 		else
 			CastSpell(Spells.E.key, Position.x, Position.z)
 		end
@@ -428,7 +431,7 @@ function isLowMana(unit, slider)
 end
 
 function GetTriangle(triangle_target, angle, unit)
-	if triangle_target == nil or unit == nil or GetDistanceSqr(unit, triangle_target) > Spells.Q.bRange*Spells.Q.bRange or GetDistanceSqr(myHero, triangle_target) > Spells.Q.range*Spells.Q.range then return end
+	if triangle_target == nil or unit == nil or GetDistanceSqr(unit, triangle_target) > Spells.Q.bRange * Spells.Q.bRange or GetDistanceSqr(myHero, triangle_target) > Spells.Q.range * Spells.Q.range then return end
 
 	v1 = (Vector(triangle_target) - Vector(myHero)):rotated(0, angle / (180 * math.pi), 0):normalized()
 	v2 = (Vector(triangle_target) - Vector(myHero)):rotated(0, -(angle / (180 * math.pi)), 0):normalized()
@@ -442,7 +445,7 @@ function GetTriangle(triangle_target, angle, unit)
 end
 
 function GetQPriorities(minion, unit)
-	if minion == nil or unit == nil or GetDistanceSqr(unit, triangle_target) > Spells.Q.bRange*Spells.Q.bRange or GetDistanceSqr(myHero, triangle_target) > Spells.Q.range*Spells.Q.range then return end
+	if minion == nil or unit == nil or GetDistanceSqr(unit, triangle_target) > Spells.Q.bRange * Spells.Q.bRange or GetDistanceSqr(myHero, triangle_target) > Spells.Q.range * Spells.Q.range then return end
 
 	for i, secure_minion in pairs(EnemyMinions.objects) do
 		if secure_minion == nil then return end
@@ -480,7 +483,7 @@ function DrawCircleNextLvl(x, y, z, radius, width, color, chordlength)
 end
 
 function round(num) 
-	if num >= 0 then return math.floor(num+.5) else return math.ceil(num-.5) end
+	if num >= 0 then return math.floor(num + .5) else return math.ceil(num - .5) end
 end
 
 function DrawCircle2(x, y, z, radius, color)
@@ -490,6 +493,6 @@ function DrawCircle2(x, y, z, radius, color)
 	local sPos = WorldToScreen(D3DXVECTOR3(tPos.x, tPos.y, tPos.z))
 	
 	if OnScreen({ x = sPos.x, y = sPos.y }, { x = sPos.x, y = sPos.y }) then
-		DrawCircleNextLvl(x, y, z, radius, 1, color, PanthMenu.drawing.lfc.CL) 
+		DrawCircleNextLvl(x, y, z, radius, 1, color, 100) 
 	end
 end
