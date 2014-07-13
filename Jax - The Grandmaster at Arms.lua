@@ -109,11 +109,6 @@ function OnLoad()
 end
 
 function OnTick()
-	ComboKey		= JaxMenu.combo.comboKey
-	HarassKey		= JaxMenu.harass.harassKey
-	FarmKey			= JaxMenu.farming.farmKey
-	JungleClearKey	= JaxMenu.jungle.jungleKey
-	WardJumpKey		= JaxMenu.misc.wardJump
 
 	if ComboKey then
 		Combo(Target)
@@ -394,6 +389,12 @@ function Menu()
 	JaxMenu:addTS(TargetSelector)
 
 	JaxMenu:addParam("jaxVer", "Version: ", SCRIPT_PARAM_INFO, version)
+
+	ComboKey		= JaxMenu.combo.comboKey
+	HarassKey		= JaxMenu.harass.harassKey
+	FarmKey			= JaxMenu.farming.farmKey
+	JungleClearKey	= JaxMenu.jungle.jungleKey
+	WardJumpKey		= JaxMenu.misc.wardJump
 end
 
 function OnProcessSpell(unit, spell)
