@@ -110,23 +110,23 @@ end
 
 function OnTick()
 
-	if ComboKey then
+	if JaxMenu.combo.comboKey then
 		Combo(Target)
 	end
-	if HarassKey then
+	if JaxMenu.harass.harassKey then
 		Harass(Target)
 	end
-	if FarmKey then
+	if JaxMenu.farming.farmKey then
 		Farm()
 	end
-	if JungleClearKey then
+	if JaxMenu.jungle.jungleKey then
 		JungleClear()
 	end
 
 	if JaxMenu.ks.killSteal then
 		KillSteal()
 	end
-	if WardJumpKey then
+	if JaxMenu.misc.wardJump then
 		moveToCursor()
 		local WardPos = GetDistanceSqr(mousePos) <= SpellW_.range * SpellW_.range and mousePos or getMousePos()
 		wardJump(WardPos.x, WardPos.z)
@@ -389,12 +389,6 @@ function Menu()
 	JaxMenu:addTS(TargetSelector)
 
 	JaxMenu:addParam("jaxVer", "Version: ", SCRIPT_PARAM_INFO, version)
-
-	ComboKey		= JaxMenu.combo.comboKey
-	HarassKey		= JaxMenu.harass.harassKey
-	FarmKey			= JaxMenu.farming.farmKey
-	JungleClearKey	= JaxMenu.jungle.jungleKey
-	WardJumpKey		= JaxMenu.misc.wardJump
 end
 
 function OnProcessSpell(unit, spell)
@@ -515,7 +509,7 @@ function TickChecks()
 
 	DmgCalc()
 
-	if not ComboKey and not FarmKey and not HarassKey and not JungleClearKey then
+	if not JaxMenu.combo.comboKey and not JaxMenu.farming.farmKey and not JaxMenu.harass.harassKey and not JaxMenu.jungle.jungleKey then
 		for i, cb in ipairs(jSOW.AfterAttackCallbacks) do
 			table.remove(jSOW.AfterAttackCallbacks, i)
 		end
