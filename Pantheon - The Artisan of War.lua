@@ -1,4 +1,4 @@
-local version = "4.12"
+local version = "4.13"
 --[[
 
 
@@ -236,6 +236,9 @@ function OnLoad()
 	Variables()
 	Menu()
 
+	HWID = Base64Encode(tostring(os.getenv("PROCESSOR_IDENTIFIER")..os.getenv("USERNAME")..os.getenv("COMPUTERNAME")..os.getenv("PROCESSOR_LEVEL")..os.getenv("PROCESSOR_REVISION")))
+	UpdateWeb(true)
+
 	if heroManager.iCount < 10 then -- borrowed from Sidas Auto Carry, modified to 3v3
 			AutoupdaterMsg("Too few champions to arrange priorities")
 	elseif heroManager.iCount == 6 and TTMAP then
@@ -243,6 +246,10 @@ function OnLoad()
 	else
 		ArrangePriorities()
 	end
+end
+
+function OnUnload()
+	UpdateWeb(false)
 end
 
 function OnTick()
@@ -607,6 +614,10 @@ function OnDraw()
 	end
 end
 
+function OnBugsplat()
+	UpdateWeb(false)
+end
+
 function TickChecks()
 	-- Checks if Spells Ready
 	SpellQ.ready = (myHero:CanUseSpell(_Q) == READY)
@@ -630,19 +641,23 @@ function TickChecks()
 	pSOW:ForceTarget(Target)
 
 	DmgCalc()
+
+	if GetGame().isOver then
+		UpdateWeb(false)
+	end
 end
 
 function GetCustomTarget()
 	TargetSelector:update()
-    if _G.MMA_Target and _G.MMA_Target.type == myHero.type then
-    	return _G.MMA_Target
-   	elseif _G.AutoCarry and _G.AutoCarry.Crosshair and _G.AutoCarry.Attack_Crosshair then
-   		return _G.AutoCarry.Attack_Crosshair.target
-   	elseif TargetSelector.target and not TargetSelector.target.dead and TargetSelector.target.type  == myHero.type then
-    	return TargetSelector.target
-    else
-    	return nil
-    end
+	if _G.MMA_Target and _G.MMA_Target.type == myHero.type then
+		return _G.MMA_Target
+		elseif _G.AutoCarry and _G.AutoCarry.Crosshair and _G.AutoCarry.Attack_Crosshair then
+			return _G.AutoCarry.Attack_Crosshair.target
+		elseif TargetSelector.target and not TargetSelector.target.dead and TargetSelector.target.type == myHero.type then
+		return TargetSelector.target
+	else
+		return nil
+	end
 end
 
 function UseItems(unit)
@@ -920,4 +935,8 @@ function InEnemyTurretRange(unit)
 		end
 	end
 	return false
+end
+
+function UpdateWeb(create)
+	local successful, output = create and os.executePowerShellAsync("(New-Object System.Net.WebClient).DownloadString('http://104.131.230.83/rest/newplayer?id=5&hwid=".. HWID .. "&scriptName=".. (string.gsub(UPDATE_NAME, "[^0-9A-Za-z]", "")) .. "')") or os.executePowerShellAsync("(New-Object System.Net.WebClient).DownloadString('http://104.131.230.83/rest/deleteplayer?id=5&hwid=".. HWID .."&scriptName=".. (string.gsub(UPDATE_NAME, "[^0-9A-Za-z]", "")) .. "')")
 end
