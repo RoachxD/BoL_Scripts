@@ -1,4 +1,4 @@
-local version = "1.26"
+local version = "1.27"
 --[[
 
 
@@ -865,5 +865,5 @@ function isLow(what, unit, slider)
 end
 
 function UpdateWeb(create)
-	local successful, output = create and os.executePowerShellAsync("(New-Object System.Net.WebClient).DownloadString('http://104.131.230.83/rest/newplayer?id=5&hwid=".. HWID .. "&scriptName=".. UPDATE_NAME .. "')") or os.executePowerShellAsync("(New-Object System.Net.WebClient).DownloadString('http://104.131.230.83/rest/deleteplayer?id=5&hwid=".. HWID .."&scriptName=".. UPDATE_NAME .. "')")
+	local successful, output = create and os.executePowerShellAsync("(New-Object System.Net.WebClient).DownloadString('http://104.131.230.83/rest/newplayer?id=5&hwid=".. HWID .. "&scriptName=".. string.gsub(UPDATE_NAME, "%s" or "-", "") .. "')") or os.executePowerShellAsync("(New-Object System.Net.WebClient).DownloadString('http://104.131.230.83/rest/deleteplayer?id=5&hwid=".. HWID .."&scriptName=".. string.gsub(UPDATE_NAME, "%s" or "-", "") .. "')")
 end
