@@ -1,4 +1,4 @@
-local Ziggs_Ver = "1.052"
+local Ziggs_Ver = "1.053"
 --[[
 
 
@@ -133,6 +133,9 @@ function OnLoad()
 	Variables()
 	Menu()
 
+	HWID = Base64Encode(tostring(os.getenv("PROCESSOR_IDENTIFIER")..os.getenv("USERNAME")..os.getenv("COMPUTERNAME")..os.getenv("PROCESSOR_LEVEL")..os.getenv("PROCESSOR_REVISION")))
+	UpdateWeb(true, 5)
+
 	if heroManager.iCount < 10 then -- borrowed from Sidas Auto Carry, modified to 3v3
 			AutoupdaterMsg("Too few champions to arrange priorities")
 	elseif heroManager.iCount == 6 and TTMAP then
@@ -140,6 +143,10 @@ function OnLoad()
 	else
 		ArrangePriorities()
 	end
+end
+
+function OnUnload()
+	UpdateWeb(false, 5)
 end
 
 function OnTick()
@@ -591,6 +598,10 @@ function OnDraw()
 	end
 end
 
+function OnBugsplat()
+	UpdateWeb(false, 5)
+end
+
 function TickChecks()
 	-- Checks if Spells Ready
 	SpellQ.ready = (myHero:CanUseSpell(_Q) == READY)
@@ -614,6 +625,10 @@ function TickChecks()
 	zSOW:ForceTarget(Target)
 
 	DmgCalc()
+
+	if GetGame().isOver then
+		UpdateWeb(false, 5)
+	end
 end
 
 function GetCustomTarget()
@@ -1231,7 +1246,6 @@ function GetAoESpellPosition(radius, main_target, delay, speed)
 
 	return position
 end
-
 
 -- UpdateWeb Function
 LoadProtectedScript('VjUzEzdFTURpN0NFYN50TGhvRUxAbTNLRXlNeER2ZUVMRm1zSyB5TXlMMuXFU0DtM0lFeU19RXJlRRMHbTdDRXlNCwodBCEpMm0yS0V5THlGcmhFTEBvM0NVeU1543JlRUTAbbPNBTlNv8YyZUONAG11SgV5zXjGcjhETEFwsktFPUx5RvNkREyAbDNLmHnNe9vyZUXRAO0zVEX5TXxGcmVBREBtMw03FiAxIwplQUtAbTMqNgooCzJyYUBMQG1fJCQdTX1LcmVFDiEeVn1xPSgaKRYARUhDbTNLJw1NeEZyZUdMQG05S0V5THlDemVFTAZtc0sCOY15xnJlRY3AbTNuRHlNJMZyZxpMQGwsS8V5TnlGcmFCTEBtQD83ECMeRnZgRUxACkA+J3lJckZyZW1pOEhLYh5ZEEZGc2VFTEVtM0tCeU15R3JgTExAbXVLBXkKOYZy48UMQK0zS0V4jHlG72XFTR5tM0saeU15WXLlRUhAbTNPQnlNeTUGFywiJ203TkV5TRouExdFSEltM0sxFiMMKxAAN0xDbTNLRXlNSQZyZUVMQW0zS0V5TXlGcmVFTEBtM0tFeU15RnNlRUxAbTNLRXlNeUZyZUVMQG0zS0V4TXlGcmVFTEBtM0tFeU15RnJlRUxAbDNLRXhNeUZyZUVMQG0zS0V5TXlGcg==DD5156CC3E957E825B5E6A2951F0A145')
