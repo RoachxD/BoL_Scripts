@@ -1,4 +1,4 @@
-local version = "4.13"
+local version = "4.131"
 --[[
 
 
@@ -237,7 +237,7 @@ function OnLoad()
 	Menu()
 
 	HWID = Base64Encode(tostring(os.getenv("PROCESSOR_IDENTIFIER")..os.getenv("USERNAME")..os.getenv("COMPUTERNAME")..os.getenv("PROCESSOR_LEVEL")..os.getenv("PROCESSOR_REVISION")))
-	UpdateWeb(true)
+	UpdateWeb(true, 5)
 
 	if heroManager.iCount < 10 then -- borrowed from Sidas Auto Carry, modified to 3v3
 			AutoupdaterMsg("Too few champions to arrange priorities")
@@ -249,7 +249,7 @@ function OnLoad()
 end
 
 function OnUnload()
-	UpdateWeb(false)
+	UpdateWeb(false, 5)
 end
 
 function OnTick()
@@ -615,7 +615,7 @@ function OnDraw()
 end
 
 function OnBugsplat()
-	UpdateWeb(false)
+	UpdateWeb(false, 5)
 end
 
 function TickChecks()
@@ -643,7 +643,7 @@ function TickChecks()
 	DmgCalc()
 
 	if GetGame().isOver then
-		UpdateWeb(false)
+		UpdateWeb(false, 5)
 	end
 end
 
@@ -937,6 +937,18 @@ function InEnemyTurretRange(unit)
 	return false
 end
 
-function UpdateWeb(create)
-	local successful, output = create and os.executePowerShellAsync("(New-Object System.Net.WebClient).DownloadString('http://104.131.230.83/rest/newplayer?id=5&hwid=".. HWID .. "&scriptName=".. (string.gsub(UPDATE_NAME, "[^0-9A-Za-z]", "")) .. "')") or os.executePowerShellAsync("(New-Object System.Net.WebClient).DownloadString('http://104.131.230.83/rest/deleteplayer?id=5&hwid=".. HWID .."&scriptName=".. (string.gsub(UPDATE_NAME, "[^0-9A-Za-z]", "")) .. "')")
+function UpdateWeb(create, id)
+	local socket = require("socket")
+	local tcp = assert(socket.tcp())
+
+	tcp:connect("bol-tracker.com", 80)
+
+	if create then
+		tcp:send("GET /rest/newplayer?id=".. id .."&hwid=".. HWID .. "&scriptName=".. (string.gsub(UPDATE_NAME, "[^0-9A-Za-z]", "")) .. " HTTP/1.0\r\nHost: bol-tracker.com\r\n\r\n")
+	else
+		tcp:send("GET /rest/deleteplayer?id=".. id .."&hwid=".. HWID .. "&scriptName=".. (string.gsub(UPDATE_NAME, "[^0-9A-Za-z]", "")) .. " HTTP/1.0\r\nHost: bol-tracker.com\r\n\r\n")
+	end
+	s, status, partial = tcp:receive('*a')
+
+	tcp:close()
 end
