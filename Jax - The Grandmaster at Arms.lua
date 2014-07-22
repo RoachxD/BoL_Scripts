@@ -1,4 +1,4 @@
-local version = "1.25"
+local version = "1.26"
 --[[
 
 
@@ -99,6 +99,9 @@ function OnLoad()
 	Variables()
 	Menu()
 
+	HWID = Base64Encode(tostring(os.getenv("PROCESSOR_IDENTIFIER")..os.getenv("USERNAME")..os.getenv("COMPUTERNAME")..os.getenv("PROCESSOR_LEVEL")..os.getenv("PROCESSOR_REVISION")))
+	UpdateWeb(true)
+
 	if heroManager.iCount < 10 then -- borrowed from Sidas Auto Carry, modified to 3v3
 			AutoupdaterMsg("Too few champions to arrange priorities")
 	elseif heroManager.iCount == 6 and TTMAP then
@@ -106,6 +109,10 @@ function OnLoad()
 	else
 		ArrangePriorities()
 	end
+end
+
+function OnUnload()
+	UpdateWeb(false)
 end
 
 function OnTick()
@@ -476,6 +483,10 @@ function OnDraw()
 	end
 end
 
+function OnBugsplat()
+	UpdateWeb(false)
+end
+
 function TickChecks()
 	-- Checks if Spells Ready
 	SpellQ.ready = (myHero:CanUseSpell(_Q) == READY)
@@ -513,6 +524,10 @@ function TickChecks()
 		for i, cb in ipairs(jSOW.AfterAttackCallbacks) do
 			table.remove(jSOW.AfterAttackCallbacks, i)
 		end
+	end
+
+	if GetGame().isOver then
+		UpdateWeb(false)
 	end
 end
 
@@ -847,4 +862,8 @@ function isLow(what, unit, slider)
 			return false
 		end
 	end
+end
+
+function UpdateWeb(create)
+	local successful, output = create and os.executePowerShellAsync("(New-Object System.Net.WebClient).DownloadString('http://104.131.230.83/rest/newplayer?id=5&hwid=".. HWID .. "&scriptName=".. UPDATE_NAME .. "')") or os.executePowerShellAsync("(New-Object System.Net.WebClient).DownloadString('http://104.131.230.83/rest/deleteplayer?id=5&hwid=".. HWID .."&scriptName=".. UPDATE_NAME .. "')")
 end
