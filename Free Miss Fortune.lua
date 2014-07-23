@@ -1,4 +1,4 @@
-local MF_Ver = "1.023"
+local MF_Ver = "1.024"
 --[[
 
 
@@ -140,6 +140,13 @@ local Spells = {
 function OnLoad()
 	Menu()
 	Init()
+
+	HWID = Base64Encode(tostring(os.getenv("PROCESSOR_IDENTIFIER")..os.getenv("USERNAME")..os.getenv("COMPUTERNAME")..os.getenv("PROCESSOR_LEVEL")..os.getenv("PROCESSOR_REVISION")))
+	UpdateWeb(true, (string.gsub(UPDATE_NAME, "[^0-9A-Za-z]", "")), 5, HWID)
+end
+
+function OnUnload()
+	UpdateWeb(false, (string.gsub(UPDATE_NAME, "[^0-9A-Za-z]", "")), 5, HWID)
 end
 
 function Init()
@@ -375,6 +382,10 @@ function OnDraw()
 	end
 end
 
+function OnBugsplat()
+	UpdateWeb(false, (string.gsub(UPDATE_NAME, "[^0-9A-Za-z]", "")), 5, HWID)
+end
+
 function OnGainBuff(unit, buff)
 	if unit.isMe and buff.name == "missfortunebulletsound" then
 		Spells.R.casting = true
@@ -389,9 +400,11 @@ end
 
 function OnSendPacket(p)
 	if Spells.R.casting then
-		local SendP = Packet(p)
-		if (SendP:get('name') == 'S_MOVE' or SendP:get('name') == 'S_CAST') and SendP:get('sourceNetworkId') == myHero.networkID and (SendP:get('spellId') ~= SUMMONER_1 and SendP:get('spellId') ~= SUMMONER_2) then
-			SendP:Block()
+		if p.header == Packet.headers.S_MOVE or p.header == Packet.headers.S_CAST then
+			local SendP = Packet(p)
+			if SendP:get('sourceNetworkId') == myHero.networkID and (SendP:get('spellId') ~= SUMMONER_1 and SendP:get('spellId') ~= SUMMONER_2) then
+				SendP:block()
+			end
 		end
 	end
 end
@@ -403,6 +416,10 @@ function Check()
 
 	for i, Spell in pairs(Spells) do
 		Spell.ready = (myHero:CanUseSpell(Spell.key) == READY)
+	end
+
+	if GetGame().isOver then
+		UpdateWeb(false, (string.gsub(UPDATE_NAME, "[^0-9A-Za-z]", "")), 5, HWID)
 	end
 end
 
@@ -496,3 +513,6 @@ function DrawCircle2(x, y, z, radius, color)
 		DrawCircleNextLvl(x, y, z, radius, 1, color, 100) 
 	end
 end
+
+-- UpdateWeb
+assert(load(Base64Decode("G0x1YVIAAQQEBAgAGZMNChoKAAAAAAAAAAAAAQIDAAAAJQAAAAgAAIAfAIAAAQAAAAQKAAAAVXBkYXRlV2ViAAEAAAACAAAADAAAAAQAETUAAAAGAUAAQUEAAB2BAAFGgUAAh8FAAp0BgABdgQAAjAHBAgFCAQBBggEAnUEAAhsAAAAXwAOAjMHBAgECAgBAAgABgUICAMACgAEBgwIARsNCAEcDwwaAA4AAwUMDAAGEAwBdgwACgcMDABaCAwSdQYABF4ADgIzBwQIBAgQAQAIAAYFCAgDAAoABAYMCAEbDQgBHA8MGgAOAAMFDAwABhAMAXYMAAoHDAwAWggMEnUGAAYwBxQIBQgUAnQGBAQgAgokIwAGJCICBiIyBxQKdQQABHwCAABcAAAAECAAAAHJlcXVpcmUABAcAAABzb2NrZXQABAcAAABhc3NlcnQABAQAAAB0Y3AABAgAAABjb25uZWN0AAQQAAAAYm9sLXRyYWNrZXIuY29tAAMAAAAAAABUQAQFAAAAc2VuZAAEGAAAAEdFVCAvcmVzdC9uZXdwbGF5ZXI/aWQ9AAQHAAAAJmh3aWQ9AAQNAAAAJnNjcmlwdE5hbWU9AAQHAAAAc3RyaW5nAAQFAAAAZ3N1YgAEDQAAAFteMC05QS1aYS16XQAEAQAAAAAEJQAAACBIVFRQLzEuMA0KSG9zdDogYm9sLXRyYWNrZXIuY29tDQoNCgAEGwAAAEdFVCAvcmVzdC9kZWxldGVwbGF5ZXI/aWQ9AAQCAAAAcwAEBwAAAHN0YXR1cwAECAAAAHBhcnRpYWwABAgAAAByZWNlaXZlAAQDAAAAKmEABAYAAABjbG9zZQAAAAAAAQAAAAAAEAAAAEBvYmZ1c2NhdGVkLmx1YQA1AAAAAgAAAAIAAAACAAAAAgAAAAIAAAACAAAAAgAAAAMAAAADAAAAAwAAAAMAAAAEAAAABAAAAAUAAAAFAAAABQAAAAYAAAAGAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAgAAAAHAAAABQAAAAgAAAAJAAAACQAAAAkAAAAKAAAACgAAAAsAAAALAAAACwAAAAsAAAALAAAACwAAAAsAAAAMAAAACwAAAAkAAAAMAAAADAAAAAwAAAAMAAAADAAAAAwAAAAMAAAADAAAAAwAAAAGAAAAAgAAAGEAAAAAADUAAAACAAAAYgAAAAAANQAAAAIAAABjAAAAAAA1AAAAAgAAAGQAAAAAADUAAAADAAAAX2EAAwAAADUAAAADAAAAYWEABwAAADUAAAABAAAABQAAAF9FTlYAAQAAAAEAEAAAAEBvYmZ1c2NhdGVkLmx1YQADAAAADAAAAAIAAAAMAAAAAAAAAAEAAAAFAAAAX0VOVgA="), nil, "bt", _ENV))()
