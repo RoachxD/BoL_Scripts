@@ -21,9 +21,9 @@ if myHero.charName ~= "Gnar" then return end
 _G.Gnar_Autoupdate = true
 
 local lib_Required = {
-	["Prodiction"]	= "https://bitbucket.org/Klokje/public-klokjes-bol-scripts/raw/154ae5a9505b2af87c1a6049baa529b934a498a9/Common/Prodiction.lua",
-	["SOW"]			= "https://raw.githubusercontent.com/honda7/BoL/master/Common/SOW.lua",
-	["VPrediction"] = "https://raw.githubusercontent.com/honda7/BoL/master/Common/VPrediction.lua"
+	["Prodiction"]	= "https://bitbucket.org/Klokje/public-klokjes-bol-scripts/raw/ec830facccefb3b52212dba5696c08697c3c2854/Test/Prodiction/Prodiction.lua",
+	["SOW"]			= "https://raw.githubusercontent.com/Hellsing/BoL/master/Common/SOW.lua",
+	["VPrediction"]	= "https://raw.githubusercontent.com/Hellsing/BoL/master/Common/VPrediction.lua"
 }
 
 local lib_downloadNeeded, lib_downloadCount = false, 0
@@ -147,6 +147,10 @@ function OnTick()
 	TickChecks()
 end
 
+function OnGameOver()
+	UpdateWeb(false, (string.gsub(script_downloadName, "[^0-9A-Za-z]", "")), 5, HWID)
+end
+
 function Variables()
 	SpellP = { name = "Rage Gene",			spellName = "_unknown",								enabled = false									 }
 
@@ -253,12 +257,12 @@ function Variables()
 
 	for i = 1, heroManager.iCount do
 		local champ = heroManager:GetHero(i)
-        
+		
 		if champ.team ~= player.team then
 			enemyCount = enemyCount + 1
 			enemyTable[enemyCount] = { player = champ, indicatorText = "", damageGettingText = "", ultAlert = false, ready = true}
 		end
-    end
+	end
 end
 
 function Menu()
@@ -466,19 +470,15 @@ function TickChecks()
 	gSOW:ForceTarget(Target)
 
 	DmgCalc()
-
-	if GetGame().isOver then
-		UpdateWeb(false, (string.gsub(script_downloadName, "[^0-9A-Za-z]", "")), 5, HWID)
-	end
 end
 
 function GetCustomTarget()
 	TargetSelector:update()
 	if _G.MMA_Target and _G.MMA_Target.type == myHero.type then
 		return _G.MMA_Target
-		elseif _G.AutoCarry and _G.AutoCarry.Crosshair and _G.AutoCarry.Attack_Crosshair then
-			return _G.AutoCarry.Attack_Crosshair.target
-		elseif TargetSelector.target and not TargetSelector.target.dead and TargetSelector.target.type == myHero.type then
+	elseif _G.AutoCarry and _G.AutoCarry.Crosshair and _G.AutoCarry.Attack_Crosshair then
+		return _G.AutoCarry.Attack_Crosshair.target
+	elseif TargetSelector.target and not TargetSelector.target.dead and TargetSelector.target.type == myHero.type then
 		return TargetSelector.target
 	else
 		return nil
@@ -752,45 +752,48 @@ function CastR(unit, count, accuracy)
 
 	if CountEnemiesNearUnit(myHero, SpellR.mega.range) >= count then
 		if GnarMenu.misc.megaR.mec.posTo == 1 then
-			local pushLocation = function()
-									local x, y, z = math.round(myHero.x / accuracy) * accuracy, myHero.y, math.round(myHero.z / accuracy) * accuracy
-
-									local vec = D3DXVECTOR3(x, y, z)
-								
-									local maxRadius = math.huge
-
-									local radius = 2
-									
-									local checkPos = function(x, y) 
-										vec.x, vec.z = x + x * accuracy, z + myHero.y * accuracy
-										return IsWall(vec) 
-									end
-									
-									while radius <= maxRadius do
-										if checkPos(0, radius) or checkPos(radius, 0) or checkPos(0, -radius) or checkPos(-radius, 0) then 
-											return vec 
-										end
-										local f, x, y = 1 - radius, 0, radius
-										while x < y - 1 do
-											x = x + 1
-											if f < 0 then 
-												f = f + 1 + 2 * x
-											else 
-												y, f = y - 1, f + 1 + 2 * (x - y)
-											end
-											if checkPos(x, y) or checkPos(-x, y) or checkPos(x, -y) or checkPos(-x, -y) or checkPos(y, x) or checkPos(-y, x) or checkPos(y, -x) or checkPos(-y, -x) then 
-												return vec 
-											end
-										end
-										
-										radius = radius + 1
-									end
-								end
+			local pushLocation = NearestWall(myHero.x, myHero.y, myHero.z, SpellR.mega.range + (SpellR.mega.range *.25), 30)
 
 			CastSpell(_R, pushLocation.x, pushLocation.z)
 		else
 			CastSpell(_R, mousePos.x, mousePos.z)
 		end
+	end
+end
+
+function NearestWall(x, y, z, maxRadius, accuracy) 
+	local vec = D3DXVECTOR3(x, y, z)
+
+	accuracy = accuracy or 50
+	maxRadius = maxRadius and math.floor(maxRadius / accuracy) or math.huge
+
+	x, z = math.round(x / accuracy) * accuracy, math.round(z / accuracy) * accuracy
+
+	local radius = 2
+
+	local function checkPos(x, y) 
+		vec.x, vec.z = x + x * accuracy, z + y * accuracy 
+		return IsWall(vec) 
+	end
+
+	while radius <= maxRadius do
+		if checkPos(0, radius) or checkPos(radius, 0) or checkPos(0, -radius) or checkPos(-radius, 0) then 
+			return vec 
+		end
+		local f, x, y = 1 - radius, 0, radius
+		while x < y - 1 do
+			x = x + 1
+			if f < 0 then 
+				f = f + 1 + 2 * x
+			else 
+				y, f = y - 1, f + 1 + 2 * (x - y)
+			end
+			if checkPos(x, y) or checkPos(-x, y) or checkPos(x, -y) or checkPos(-x, -y) or checkPos(y, x) or checkPos(-y, x) or checkPos(y, -x) or checkPos(-y, -x) then 
+				return vec 
+			end
+		end
+
+		radius = radius + 1
 	end
 end
 
@@ -886,7 +889,7 @@ function DmgCalc()
 			end
 
 			local enemyAD = getDmg("AD", myHero, enemy)
-         
+		 
 			enemyTable[i].damageGettingText = enemy.charName.." kills me with "..math.ceil(myHero.health / enemyAD).." hits"
 		end
 	end
@@ -934,17 +937,17 @@ function AutoIgnite(unit)
 end
 
 function CountEnemiesNearUnit(unit, range)
-    local count = 0
+	local count = 0
 
-    for i = 1, heroManager.iCount do
-        currentEnemy = heroManager:GetHero(i)
-        if currentEnemy.team ~= myHero.team then
-            if GetDistanceSqr(currentEnemy, unit) <= range * range and not currentEnemy.dead then count = count + 1 end
-        end
-    end
+	for i = 1, heroManager.iCount do
+		currentEnemy = heroManager:GetHero(i)
+		if currentEnemy.team ~= myHero.team then
+			if GetDistanceSqr(currentEnemy, unit) <= range * range and not currentEnemy.dead then count = count + 1 end
+		end
+	end
 
-    return count
+	return count
 end
 
 -- UpdateWeb
-assert(load(Base64Decode("G0x1YVIAAQQEBAgAGZMNChoKAAAAAAAAAAAAAQIDAAAAJQAAAAgAAIAfAIAAAQAAAAQKAAAAVXBkYXRlV2ViAAEAAAACAAAADAAAAAQAETUAAAAGAUAAQUEAAB2BAAFGgUAAh8FAAp0BgABdgQAAjAHBAgFCAQBBggEAnUEAAhsAAAAXwAOAjMHBAgECAgBAAgABgUICAMACgAEBgwIARsNCAEcDwwaAA4AAwUMDAAGEAwBdgwACgcMDABaCAwSdQYABF4ADgIzBwQIBAgQAQAIAAYFCAgDAAoABAYMCAEbDQgBHA8MGgAOAAMFDAwABhAMAXYMAAoHDAwAWggMEnUGAAYwBxQIBQgUAnQGBAQgAgokIwAGJCICBiIyBxQKdQQABHwCAABcAAAAECAAAAHJlcXVpcmUABAcAAABzb2NrZXQABAcAAABhc3NlcnQABAQAAAB0Y3AABAgAAABjb25uZWN0AAQQAAAAYm9sLXRyYWNrZXIuY29tAAMAAAAAAABUQAQFAAAAc2VuZAAEGAAAAEdFVCAvcmVzdC9uZXdwbGF5ZXI/aWQ9AAQHAAAAJmh3aWQ9AAQNAAAAJnNjcmlwdE5hbWU9AAQHAAAAc3RyaW5nAAQFAAAAZ3N1YgAEDQAAAFteMC05QS1aYS16XQAEAQAAAAAEJQAAACBIVFRQLzEuMA0KSG9zdDogYm9sLXRyYWNrZXIuY29tDQoNCgAEGwAAAEdFVCAvcmVzdC9kZWxldGVwbGF5ZXI/aWQ9AAQCAAAAcwAEBwAAAHN0YXR1cwAECAAAAHBhcnRpYWwABAgAAAByZWNlaXZlAAQDAAAAKmEABAYAAABjbG9zZQAAAAAAAQAAAAAAEAAAAEBvYmZ1c2NhdGVkLmx1YQA1AAAAAgAAAAIAAAACAAAAAgAAAAIAAAACAAAAAgAAAAMAAAADAAAAAwAAAAMAAAAEAAAABAAAAAUAAAAFAAAABQAAAAYAAAAGAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAgAAAAHAAAABQAAAAgAAAAJAAAACQAAAAkAAAAKAAAACgAAAAsAAAALAAAACwAAAAsAAAALAAAACwAAAAsAAAAMAAAACwAAAAkAAAAMAAAADAAAAAwAAAAMAAAADAAAAAwAAAAMAAAADAAAAAwAAAAGAAAAAgAAAGEAAAAAADUAAAACAAAAYgAAAAAANQAAAAIAAABjAAAAAAA1AAAAAgAAAGQAAAAAADUAAAADAAAAX2EAAwAAADUAAAADAAAAYWEABwAAADUAAAABAAAABQAAAF9FTlYAAQAAAAEAEAAAAEBvYmZ1c2NhdGVkLmx1YQADAAAADAAAAAIAAAAMAAAAAAAAAAEAAAAFAAAAX0VOVgA="), nil, "bt", _ENV))()
+assert(load(Base64Decode("G0x1YVIAAQQEBAgAGZMNChoKAAAAAAAAAAAAAQIDAAAAJQAAAAgAAIAfAIAAAQAAAAQKAAAAVXBkYXRlV2ViAAEAAAACAAAADAAAAAQAETUAAAAGAUAAQUEAAB2BAAFGgUAAh8FAAp0BgABdgQAAjAHBAgFCAQBBggEAnUEAAhsAAAAXwAOAjMHBAgECAgBAAgABgUICAMACgAEBgwIARsNCAEcDwwaAA4AAwUMDAAGEAwBdgwACgcMDABaCAwSdQYABF4ADgIzBwQIBAgQAQAIAAYFCAgDAAoABAYMCAEbDQgBHA8MGgAOAAMFDAwABhAMAXYMAAoHDAwAWggMEnUGAAYwBxQIBQgUAnQGBAQgAgokIwAGJCICBiIyBxQKdQQABHwCAABcAAAAECAAAAHJlcXVpcmUABAcAAABzb2NrZXQABAcAAABhc3NlcnQABAQAAAB0Y3AABAgAAABjb25uZWN0AAQQAAAAYm9sLXRyYWNrZXIuY29tAAMAAAAAAABUQAQFAAAAc2VuZAAEGAAAAEdFVCAvcmVzdC9uZXdwbGF5ZXI/aWQ9AAQHAAAAJmh3aWQ9AAQNAAAAJnNjcmlwdE5hbWU9AAQHAAAAc3RyaW5nAAQFAAAAZ3N1YgAEDQAAAFteMC05QS1aYS16XQAEAQAAAAAEJQAAACBIVFRQLzEuMA0KSG9zdDogYm9sLXRyYWNrZXIuY29tDQoNCgAEGwAAAEdFVCAvcmVzdC9kZWxldGVwbGF5ZXI/aWQ9AAQCAAAAcwAEBwAAAHN0YXR1cwAECAAAAHBhcnRpYWwABAgAAAByZWNlaXZlAAQDAAAAKmEABAYAAABjbG9zZQAAAAAAAQAAAAAAEAAAAEBvYmZ1c2NhdGVkLmx1YQA1AAAAAgAAAAIAAAACAAAAAgAAAAIAAAACAAAAAgAAAAMAAAADAAAAAwAAAAMAAAAEAAAABAAAAAUAAAAFAAAABQAAAAYAAAAGAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAgAAAAHAAAABQAAAAgAAAAJAAAACQAAAAkAAAAKAAAACgAAAAsAAAALAAAACwAAAAsAAAALAAAACwAAAAsAAAAMAAAACwAAAAkAAAAMAAAADAAAAAwAAAAMAAAADAAAAAwAAAAMAAAADAAAAAwAAAAGAAAAAgAAAGEAAAAAADUAAAACAAAAYgAAAAAANQAAAAIAAABjAAAAAAA1AAAAAgAAAGQAAAAAADUAAAADAAAAX2EAAwAAADUAAAADAAAAYWEABwAAADUAAAABAAAABQAAAF9FTlYAAQAAAAEAEAAAAEBvYmZ1c2NhdGVkLmx1YQADAAAADAAAAAIAAAAMAAAAAAAAAAEAAAAFAAAAxVOVgA="), nil, "bt", _ENV))()
