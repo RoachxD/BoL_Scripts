@@ -156,8 +156,8 @@ function Variables()
 
 	SpellQ =
 	{
-		mini = { name = "Boomerang Throw",	range = 0000, delay = 0.5, speed = 0, width = 000, ready = false, pos = nil, dmg = 0				 },
-		mega = { name = "Boulder Toss",		range = 0000, delay = 0.5, speed = 0, width = 000, ready = false, pos = nil, dmg = 0				 }
+		mini = { name = "Boomerang Throw",	range = 1100, delay = 0.5, speed = 0, width = 000, ready = false, pos = nil, dmg = 0				 },
+		mega = { name = "Boulder Toss",		range = 1100, delay = 0.5, speed = 0, width = 000, ready = false, pos = nil, dmg = 0				 }
 	}
 	SpellW =
 	{
@@ -165,12 +165,12 @@ function Variables()
 	}
 	SpellE =
 	{
-		mini = { name = "Hop",				range = 0000, delay = 0.5, speed = 0, width = 000, ready = false, pos = nil, dmg = 0				 },
+		mini = { name = "Hop",				range =  475, delay = 0.5, speed = 0, width = 000, ready = false, pos = nil, dmg = 0				 },
 		mega = { name = "Crunch",			range = 0000, delay = 0.5, speed = 0, width = 000, ready = false, pos = nil, dmg = 0				 }
 	}
 	SpellR =
 	{
-		mega = { name = "GNAR!",			range = 0000, delay = 0.5, speed = 0, width = 000, ready = false, pos = nil, dmg = 0				 }
+		mega = { name = "GNAR!",			range =  590, delay = 0.5, speed = 0, width = 000, ready = false, pos = nil, dmg = 0				 }
 	}
 
 	SpellI = { name = "SummonerDot",		range =  600,									   ready = false,			 dmg = 0, variable = nil }
