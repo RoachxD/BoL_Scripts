@@ -111,7 +111,7 @@ function OnTick()
 	HarassKey		= GnarMenu.harass.harassKey
 	FarmKey			= GnarMenu.farming.farmKey
 	JungleClearKey	= GnarMenu.jungle.jungleKey
-	HopKey			= GnarMenu.misc.hop.wardHop
+	HopKey			= GnarMenu.misc.hop.UnitHop
 
 	if ComboKey then
 		Combo(Target)
@@ -126,11 +126,11 @@ function OnTick()
 		JungleClear()
 	end
 	if HopKey then
-		if GnarMenu.misc.hop.MTCwardHop then
+		if GnarMenu.misc.hop.MTCUnitHop then
 			moveToCursor()
 		end
 
-		WardHop(mousePos.x, mousePos.z)
+		UnitHop(mousePos.x, mousePos.z)
 	end
 	if GnarMenu.ks.killSteal then
 		KillSteal()
@@ -174,16 +174,6 @@ function Variables()
 	}
 
 	SpellI = { name = "SummonerDot",		range =  600,									   ready = false,			 dmg = 0, variable = nil }
-
-	SpellW_= {								range = 600,									   lastJump = 0,			 itemSlot = nil			 }
-
-	Wards = {
-		TrinketWard		= { 			ready = false },
-		RubySightStone	= { slot = nil, ready = false },
-		SightStone		= { slot = nil, ready = false },
-		SightWard		= { slot = nil, ready = false },
-		VisionWard		= { slot = nil, ready = false }
-	}
 
 	vPred = VPrediction()
 
@@ -247,8 +237,6 @@ function Variables()
 	enemyMinions = minionManager(MINION_ENEMY, 1100, myHero.visionPos, MINION_SORT_MAXHEALTH_DEC)
 	jungleMinions = minionManager(MINION_JUNGLE, 1100, myHero.visionPos, MINION_SORT_MAXHEALTH_DEC)
 	pets = { "annietibbers", "shacobox", "malzaharvoidling", "heimertyellow", "heimertblue", "yorickdecayedghoul" }
-
-	Wards_ = {}
 
 	buffTypes = { BUFF_STUN, BUFF_ROOT, BUFF_KNOCKUP, BUFF_SUPPRESS, BUFF_SLOW, BUFF_CHARM, BUFF_FEAR, BUFF_TAUNT }
 
@@ -314,8 +302,8 @@ function Menu()
 	
 	GnarMenu:addSubMenu("["..myHero.charName.."] - Misc Settings", "misc") -- Done
 		GnarMenu.misc:addSubMenu("Spells - Hop Settings", "hop") -- Done
-			GnarMenu.misc.hop:addParam("wardHop", "Unit-Hop / Ward-Hop (G)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey('G')) -- Done
-			GnarMenu.misc.hop:addParam("MTCwardHop", "Move to Cursor while Unit-Hoping / Ward-Hoping", SCRIPT_PARAM_ONOFF, false) -- Done
+			GnarMenu.misc.hop:addParam("UnitHop", "Unit-Hop (G)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey('G')) -- Done
+			GnarMenu.misc.hop:addParam("MTCUnitHop", "Move to Cursor while Unit-Hoping / Ward-Hoping", SCRIPT_PARAM_ONOFF, false) -- Done
 			GnarMenu.misc.hop:addParam("warn", "Don't jump if in Mega-Form", SCRIPT_PARAM_ONOFF, false) -- Done
 		GnarMenu.misc:addSubMenu("Spells - " .. SpellQ.mini.name .. " (Q) Settings", "miniQ")
 			GnarMenu.misc.miniQ:addParam("ccTarget", "Auto-MiniQ at CCed Targets", SCRIPT_PARAM_ONOFF, true) -- Done
@@ -324,7 +312,7 @@ function Menu()
 		GnarMenu.misc:addSubMenu("Spells - " .. SpellQ.mega.name .. " (Q) Settings", "megaQ") -- Done
 			GnarMenu.misc.megaQ:addParam("howTo", "Use " .. SpellQ.mega.name .. " (Q): ", SCRIPT_PARAM_LIST, 1, { "If outside of Melee Range", "When Available" }) -- Done
 		GnarMenu.misc:addSubMenu("Spells - " .. SpellW.mega.name .. " (W) Settings", "megaW") -- Done
-			GnarMenu.misc.megaW:addParam("intrerrupt", "Auto-intrrerupt Channeling Spells with " .. SpellW.mega.name .. " (W)", SCRIPT_PARAM_ONOFF, true) -- Done
+			GnarMenu.misc.megaW:addParam("interrupt", "Auto-interrupt Channeling Spells with " .. SpellW.mega.name .. " (W)", SCRIPT_PARAM_ONOFF, true) -- Done
 			GnarMenu.misc.megaW:addParam("turretAggro", "Try to stun enemies in allied Turret Range", SCRIPT_PARAM_ONOFF, true)
 		GnarMenu.misc:addSubMenu("Spells - " .. SpellE.mega.name .. " (E) Settings", "megaE")
 			GnarMenu.misc.megaE:addParam("howTo", "Use " .. SpellE.mega.name .. " (E): ", SCRIPT_PARAM_LIST, 1, { "If outside of Melee Range", "When Available" }) -- Done
@@ -334,7 +322,7 @@ function Menu()
 				GnarMenu.misc.megaR.mec:addParam("minEnemies", "Min. Enemies to use " .. SpellR.mega.name .. " (R): ", SCRIPT_PARAM_SLICE, 2, 2, 5, 0) -- Done
 				GnarMenu.misc.megaR.mec:addParam("posTo", "Position to throw the enemies: ", SCRIPT_PARAM_LIST, 1, { "Closest Wall", "Mouse-Position" }) -- Done
 				GnarMenu.misc.megaR.mec:addParam("accuracy", "Accuracy to hit the Wall: ", SCRIPT_PARAM_SLICE, 30, 1, 40, 0) -- Done
-			GnarMenu.misc.megaR:addParam("intrerrupt", "Auto-intrrerupt Channeling Spells with " .. SpellR.mega.name .. " (R)", SCRIPT_PARAM_ONOFF, false) -- Done
+			GnarMenu.misc.megaR:addParam("interrupt", "Auto-interrupt Channeling Spells with " .. SpellR.mega.name .. " (R)", SCRIPT_PARAM_ONOFF, false) -- Done
 			GnarMenu.misc.megaR:addParam("turretAggro", "Try to stun enemies in allied Turret Range", SCRIPT_PARAM_ONOFF, true)
 
 		GnarMenu.misc:addSubMenu("Spells - Cast Settings", "cast") -- Done
@@ -353,11 +341,11 @@ function Menu()
 end
 
 function OnProcessSpell(unit, spell)
-	if GnarMenu.misc.megaW.intrerrupt or GnarMenu.misc.megaR.intrerrupt then
-		if (GnarMenu.misc.megaW.intrerrupt and SpellW.mega.ready) or SpellR.mega.ready then
-			if GetDistanceSqr(unit) <= ((GnarMenu.misc.megaW.intrerrupt and (SpellW.mega.range * SpellW.mega.range)) or SpellR.mega.range * SpellR.mega.range) then
+	if GnarMenu.misc.megaW.interrupt or GnarMenu.misc.megaR.interrupt then
+		if (GnarMenu.misc.megaW.interrupt and SpellW.mega.ready) or SpellR.mega.ready then
+			if GetDistanceSqr(unit) <= ((GnarMenu.misc.megaW.interrupt and (SpellW.mega.range * SpellW.mega.range)) or SpellR.mega.range * SpellR.mega.range) then
 				if InterruptingSpells[spell.name] and unit.team ~= myHero.team then
-					CastSpell(GnarMenu.misc.megaW.intrerrupt and _W or _R, unit.visionPos.x, unit.visionPos.z)
+					CastSpell(GnarMenu.misc.megaW.interrupt and _W or _R, unit.visionPos.x, unit.visionPos.z)
 				end
 			end
 		end
@@ -365,22 +353,6 @@ function OnProcessSpell(unit, spell)
 
 	if unit == myHero and spell.name == SpellP.spellName then
 		SpellP.enabled = true
-	end
-end
-
-function OnCreateObj(obj)
-	if obj.valid then
-		if string.find(obj.name, "Ward") ~= nil or string.find(obj.name, "Wriggle") ~= nil or string.find(obj.name, "Trinket") then 
-			Wards_[#Wards_+1] = obj
-		end
-	end
-end
-
-function OnDeleteObj(obj)
-	for i, ward in pairs(Wards_) do
-		if obj.name == ward.name and obj.x == ward.x and obj.z == ward.z then
-			table.remove(Wards_, i)
-		end
 	end
 end
 
@@ -590,16 +562,17 @@ function JungleClear()
 	end
 end
 
-function WardHop(x, y)
+function UnitHop(x, y)
 	if not SpellP.enabled and GnarMenu.misc.hop.warn or not GnarMenu.misc.hop.warn then
 		if SpellE.mini.ready or SpellE.mega.ready then
-			local WardDistance = 300
+			local Distance = 300
+	
 
-			if next(Wards_) ~= nil then
-				for i, obj in pairs(Wards_) do 
+			if next(allyMinions) ~= nil then
+				for i, obj in pairs(allyMinions) do 
 					if obj.valid then
 						MousePos = getMousePos()
-						if GetDistanceSqr(obj, MousePos) <= WardDistance * WardDistance then
+						if GetDistanceSqr(obj, MousePos) <= Distance * Distance then
 							CastSpell(_E, obj.x, obj.z)
 							SpellW_.lastJump = os.clock() + 2
 						 end
@@ -607,23 +580,39 @@ function WardHop(x, y)
 				end
 			end
 
-			if os.clock() >= SpellW_.lastJump then
-				if Wards.TrinketWard.ready then
-					SpellW_.itemSlot = ITEM_7
-				elseif Wards.RubySightStone.ready then
-					SpellW_.itemSlot = Wards.RubySightStone.slot
-				elseif Wards.SightStone.ready then 
-					SpellW_.itemSlot = Wards.SightStone.slot
-				elseif Wards.SightWard.ready then
-					SpellW_.itemSlot = Wards.SightWard.slot
-				elseif Wards.VisionWard.ready then
-					SpellW_.itemSlot = Wards.VisionWard.slot
+			if next(enemyMinions) ~= nil then
+				for i, obj in pairs(enemyMinions) do 
+					if obj.valid then
+						MousePos = getMousePos()
+						if GetDistanceSqr(obj, MousePos) <= Distance * Distance then
+							CastSpell(_E, obj.x, obj.z)
+							SpellW_.lastJump = os.clock() + 2
+						 end
+					end
 				end
-				
-				if SpellW_.itemSlot ~= nil then
-					CastSpell(SpellW_.itemSlot, x, y)
-					SpellW_.lastJump = os.clock() + 2
-					SpellW_.itemSlot = nil
+			end
+
+			if next(jungleMinions) ~= nil then
+				for i, obj in pairs(jungleMinions) do 
+					if obj.valid then
+						MousePos = getMousePos()
+						if GetDistanceSqr(obj, MousePos) <= Distance * Distance then
+							CastSpell(_E, obj.x, obj.z)
+							SpellW_.lastJump = os.clock() + 2
+						 end
+					end
+				end
+			end
+
+			if next(pets) ~= nil then
+				for i, obj in pairs(pets) do 
+					if obj.valid then
+						MousePos = getMousePos()
+						if GetDistanceSqr(obj, MousePos) <= Distance * Distance then
+							CastSpell(_E, obj.x, obj.z)
+							SpellW_.lastJump = os.clock() + 2
+						 end
+					end
 				end
 			end
 		end
