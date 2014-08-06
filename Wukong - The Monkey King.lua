@@ -1,4 +1,4 @@
-local version = "3.071"
+local version = "3.072"
 --[[
 
 
@@ -137,7 +137,6 @@ if myHero.charName ~= "MonkeyKing" then return end
 _G.Wu_Autoupdate = true
 
 local lib_Required = {
-	["Prodiction"]	= "https://bitbucket.org/Klokje/public-klokjes-bol-scripts/raw/ec830facccefb3b52212dba5696c08697c3c2854/Test/Prodiction/Prodiction.lua",
 	["SOW"]			= "https://raw.githubusercontent.com/Hellsing/BoL/master/Common/SOW.lua",
 	["VPrediction"]	= "https://raw.githubusercontent.com/Hellsing/BoL/master/Common/VPrediction.lua"
 }
