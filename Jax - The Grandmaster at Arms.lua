@@ -1,4 +1,4 @@
-local version = "1.276"
+local version = "1.277"
 --[[
 
 
@@ -84,7 +84,7 @@ function script_Messager(msg) print("<font color=\"#FF0000\">" .. script_downloa
 if _G.Jax_Autoupdate then
 	local script_webResult = GetWebResult(script_downloadHost, script_downloadPath)
 	if script_webResult then
-		local script_serverVersion = string.match(script_webResult, "local%s+version%s+=%s+\"%d+.%d+\"")
+		local script_serverVersion = string.match(script_webResult, "local version = \"%d+.%d+\"")
 		
 		if script_serverVersion then
 			script_serverVersion = tonumber(string.match(script_serverVersion or "", "%d+%.?%d*"))
