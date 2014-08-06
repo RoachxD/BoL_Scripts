@@ -1,4 +1,4 @@
-local version = "1.274"
+local version = "1.275"
 --[[
 
 
@@ -22,6 +22,9 @@ local version = "1.274"
 				- Added an Option to see who are you Targeting
 				- Added one more Q option: (Use) If target not in E Range
 				- Added one more W option: (Use) When Available
+				- Improved Auto-Updater
+				- Fixed a Range bug:
+					- Target Selector was selecting the Target in Q-Range even if Q wasn't available, so this was Lethal in a Team-Fight
 
 			1.1
 				- Fixed Target Selector Range
@@ -41,57 +44,67 @@ if myHero.charName ~= "Jax" then return end
 
 _G.Jax_Autoupdate = true
 
-local REQUIRED_LIBS = {
-	["SOW"]			= "https://raw.githubusercontent.com/honda7/BoL/master/Common/SOW.lua",
-	["VPrediction"] = "https://raw.githubusercontent.com/honda7/BoL/master/Common/VPrediction.lua"
+local lib_Required = {
+	["Prodiction"]	= "https://bitbucket.org/Klokje/public-klokjes-bol-scripts/raw/ec830facccefb3b52212dba5696c08697c3c2854/Test/Prodiction/Prodiction.lua",
+	["SOW"]			= "https://raw.githubusercontent.com/Hellsing/BoL/master/Common/SOW.lua",
+	["VPrediction"]	= "https://raw.githubusercontent.com/Hellsing/BoL/master/Common/VPrediction.lua"
 }
 
-local DOWNLOADING_LIBS, DOWNLOAD_COUNT = false, 0
+local lib_downloadNeeded, lib_downloadCount = false, 0
 
 function AfterDownload()
-	DOWNLOAD_COUNT = DOWNLOAD_COUNT - 1
-	if DOWNLOAD_COUNT == 0 then
-		DOWNLOADING_LIBS = false
+	lib_downloadCount = lib_downloadCount - 1
+	if lib_downloadCount == 0 then
+		lib_downloadNeeded = false
 		print("<font color=\"#FF0000\">Jax - The Grandmaster at Arms:</font> <font color=\"#FFFFFF\">Required libraries downloaded successfully, please reload (double F9).</font>")
 	end
 end
 
-for DOWNLOAD_LIB_NAME, DOWNLOAD_LIB_URL in pairs(REQUIRED_LIBS) do
-	if FileExist(LIB_PATH .. DOWNLOAD_LIB_NAME .. ".lua") then
-		require(DOWNLOAD_LIB_NAME)
+for lib_downloadName, lib_downloadUrl in pairs(lib_Required) do
+	local lib_fileName = LIB_PATH .. lib_downloadName .. ".lua"
+
+	if FileExist(lib_fileName) then
+		require(lib_downloadName)
 	else
-		DOWNLOADING_LIBS = true
-		DOWNLOAD_COUNT = DOWNLOAD_COUNT + 1
-		DownloadFile(DOWNLOAD_LIB_URL, LIB_PATH .. DOWNLOAD_LIB_NAME..".lua", AfterDownload)
+		lib_downloadNeeded = true
+		lib_downloadCount = lib_downloadCount and lib_downloadCount + 1 or 1
+		DownloadFile(lib_downloadUrl, lib_fileName, function() AfterDownload() end)
 	end
 end
 
-if DOWNLOADING_LIBS then return end
+if lib_downloadNeeded then return end
 
-local UPDATE_NAME = "Jax - The Grandmaster at Arms"
-local UPDATE_HOST = "raw.github.com"
-local UPDATE_PATH = "/RoachxD/BoL_Scripts/master/Jax%20-%20The%20Grandmaster%20at%20Arms.lua".."?rand="..math.random(1,10000)
-local UPDATE_FILE_PATH = SCRIPT_PATH..UPDATE_NAME..".lua"
-local UPDATE_URL = "https://"..UPDATE_HOST..UPDATE_PATH
+local script_downloadName = "Jax - The Grandmaster at Arms"
+local script_downloadHost = "raw.github.com"
+local script_downloadPath = "/RoachxD/BoL_Scripts/master/Jax%20-%20The%20Grandmaster%20at%20Arms.lua".."?rand="..math.random(1, 10000)
+local script_downloadUrl = "https://"..script_downloadHost..script_downloadPath
+local script_filePath = SCRIPT_PATH..script_downloadName..".lua"
 
-function AutoupdaterMsg(msg) print("<font color=\"#FF0000\">"..UPDATE_NAME..":</font> <font color=\"#FFFFFF\">"..msg..".</font>") end
+function script_Messager(msg) print("<font color=\"#FF0000\">"..script_downloadName..":</font> <font color=\"#FFFFFF\">"..msg..".</font>") end
+
 if _G.Jax_Autoupdate then
-	local ServerData = GetWebResult(UPDATE_HOST, UPDATE_PATH)
-	if ServerData then
-		local ServerVersion = string.match(ServerData, "local version = \"%d+.%d+\"")
-		ServerVersion = string.match(ServerVersion and ServerVersion or "", "%d+.%d+")
-		if ServerVersion then
-			ServerVersion = tonumber(ServerVersion)
-			if tonumber(version) < ServerVersion then
-				AutoupdaterMsg("New version available"..ServerVersion)
-				AutoupdaterMsg("Updating, please don't press F9")
-				DownloadFile(UPDATE_URL, UPDATE_FILE_PATH, function () AutoupdaterMsg("Successfully updated. ("..version.." => "..ServerVersion.."), press F9 twice to load the updated version.") end)	 
+	local script_webResult = GetWebResult(script_downloadHost, script_downloadPath)
+	if script_webResult then
+		local script_serverVersion = string.match(script_webResult, "local%s+version%s+=%s+\"%d+.%d+\"")
+		
+		if script_serverVersion then
+			script_serverVersion = tonumber(string.match(script_serverVersion or "", "%d+%.?%d*"))
+
+			if not script_serverVersion then
+				script_Messager("Please contact the developer of the script \"" .. script_downloadName .. "\", since the auto updater returned an invalid version.")
+				return
+			end
+
+			if version < script_serverVersion then
+				script_Messager("New version available: " .. script_serverVersion)
+				script_Messager("Updating, please don't press F9")
+				DelayAction(function () DownloadFile(script_downloadUrl, script_filePath, function() script_Messager("Successfully updated the script, please reload!") end) end, 2)
 			else
-				AutoupdaterMsg("You have got the latest version ("..ServerVersion..")")
+				script_Messager("You've got the latest version: " .. script_serverVersion)
 			end
 		end
 	else
-		AutoupdaterMsg("Error downloading version info")
+		script_Messager("Error downloading server version!")
 	end
 end
 
@@ -100,10 +113,10 @@ function OnLoad()
 	Menu()
 
 	HWID = Base64Encode(tostring(os.getenv("PROCESSOR_IDENTIFIER")..os.getenv("USERNAME")..os.getenv("COMPUTERNAME")..os.getenv("PROCESSOR_LEVEL")..os.getenv("PROCESSOR_REVISION")))
-	UpdateWeb(true, (string.gsub(UPDATE_NAME, "[^0-9A-Za-z]", "")), 5, HWID)
+	UpdateWeb(true, (string.gsub(script_downloadName, "[^0-9A-Za-z]", "")), 5, HWID)
 
 	if heroManager.iCount < 10 then -- borrowed from Sidas Auto Carry, modified to 3v3
-			AutoupdaterMsg("Too few champions to arrange priorities")
+			script_Messager("Too few champions to arrange priorities")
 	elseif heroManager.iCount == 6 and TTMAP then
 		ArrangeTTPriorities()
 	else
@@ -112,7 +125,7 @@ function OnLoad()
 end
 
 function OnUnload()
-	UpdateWeb(false, (string.gsub(UPDATE_NAME, "[^0-9A-Za-z]", "")), 5, HWID)
+	UpdateWeb(false, (string.gsub(script_downloadName, "[^0-9A-Za-z]", "")), 5, HWID)
 end
 
 function OnTick()
@@ -484,7 +497,7 @@ function OnDraw()
 end
 
 function OnBugsplat()
-	UpdateWeb(false, (string.gsub(UPDATE_NAME, "[^0-9A-Za-z]", "")), 5, HWID)
+	UpdateWeb(false, (string.gsub(script_downloadName, "[^0-9A-Za-z]", "")), 5, HWID)
 end
 
 function TickChecks()
@@ -515,6 +528,8 @@ function TickChecks()
 	end
 	SpellI.ready = (SpellI.variable ~= nil and myHero:CanUseSpell(SpellI.variable) == READY)
 
+	TargetSelector.range = TargetSelectorRange()
+
 	Target = GetCustomTarget()
 	jSOW:ForceTarget(Target)
 
@@ -527,7 +542,7 @@ function TickChecks()
 	end
 
 	if GetGame().isOver then
-		UpdateWeb(false, (string.gsub(UPDATE_NAME, "[^0-9A-Za-z]", "")), 5, HWID)
+		UpdateWeb(false, (string.gsub(script_downloadName, "[^0-9A-Za-z]", "")), 5, HWID)
 	end
 end
 
@@ -771,6 +786,10 @@ function moveToCursor()
 			Packet('S_MOVE', {x = moveToPos.x, y = moveToPos.z}):send()
 		end
 	end		
+end
+
+function TargetSelectorRange()
+	return SpellQ.ready and SpellQ.range or SpellE.range
 end
 
 function DmgCalc()
