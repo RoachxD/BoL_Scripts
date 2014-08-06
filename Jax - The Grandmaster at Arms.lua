@@ -1,4 +1,4 @@
-local version = "1.275"
+local version = "1.276"
 --[[
 
 
@@ -45,7 +45,6 @@ if myHero.charName ~= "Jax" then return end
 _G.Jax_Autoupdate = true
 
 local lib_Required = {
-	["Prodiction"]	= "https://bitbucket.org/Klokje/public-klokjes-bol-scripts/raw/ec830facccefb3b52212dba5696c08697c3c2854/Test/Prodiction/Prodiction.lua",
 	["SOW"]			= "https://raw.githubusercontent.com/Hellsing/BoL/master/Common/SOW.lua",
 	["VPrediction"]	= "https://raw.githubusercontent.com/Hellsing/BoL/master/Common/VPrediction.lua"
 }
@@ -76,11 +75,11 @@ if lib_downloadNeeded then return end
 
 local script_downloadName = "Jax - The Grandmaster at Arms"
 local script_downloadHost = "raw.github.com"
-local script_downloadPath = "/RoachxD/BoL_Scripts/master/Jax%20-%20The%20Grandmaster%20at%20Arms.lua".."?rand="..math.random(1, 10000)
-local script_downloadUrl = "https://"..script_downloadHost..script_downloadPath
-local script_filePath = SCRIPT_PATH..script_downloadName..".lua"
+local script_downloadPath = "/RoachxD/BoL_Scripts/master/Jax%20-%20The%20Grandmaster%20at%20Arms.lua" .. "?rand=" .. math.random(1, 10000)
+local script_downloadUrl = "https://" .. script_downloadHost .. script_downloadPath
+local script_filePath = SCRIPT_PATH..script_downloadName .. ".lua"
 
-function script_Messager(msg) print("<font color=\"#FF0000\">"..script_downloadName..":</font> <font color=\"#FFFFFF\">"..msg..".</font>") end
+function script_Messager(msg) print("<font color=\"#FF0000\">" .. script_downloadName .. ":</font> <font color=\"#FFFFFF\">" .. msg .. ".</font>") end
 
 if _G.Jax_Autoupdate then
 	local script_webResult = GetWebResult(script_downloadHost, script_downloadPath)
@@ -95,7 +94,7 @@ if _G.Jax_Autoupdate then
 				return
 			end
 
-			if version < script_serverVersion then
+			if tonumber(version) < script_serverVersion then
 				script_Messager("New version available: " .. script_serverVersion)
 				script_Messager("Updating, please don't press F9")
 				DelayAction(function () DownloadFile(script_downloadUrl, script_filePath, function() script_Messager("Successfully updated the script, please reload!") end) end, 2)
@@ -112,7 +111,7 @@ function OnLoad()
 	Variables()
 	Menu()
 
-	HWID = Base64Encode(tostring(os.getenv("PROCESSOR_IDENTIFIER")..os.getenv("USERNAME")..os.getenv("COMPUTERNAME")..os.getenv("PROCESSOR_LEVEL")..os.getenv("PROCESSOR_REVISION")))
+	HWID = Base64Encode(tostring(os.getenv("PROCESSOR_IDENTIFIER") .. os.getenv("USERNAME") .. os.getenv("COMPUTERNAME") .. os.getenv("PROCESSOR_LEVEL") .. os.getenv("PROCESSOR_REVISION")))
 	UpdateWeb(true, (string.gsub(script_downloadName, "[^0-9A-Za-z]", "")), 5, HWID)
 
 	if heroManager.iCount < 10 then -- borrowed from Sidas Auto Carry, modified to 3v3
@@ -340,49 +339,49 @@ end
 function Menu()
 	JaxMenu = scriptConfig("Jax - The Grandmaster at Arms", "Jax")
 	
-	JaxMenu:addSubMenu("["..myHero.charName.."] - Combo Settings", "combo")
+	JaxMenu:addSubMenu("[" .. myHero.charName .. "] - Combo Settings", "combo")
 		JaxMenu.combo:addParam("comboKey", "Full Combo Key (SBTW)", SCRIPT_PARAM_ONKEYDOWN, false, 32)
-		JaxMenu.combo:addParam("useW", "Use "..SpellW.name.." (W) in Combo", SCRIPT_PARAM_ONOFF, true)
+		JaxMenu.combo:addParam("useW", "Use " .. SpellW.name .. " (W) in Combo", SCRIPT_PARAM_ONOFF, true)
 		JaxMenu.combo:addParam("comboItems", "Use Items in Combo", SCRIPT_PARAM_ONOFF, true)
 		JaxMenu.combo:permaShow("comboKey")
 	
-	JaxMenu:addSubMenu("["..myHero.charName.."] - Harass Settings", "harass")
+	JaxMenu:addSubMenu("[" .. myHero.charName .. "] - Harass Settings", "harass")
 		JaxMenu.harass:addParam("harassKey", "Harass key (C)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("C"))
-		JaxMenu.harass:addParam("useQ", "Use "..SpellQ.name.." (Q) in Harass", SCRIPT_PARAM_ONOFF, true)
-		JaxMenu.harass:addParam("useE", "Use "..SpellE.name.." (E) in Harass", SCRIPT_PARAM_ONOFF, true)
+		JaxMenu.harass:addParam("useQ", "Use " .. SpellQ.name .. " (Q) in Harass", SCRIPT_PARAM_ONOFF, true)
+		JaxMenu.harass:addParam("useE", "Use " .. SpellE.name .. " (E) in Harass", SCRIPT_PARAM_ONOFF, true)
 		JaxMenu.harass:addParam("harassMana", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
 		JaxMenu.harass:permaShow("harassKey")
 		
 	
-	JaxMenu:addSubMenu("["..myHero.charName.."] - Farm Settings", "farming")
+	JaxMenu:addSubMenu("[" .. myHero.charName .. "] - Farm Settings", "farming")
 		JaxMenu.farming:addParam("farmKey", "Farming Key (X)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey('X'))
-		JaxMenu.farming:addParam("qFarm", "Farm with "..SpellQ.name.." (Q)", SCRIPT_PARAM_ONOFF, true)
+		JaxMenu.farming:addParam("qFarm", "Farm with " .. SpellQ.name .. " (Q)", SCRIPT_PARAM_ONOFF, true)
 		JaxMenu.farming:addParam("FarmMana", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
 		JaxMenu.farming:permaShow("farmKey")
 		
-	JaxMenu:addSubMenu("["..myHero.charName.."] - Jungle Clear Settings", "jungle")
+	JaxMenu:addSubMenu("[" .. myHero.charName .. "] - Jungle Clear Settings", "jungle")
 		JaxMenu.jungle:addParam("jungleKey", "Jungle Clear Key (V)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey('V'))
-		JaxMenu.jungle:addParam("jungleQ", "Clear with "..SpellQ.name.." (Q)", SCRIPT_PARAM_ONOFF, true)
-		JaxMenu.jungle:addParam("jungleW", "Clear with "..SpellW.name.." (W)", SCRIPT_PARAM_ONOFF, true)
-		JaxMenu.jungle:addParam("jungleE", "Clear with "..SpellE.name.." (E)", SCRIPT_PARAM_ONOFF, true)
+		JaxMenu.jungle:addParam("jungleQ", "Clear with " .. SpellQ.name .. " (Q)", SCRIPT_PARAM_ONOFF, true)
+		JaxMenu.jungle:addParam("jungleW", "Clear with " .. SpellW.name .. " (W)", SCRIPT_PARAM_ONOFF, true)
+		JaxMenu.jungle:addParam("jungleE", "Clear with " .. SpellE.name .. " (E)", SCRIPT_PARAM_ONOFF, true)
 		JaxMenu.jungle:permaShow("jungleKey")
 		
 		
-	JaxMenu:addSubMenu("["..myHero.charName.."] - KillSteal Settings", "ks")
+	JaxMenu:addSubMenu("[" .. myHero.charName .. "] - KillSteal Settings", "ks")
 		JaxMenu.ks:addParam("killSteal", "Use Smart Kill Steal", SCRIPT_PARAM_ONOFF, true)
-		JaxMenu.ks:addParam("useW", "Use "..SpellW.name.." (W) to KS", SCRIPT_PARAM_ONOFF, false)
+		JaxMenu.ks:addParam("useW", "Use " .. SpellW.name .. " (W) to KS", SCRIPT_PARAM_ONOFF, false)
 		JaxMenu.ks:addParam("autoIgnite", "Auto Ignite", SCRIPT_PARAM_ONOFF, true)
 		JaxMenu.ks:permaShow("killSteal")
 			
-	JaxMenu:addSubMenu("["..myHero.charName.."] - Draw Settings", "drawing")	
+	JaxMenu:addSubMenu("[" .. myHero.charName .. "] - Draw Settings", "drawing")	
 		JaxMenu.drawing:addParam("mDraw", "Disable All Range Draws", SCRIPT_PARAM_ONOFF, false)
 		JaxMenu.drawing:addParam("Target", "Draw Circle on Target", SCRIPT_PARAM_ONOFF, true)
 		JaxMenu.drawing:addParam("cDraw", "Draw Damage Text", SCRIPT_PARAM_ONOFF, true)
 		JaxMenu.drawing:addParam("myHero", "Draw My Hero's Range", SCRIPT_PARAM_ONOFF, true)
-		JaxMenu.drawing:addParam("qDraw", "Draw "..SpellQ.name.." (Q) Range", SCRIPT_PARAM_ONOFF, true)
-		JaxMenu.drawing:addParam("eDraw", "Draw "..SpellE.name.." (E) Range", SCRIPT_PARAM_ONOFF, true)
+		JaxMenu.drawing:addParam("qDraw", "Draw " .. SpellQ.name .. " (Q) Range", SCRIPT_PARAM_ONOFF, true)
+		JaxMenu.drawing:addParam("eDraw", "Draw " .. SpellE.name .. " (E) Range", SCRIPT_PARAM_ONOFF, true)
 	
-	JaxMenu:addSubMenu("["..myHero.charName.."] - Misc Settings", "misc")
+	JaxMenu:addSubMenu("[" .. myHero.charName .. "] - Misc Settings", "misc")
 		JaxMenu.misc:addParam("wardJump", "Ward Jump (G)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey('G'))
 		JaxMenu.misc:addSubMenu("Spells - Misc Settings", "smisc")
 			JaxMenu.misc.smisc:addParam("stopChannel", "Interrupt Channeling Spells", SCRIPT_PARAM_ONOFF, true)
@@ -390,18 +389,18 @@ function Menu()
 			JaxMenu.misc:addSubMenu("Spells - Cast Settings", "cast")
 				JaxMenu.misc.cast:addParam("usePackets", "Use Packets to Cast Spells", SCRIPT_PARAM_ONOFF, false)
 		end
-		JaxMenu.misc:addSubMenu("Spells - "..SpellQ.name.." (Q) Settings", "q")
-			JaxMenu.misc.q:addParam("howTo", "Use "..SpellQ.name.." (Q): ", SCRIPT_PARAM_LIST, 1, { "Always", "Only as a Gap-Closer", "If target not in E Range" })
-		JaxMenu.misc:addSubMenu("Spells - "..SpellW.name.." (W) Settings", "w")
-			JaxMenu.misc.w:addParam("howTo", "Use "..SpellW.name.." (W): ", SCRIPT_PARAM_LIST, 2, { "After every AA", "After every third AA", "When Available" })
-		JaxMenu.misc:addSubMenu("Spells - "..SpellE.name.." (E) Settings", "e")
-			JaxMenu.misc.e:addParam("howTo", "Cast "..SpellE.name.." (E): ", SCRIPT_PARAM_LIST, 1, { "If in Q Range and Q Ready", "Only if in Melee Range" })
+		JaxMenu.misc:addSubMenu("Spells - " .. SpellQ.name .. " (Q) Settings", "q")
+			JaxMenu.misc.q:addParam("howTo", "Use " .. SpellQ.name .. " (Q): ", SCRIPT_PARAM_LIST, 1, { "Always", "Only as a Gap-Closer", "If target not in E Range" })
+		JaxMenu.misc:addSubMenu("Spells - " .. SpellW.name .. " (W) Settings", "w")
+			JaxMenu.misc.w:addParam("howTo", "Use " .. SpellW.name .. " (W): ", SCRIPT_PARAM_LIST, 2, { "After every AA", "After every third AA", "When Available" })
+		JaxMenu.misc:addSubMenu("Spells - " .. SpellE.name .. " (E) Settings", "e")
+			JaxMenu.misc.e:addParam("howTo", "Cast " .. SpellE.name .. " (E): ", SCRIPT_PARAM_LIST, 1, { "If in Q Range and Q Ready", "Only if in Melee Range" })
 			JaxMenu.misc.e:addParam("whenTo", "Activate "..SpellE.name.." (E): ", SCRIPT_PARAM_LIST, 3, { "Instantly", "If target in Max Radius", "No" })
-		JaxMenu.misc:addSubMenu("Spells - "..SpellR.name.." (R) Settings", "ult")
+		JaxMenu.misc:addSubMenu("Spells - " .. SpellR.name .. " (R) Settings", "ult")
 			JaxMenu.misc.ult:addParam("Enable", "Enable Auto Ult", SCRIPT_PARAM_ONOFF, true)
 			JaxMenu.misc.ult:addParam("minEnemies", "Min. Enemies in Range: ", SCRIPT_PARAM_SLICE, 2, 2, 5, 0)
 
-		JaxMenu:addSubMenu("["..myHero.charName.."] - Orbwalking Settings", "Orbwalking")
+		JaxMenu:addSubMenu("[" .. myHero.charName .. "] - Orbwalking Settings", "Orbwalking")
 			jSOW:LoadToMenu(JaxMenu.Orbwalking)
 
 	TargetSelector = TargetSelector(TARGET_LESS_CAST, SpellQ.range, DAMAGE_PHYSICAL)
@@ -836,7 +835,7 @@ function DmgCalc()
 
 			local enemyAD = getDmg("AD", myHero, enemy)
 
-			enemyTable[i].damageGettingText = enemy.charName.." kills me with "..math.ceil(myHero.health / enemyAD).." hits"
+			enemyTable[i].damageGettingText = enemy.charName .. " kills me with " .. math.ceil(myHero.health / enemyAD) .. " hits"
 		end
 	end
 end
