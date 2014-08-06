@@ -1,4 +1,4 @@
-local version = "3.07"
+local version = "3.071"
 --[[
 
 
@@ -187,7 +187,7 @@ if _G.Wu_Autoupdate then
 				return
 			end
 
-			if version < script_serverVersion then
+			if tonumber(version) < script_serverVersion then
 				script_Messager("New version available: " .. script_serverVersion)
 				script_Messager("Updating, please don't press F9")
 				DelayAction(function () DownloadFile(script_downloadUrl, script_filePath, function() script_Messager("Successfully updated the script, please reload!") end) end, 2)
