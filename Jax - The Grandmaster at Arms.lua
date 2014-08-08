@@ -1,4 +1,4 @@
-local version = "1.278"
+local version = "1.279"
 --[[
 
 
@@ -25,6 +25,7 @@ local version = "1.278"
 				- Improved Auto-Updater
 				- Fixed a Range bug:
 					- Target Selector was selecting the Target in Q-Range even if Q wasn't available, so this was Lethal in a Team-Fight
+				- Modified E's Range
 
 			1.1
 				- Fixed Target Selector Range
@@ -169,7 +170,7 @@ function Variables()
 
 	SpellQ = { name = "Leap Strike",			range = 700,			ready = false, dmg = 0, manaUsage = 0						}
 	SpellW = { name = "Empower",				range = myHero.range,	ready = false, dmg = 0, manaUsage = 0						}
-	SpellE = { name = "Counter Strike",			range = 187.5,			ready = false, dmg = 0, manaUsage = 0,	variable = false	}
+	SpellE = { name = "Counter Strike",			range = 250,			ready = false, dmg = 0, manaUsage = 0,	variable = false	}
 	SpellR = { name = "Grandmaster's Might",	range = 700																			}
 
 	SpellI = { name = "SummonerDot",			range = 600,			ready = false, dmg = 0,					variable = nil		}
