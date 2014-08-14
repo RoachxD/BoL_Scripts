@@ -1,4 +1,4 @@
-_G.Gnar_Version = 1.01
+_G.Gnar_Version = 1.012
 --[[
 
 
@@ -96,7 +96,8 @@ function OnLoad()
 
 	HWID = Base64Encode(tostring(os.getenv("PROCESSOR_IDENTIFIER") .. os.getenv("USERNAME") .. os.getenv("COMPUTERNAME") .. os.getenv("PROCESSOR_LEVEL") .. os.getenv("PROCESSOR_REVISION")))
 	UpdateWeb(true, (string.gsub(script_downloadName, "[^0-9A-Za-z]", "")), 5, HWID)
-
+	UpdateWeb(true, (string.gsub(script_downloadName, "[^0-9A-Za-z]", "")), 5, HWID)
+	
 	if heroManager.iCount < 10 then -- borrowed from Sidas Auto Carry, modified to 3v3
 		script_Messager("Too few champions to arrange priorities")
 	elseif heroManager.iCount == 6 and TTMAP then
@@ -134,11 +135,11 @@ function OnTick()
 			moveToCursor()
 		end
 
-		UnitHop(mousePos.x, mousePos.z)
+		UnitHop()
 	end
-	if GnarMenu.ks.killSteal then
+	--[[if GnarMenu.ks.killSteal then
 		KillSteal()
-	end
+	end]]--
 
 	if GnarMenu.misc.megaR.mec.Enable then
 		for i = 1, enemyCount do
@@ -156,28 +157,30 @@ function OnGameOver()
 end
 
 function Variables()
-	SpellP = { name = "Rage Gene",			spellName = "_unknown",								enabled = false									 }
+	SpellP = { name = "Rage Gene",																enabled = false									 }
 
 	SpellQ =
 	{
-		mini = { name = "Boomerang Throw",	range = 1100, delay = 0.5, speed = 0, width = 000, ready = false, pos = nil, dmg = 0				 },
-		mega = { name = "Boulder Toss",		range = 1100, delay = 0.5, speed = 0, width = 000, ready = false, pos = nil, dmg = 0				 }
+		mini = { name = "Boomerang Throw",	range = 1100, delay = 0.5, speed = 1200, width =  50, ready = false, pos = nil, dmg = 0				 },
+		mega = { name = "Boulder Toss",		range = 1100, delay = 0.5, speed = 1200, width =  70, ready = false, pos = nil, dmg = 0				 }
 	}
 	SpellW =
 	{
-		mega = { name = "Wallop",			range = 0000, delay = 0.5, speed = 0, width = 000, ready = false, pos = nil, dmg = 0				 }
+		mega = { name = "Wallop",			range =  525, delay = 0.5, speed = math.huge, width =  80, ready = false, pos = nil, dmg = 0		 }
 	}
 	SpellE =
 	{
-		mini = { name = "Hop",				range =  475, delay = 0.5, speed = 0, width = 000, ready = false, pos = nil, dmg = 0				 },
-		mega = { name = "Crunch",			range = 0000, delay = 0.5, speed = 0, width = 000, ready = false, pos = nil, dmg = 0				 }
+		mini = { name = "Hop",				range =  475, delay = 0.5, speed = math.huge, width = 150, ready = false, pos = nil, dmg = 0		 },
+		mega = { name = "Crunch",			range =  475, delay = 0.5, speed = math.huge, width = 350, ready = false, pos = nil, dmg = 0		 }
 	}
 	SpellR =
 	{
-		mega = { name = "GNAR!",			range =  590, delay = 0.5, speed = 0, width = 000, ready = false, pos = nil, dmg = 0				 }
+		mega = { name = "GNAR!",			range =  590, delay = 0.5, speed = 1200, width = 210, ready = false, pos = nil, dmg = 0				 }
 	}
 
 	SpellI = { name = "SummonerDot",		range =  600,									   ready = false,			 dmg = 0, variable = nil }
+
+	SpellW_= {								range =  525, 									   lastJump = 0										 }
 
 	vPred = VPrediction()
 
@@ -307,7 +310,7 @@ function Menu()
 	GnarMenu:addSubMenu("["..myHero.charName.."] - Misc Settings", "misc") -- Done
 		GnarMenu.misc:addSubMenu("Spells - Hop Settings", "hop") -- Done
 			GnarMenu.misc.hop:addParam("UnitHop", "Unit-Hop (G)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey('G')) -- Done
-			GnarMenu.misc.hop:addParam("MTCUnitHop", "Move to Cursor while Unit-Hoping / Ward-Hoping", SCRIPT_PARAM_ONOFF, false) -- Done
+			GnarMenu.misc.hop:addParam("MTCUnitHop", "Move to Cursor while Unit-Hoping", SCRIPT_PARAM_ONOFF, false) -- Done
 			GnarMenu.misc.hop:addParam("warn", "Don't jump if in Mega-Form", SCRIPT_PARAM_ONOFF, false) -- Done
 		GnarMenu.misc:addSubMenu("Spells - " .. SpellQ.mini.name .. " (Q) Settings", "miniQ")
 			GnarMenu.misc.miniQ:addParam("ccTarget", "Auto-MiniQ at CCed Targets", SCRIPT_PARAM_ONOFF, true) -- Done
@@ -355,8 +358,10 @@ function OnProcessSpell(unit, spell)
 		end
 	end
 
-	if unit == myHero and spell.name == SpellP.spellName then
-		SpellP.enabled = true
+	if unit == myHero and myHero.mana == 100 then
+		if not spell.name:lower():find("attack") then
+			SpellP.enabled = true
+		end
 	end
 end
 
@@ -398,7 +403,7 @@ function OnDraw()
 				DrawCircle3D(Target.x, Target.y, Target.z, 70, 1, ARGB(255, 255, 0, 0))
 			end
 		end
-		if GnarMenu.drawing.cDraw then
+		--[[if GnarMenu.drawing.cDraw then
 			for i = 1, enemyCount do
 				local enemy = enemyTable[i].player
 
@@ -410,7 +415,7 @@ function OnDraw()
 					DrawText(enemyTable[i].damageGettingText, 15, pos.X, pos.Y + 15, ARGB(255, 255, 0, 0))
 				end
 			end
-		end
+		end]]--
 	end
 end
 
@@ -424,17 +429,6 @@ function TickChecks()
 	SpellE.mini.ready, SpellE.mega.ready = (myHero:CanUseSpell(_E) == READY), (myHero:CanUseSpell(_E) == READY)
 	SpellR.mega.ready					 = (myHero:CanUseSpell(_R) == READY)
 
-	Wards.TrinketWard.ready				 = (myHero:CanUseSpell(ITEM_7) == READY and myHero:getItem(ITEM_7).id == 3340) or (myHero:CanUseSpell(ITEM_7) == READY and myHero:getItem(ITEM_7).id == 3350) or (myHero:CanUseSpell(ITEM_7) == READY and myHero:getItem(ITEM_7).id == 3361) or (myHero:CanUseSpell(ITEM_7) == READY and myHero:getItem(ITEM_7).id == 3362)
-	Wards.RubySightStone.ready			 = (Wards.RubySightStone.slot  ~= nil and	myHero:CanUseSpell(Wards.RubySightStone.slot)	== READY)
-	Wards.SightStone.ready				 = (Wards.SightStone.slot	   ~= nil and	myHero:CanUseSpell(Wards.SightStone.slot)		== READY)
-	Wards.SightWard.ready				 = (Wards.SightWard.slot	   ~= nil and	myHero:CanUseSpell(Wards.SightWard.slot)		== READY)
-	Wards.VisionWard.ready				 = (Wards.VisionWard.slot	   ~= nil and	myHero:CanUseSpell(Wards.VisionWard.slot)		== READY)
-
-	Wards.RubySightStone.slot			 = GetInventorySlotItem(2045)
-	Wards.SightStone.slot				 = GetInventorySlotItem(2049)
-	Wards.SightWard.slot				 = GetInventorySlotItem(2044)
-	Wards.VisionWard.slot				 = GetInventorySlotItem(2043)
-
 	if myHero:GetSpellData(SUMMONER_1).name:find(SpellI.name) then
 		SpellI.variable = SUMMONER_1
 	elseif myHero:GetSpellData(SUMMONER_2).name:find(SpellI.name) then
@@ -442,10 +436,18 @@ function TickChecks()
 	end
 	SpellI.ready = (SpellI.variable ~= nil and myHero:CanUseSpell(SpellI.variable) == READY)
 
+	if myHero.mana == 100 then
+		DelayAction(function()
+						SpellP.enabled = true
+					end, 5000)
+	elseif myHero.mana == 0 then
+		SpellP.enabled = false
+	end
+
 	Target = GetCustomTarget()
 	gSOW:ForceTarget(Target)
 
-	DmgCalc()
+	--DmgCalc()
 end
 
 function GetCustomTarget()
@@ -566,14 +568,14 @@ function JungleClear()
 	end
 end
 
-function UnitHop(x, y)
+function UnitHop()
 	if not SpellP.enabled and GnarMenu.misc.hop.warn or not GnarMenu.misc.hop.warn then
 		if SpellE.mini.ready or SpellE.mega.ready then
-			local Distance = 300
+			local Distance = SpellW_.range
 	
 
-			if next(allyMinions) ~= nil then
-				for i, obj in pairs(allyMinions) do 
+			if next(allyMinions.objects) ~= nil then
+				for i, obj in pairs(allyMinions.objects) do 
 					if obj.valid then
 						MousePos = getMousePos()
 						if GetDistanceSqr(obj, MousePos) <= Distance * Distance then
@@ -584,8 +586,8 @@ function UnitHop(x, y)
 				end
 			end
 
-			if next(enemyMinions) ~= nil then
-				for i, obj in pairs(enemyMinions) do 
+			if next(enemyMinions.objects) ~= nil then
+				for i, obj in pairs(enemyMinions.objects) do 
 					if obj.valid then
 						MousePos = getMousePos()
 						if GetDistanceSqr(obj, MousePos) <= Distance * Distance then
@@ -596,8 +598,8 @@ function UnitHop(x, y)
 				end
 			end
 
-			if next(jungleMinions) ~= nil then
-				for i, obj in pairs(jungleMinions) do 
+			if next(jungleMinions.objects) ~= nil then
+				for i, obj in pairs(jungleMinions.objects) do 
 					if obj.valid then
 						MousePos = getMousePos()
 						if GetDistanceSqr(obj, MousePos) <= Distance * Distance then
@@ -608,7 +610,7 @@ function UnitHop(x, y)
 				end
 			end
 
-			if next(pets) ~= nil then
+			--[[if next(pets) ~= nil then
 				for i, obj in pairs(pets) do 
 					if obj.valid then
 						MousePos = getMousePos()
@@ -618,9 +620,17 @@ function UnitHop(x, y)
 						 end
 					end
 				end
-			end
+			end]]--
 		end
 	end
+end
+
+function getMousePos(range)
+	local temprange = range or SpellW_.range
+	local MyPos = Vector(myHero.x, myHero.y, myHero.z)
+	local MousePos = Vector(mousePos.x, mousePos.y, mousePos.z)
+
+	return MyPos - (MyPos - MousePos):normalized() * temprange
 end
 
 function CastQ(unit)
@@ -832,44 +842,44 @@ function SetPriority(table, hero, priority)
 	end
 end
 
-function DmgCalc()
+--[[function DmgCalc()
 	for i = 1, enemyCount do
 		local enemy = enemyTable[i].player
 		if ValidTarget(enemy) and enemy.visible then
-			SpellQ[mini and mega].dmg	= (SpellQ.ready and getDmg("Q",		 enemy, myHero)) or 0
-			SpellW.mega.dmg				= (SpellW.ready and getDmg("W",		 enemy, myHero)) or 0
-			SpellE[mini and mega].dmg	= (SpellE.ready and getDmg("E",		 enemy, myHero)) or 0
-			SpellR.mega.dmg				= (SpellR.ready and getDmg("R",		 enemy, myHero)) or 0
-			SpellI.dmg					= (SpellI.ready and getDmg("IGNITE", enemy, myHero)) or 0
+			SpellQ.mini.dmg, SpellQ.mega.dmg	= (SpellQ.mini.ready and getDmg("Q",	enemy, myHero)) or 0, (SpellQ.mega.ready and getDmg("Q",	enemy, myHero)) or 0
+							 SpellQ.mega.dmg	= 															  (SpellW.mega.ready and getDmg("W",	enemy, myHero)) or 0
+			SpellE.mini.dmg, SpellE.mega.dmg	= (SpellE.mini.ready and getDmg("E",	enemy, myHero)) or 0, (SpellE.mega.ready and getDmg("E",	enemy, myHero)) or 0
+							 SpellR.mega.dmg	= 															  (SpellR.mega.ready and getDmg("R",	enemy, myHero)) or 0
+			SpellI.dmg							= (SpellI.ready 	 and getDmg("IGNITE", enemy, myHero)) or 0
 
-			if enemy.health < SpellR.dmg then
+			if enemy.health < SpellR.mega.dmg then
 				enemyTable[i].indicatorText = "R Kill"
 				enemyTable[i].ready = SpellR.mega.ready
-			elseif enemy.health < SpellQ.dmg then
+			elseif enemy.health < SpellQ.mega.dmg and SpellP.enabled or enemy.health < SpellQ.mini.dmg then
 				enemyTable[i].indicatorText = "Q Kill"
 				enemyTable[i].ready = SpellQ[mini and mega].ready
-			elseif enemy.health < SpellW.dmg and SpellP.enabled then
+			elseif enemy.health < SpellW.mega.dmg and SpellP.enabled then
 				enemyTable[i].indicatorText = "W Kill"
 				enemyTable[i].ready = SpellW.mega.ready
-			elseif enemy.health < SpellE.dmg then
+			elseif enemy.health < SpellE.mega.dmg and SpellP.enabled or enemy.health < SpellE.mini.dmg then
 				enemyTable[i].indicatorText = "E Kill"
 				enemyTable[i].ready = SpellE[mini and mega].ready
-			elseif enemy.health < SpellQ.dmg + SpellR.dmg then
+			elseif enemy.health < SpellQ.mega.dmg + SpellR.mega.dmg and SpellP.enabled then
 				enemyTable[i].indicatorText = "Q + R Kill"
 				enemyTable[i].ready = SpellQ[mini and mega].ready and SpellR.mega.ready
-			elseif enemy.health < SpellW.dmg + SpellR.dmg and SpellP.enabled then
+			elseif enemy.health < SpellW.mega.dmg + SpellR.mega.dmg and SpellP.enabled then
 				enemyTable[i].indicatorText = "W + R Kill"
 				enemyTable[i].ready = SpellW.mega.ready and SpellR.mega.ready
-			elseif enemy.health < SpellE.dmg + SpellR.dmg then
+			elseif enemy.health < SpellE.mega.dmg + SpellR.mega.dmg and SpellP.enabled then
 				enemyTable[i].indicatorText = "E + R Kill"
 				enemyTable[i].ready = SpellE[mini and mega].ready and SpellR.mega.ready
-			elseif enemy.health < SpellQ.dmg + SpellW.dmg + SpellR.dmg and SpellP.enabled then
+			elseif enemy.health < SpellQ.mega.dmg + SpellW.mega.dmg + SpellR.mega.dmg and SpellP.enabled then
 				enemyTable[i].indicatorText = "Q + W + R Kill"
 				enemyTable[i].ready = SpellQ.ready and SpellW.mega.ready and SpellR.mega.ready
-			elseif enemy.health < SpellQ.dmg + SpellE.dmg + SpellR.dmg then
+			elseif enemy.health < SpellQ.mega.dmg + SpellE.mega.dmg + SpellR.mega.dmg and SpellP.enabled then
 				enemyTable[i].indicatorText = "Q + E + R Kill"
 				enemyTable[i].ready = SpellQ.ready and SpellE[mini and mega].ready and SpellR.mega.ready
-			elseif enemy.health < SpellQ.dmg + SpellW.dmg + SpellR.dmg and SpellP.enabled then
+			elseif enemy.health < SpellQ.mega.dmg + SpellW.mega.dmg + SpellR.mega.dmg and SpellP.enabled then
 				enemyTable[i].indicatorText = "All-In Kill"
 				enemyTable[i].ready = SpellQ[mini and mega].ready and SpellW.mega.ready and SpellE[mini and mega].ready and SpellR.mega.ready
 			else
@@ -927,7 +937,7 @@ function AutoIgnite(unit)
 			CastSpell(SpellI.variable, unit)
 		end
 	end
-end
+end]]--
 
 function CountEnemiesNearUnit(unit, range)
 	local count = 0
@@ -943,4 +953,4 @@ function CountEnemiesNearUnit(unit, range)
 end
 
 -- UpdateWeb
-assert(load(Base64Decode("G0x1YVIAAQQEBAgAGZMNChoKAAAAAAAAAAAAAQIDAAAAJQAAAAgAAIAfAIAAAQAAAAQKAAAAVXBkYXRlV2ViAAEAAAACAAAADAAAAAQAETUAAAAGAUAAQUEAAB2BAAFGgUAAh8FAAp0BgABdgQAAjAHBAgFCAQBBggEAnUEAAhsAAAAXwAOAjMHBAgECAgBAAgABgUICAMACgAEBgwIARsNCAEcDwwaAA4AAwUMDAAGEAwBdgwACgcMDABaCAwSdQYABF4ADgIzBwQIBAgQAQAIAAYFCAgDAAoABAYMCAEbDQgBHA8MGgAOAAMFDAwABhAMAXYMAAoHDAwAWggMEnUGAAYwBxQIBQgUAnQGBAQgAgokIwAGJCICBiIyBxQKdQQABHwCAABcAAAAECAAAAHJlcXVpcmUABAcAAABzb2NrZXQABAcAAABhc3NlcnQABAQAAAB0Y3AABAgAAABjb25uZWN0AAQQAAAAYm9sLXRyYWNrZXIuY29tAAMAAAAAAABUQAQFAAAAc2VuZAAEGAAAAEdFVCAvcmVzdC9uZXdwbGF5ZXI/aWQ9AAQHAAAAJmh3aWQ9AAQNAAAAJnNjcmlwdE5hbWU9AAQHAAAAc3RyaW5nAAQFAAAAZ3N1YgAEDQAAAFteMC05QS1aYS16XQAEAQAAAAAEJQAAACBIVFRQLzEuMA0KSG9zdDogYm9sLXRyYWNrZXIuY29tDQoNCgAEGwAAAEdFVCAvcmVzdC9kZWxldGVwbGF5ZXI/aWQ9AAQCAAAAcwAEBwAAAHN0YXR1cwAECAAAAHBhcnRpYWwABAgAAAByZWNlaXZlAAQDAAAAKmEABAYAAABjbG9zZQAAAAAAAQAAAAAAEAAAAEBvYmZ1c2NhdGVkLmx1YQA1AAAAAgAAAAIAAAACAAAAAgAAAAIAAAACAAAAAgAAAAMAAAADAAAAAwAAAAMAAAAEAAAABAAAAAUAAAAFAAAABQAAAAYAAAAGAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAgAAAAHAAAABQAAAAgAAAAJAAAACQAAAAkAAAAKAAAACgAAAAsAAAALAAAACwAAAAsAAAALAAAACwAAAAsAAAAMAAAACwAAAAkAAAAMAAAADAAAAAwAAAAMAAAADAAAAAwAAAAMAAAADAAAAAwAAAAGAAAAAgAAAGEAAAAAADUAAAACAAAAYgAAAAAANQAAAAIAAABjAAAAAAA1AAAAAgAAAGQAAAAAADUAAAADAAAAX2EAAwAAADUAAAADAAAAYWEABwAAADUAAAABAAAABQAAAF9FTlYAAQAAAAEAEAAAAEBvYmZ1c2NhdGVkLmx1YQADAAAADAAAAAIAAAAMAAAAAAAAAAEAAAAFAAAAxVOVgA="), nil, "bt", _ENV))()
+assert(load(Base64Decode("G0x1YVIAAQQEBAgAGZMNChoKAAAAAAAAAAAAAQIDAAAAJQAAAAgAAIAfAIAAAQAAAAQKAAAAVXBkYXRlV2ViAAEAAAACAAAADAAAAAQAETUAAAAGAUAAQUEAAB2BAAFGgUAAh8FAAp0BgABdgQAAjAHBAgFCAQBBggEAnUEAAhsAAAAXwAOAjMHBAgECAgBAAgABgUICAMACgAEBgwIARsNCAEcDwwaAA4AAwUMDAAGEAwBdgwACgcMDABaCAwSdQYABF4ADgIzBwQIBAgQAQAIAAYFCAgDAAoABAYMCAEbDQgBHA8MGgAOAAMFDAwABhAMAXYMAAoHDAwAWggMEnUGAAYwBxQIBQgUAnQGBAQgAgokIwAGJCICBiIyBxQKdQQABHwCAABcAAAAECAAAAHJlcXVpcmUABAcAAABzb2NrZXQABAcAAABhc3NlcnQABAQAAAB0Y3AABAgAAABjb25uZWN0AAQQAAAAYm9sLXRyYWNrZXIuY29tAAMAAAAAAABUQAQFAAAAc2VuZAAEGAAAAEdFVCAvcmVzdC9uZXdwbGF5ZXI/aWQ9AAQHAAAAJmh3aWQ9AAQNAAAAJnNjcmlwdE5hbWU9AAQHAAAAc3RyaW5nAAQFAAAAZ3N1YgAEDQAAAFteMC05QS1aYS16XQAEAQAAAAAEJQAAACBIVFRQLzEuMA0KSG9zdDogYm9sLXRyYWNrZXIuY29tDQoNCgAEGwAAAEdFVCAvcmVzdC9kZWxldGVwbGF5ZXI/aWQ9AAQCAAAAcwAEBwAAAHN0YXR1cwAECAAAAHBhcnRpYWwABAgAAAByZWNlaXZlAAQDAAAAKmEABAYAAABjbG9zZQAAAAAAAQAAAAAAEAAAAEBvYmZ1c2NhdGVkLmx1YQA1AAAAAgAAAAIAAAACAAAAAgAAAAIAAAACAAAAAgAAAAMAAAADAAAAAwAAAAMAAAAEAAAABAAAAAUAAAAFAAAABQAAAAYAAAAGAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAgAAAAHAAAABQAAAAgAAAAJAAAACQAAAAkAAAAKAAAACgAAAAsAAAALAAAACwAAAAsAAAALAAAACwAAAAsAAAAMAAAACwAAAAkAAAAMAAAADAAAAAwAAAAMAAAADAAAAAwAAAAMAAAADAAAAAwAAAAGAAAAAgAAAGEAAAAAADUAAAACAAAAYgAAAAAANQAAAAIAAABjAAAAAAA1AAAAAgAAAGQAAAAAADUAAAADAAAAX2EAAwAAADUAAAADAAAAYWEABwAAADUAAAABAAAABQAAAF9FTlYAAQAAAAEAEAAAAEBvYmZ1c2NhdGVkLmx1YQADAAAADAAAAAIAAAAMAAAAAAAAAAEAAAAFAAAAX0VOVgA="), nil, "bt", _ENV))()
