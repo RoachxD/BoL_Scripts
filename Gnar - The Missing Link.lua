@@ -1,4 +1,4 @@
-_G.Gnar_Version = 1.017
+_G.Gnar_Version = 1.018
 --[[
 
 
@@ -508,10 +508,12 @@ end
 
 function Farm()
 	enemyMinions:update()
-	if SpellQ.mini.ready and #enemyMinions.objects > 0 then
-		local Pos = GetBestQPositionFarm()
-		if Pos then
-			CastSpell(_Q, Pos.x, Pos.z)
+	if SpellP.enabled and GnarMenu.farming.qmegaFarm or GnarMenu.farming.qminiFarm then
+		if (SpellP.enabled and SpellQ.mega.ready or SpellQ.mini.ready) and #enemyMinions.objects > 0 then
+			local Pos = GetBestQPositionFarm()
+			if Pos then
+				CastSpell(_Q, Pos.x, Pos.z)
+			end
 		end
 	end
 end
