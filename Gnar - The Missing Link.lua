@@ -1,4 +1,4 @@
-_G.Gnar_Version = 1.015
+_G.Gnar_Version = 1.016
 --[[
 
 
@@ -719,7 +719,7 @@ function CastW(unit)
 end
 
 function CastE(unit)
-	if unit == nil or not SpellQ.mega.ready or (GetDistanceSqr(unit, myHero) > SpellE.mega.range * SpellE.mega.range) or not SpellP.enabled then
+	if unit == nil or not SpellE.mega.ready or (GetDistanceSqr(unit, myHero) > SpellE.mega.range * SpellE.mega.range) or not SpellP.enabled then
 		return false
 	end
 
