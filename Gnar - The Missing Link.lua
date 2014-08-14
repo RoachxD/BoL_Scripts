@@ -1,4 +1,4 @@
-_G.Gnar_Version = 1.016
+_G.Gnar_Version = 1.017
 --[[
 
 
@@ -358,8 +358,12 @@ function OnProcessSpell(unit, spell)
 		end
 	end
 
-	if unit == myHero and myHero.mana == 100 then
-		if not spell.name:lower():find("attack") then
+	if unit == myHero then
+		if spell.name == "GnarE" then
+			gSOW:resetAA()
+		end
+
+		if not spell.name:lower():find("attack") and myHero.mana == 100 then
 			SpellP.enabled = true
 		end
 	end
