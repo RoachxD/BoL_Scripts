@@ -1,4 +1,4 @@
-_G.Gnar_Version = 1.013
+_G.Gnar_Version = 1.014
 --[[
 
 
@@ -137,9 +137,9 @@ function OnTick()
 
 		UnitHop()
 	end
-	--[[if GnarMenu.ks.killSteal then
+	if GnarMenu.ks.killSteal then
 		KillSteal()
-	end]]--
+	end
 
 	if GnarMenu.misc.megaR.mec.Enable then
 		for i = 1, enemyCount do
@@ -403,7 +403,7 @@ function OnDraw()
 				DrawCircle3D(Target.x, Target.y, Target.z, 70, 1, ARGB(255, 255, 0, 0))
 			end
 		end
-		--[[if GnarMenu.drawing.cDraw then
+		if GnarMenu.drawing.cDraw then
 			for i = 1, enemyCount do
 				local enemy = enemyTable[i].player
 
@@ -415,7 +415,7 @@ function OnDraw()
 					DrawText(enemyTable[i].damageGettingText, 15, pos.X, pos.Y + 15, ARGB(255, 255, 0, 0))
 				end
 			end
-		end]]--
+		end
 	end
 end
 
@@ -439,15 +439,17 @@ function TickChecks()
 	if myHero.mana == 100 then
 		DelayAction(function()
 						SpellP.enabled = true
-					end, 5000)
+					end, 5)
 	elseif myHero.mana == 0 then
 		SpellP.enabled = false
 	end
 
 	Target = GetCustomTarget()
+
+	TargetSelector.range = TargetSelectorRange()
 	gSOW:ForceTarget(Target)
 
-	--DmgCalc()
+	DmgCalc()
 end
 
 function GetCustomTarget()
@@ -704,7 +706,7 @@ function CastW(unit)
 			return true
 		end
 	else
-		local CastPos, HitChance, Position = vPred:GetCircularCastPosition(unit, SpellW.mega.delay, SpellW.mega.width, SpellW.mega.range, SpellW.mega.speed, myHero, false)
+		local CastPos, HitChance, Position = vPred:GetLineCastPosition(unit, SpellW.mega.delay, SpellW.mega.width, SpellW.mega.range, SpellW.mega.speed, myHero, false)
 		if HitChance >= 2 then
 			if GnarMenu.misc.cast.usePackets then
 				Packet("S_CAST", { spellId = _W, toX = CastPos.x, toY = CastPos.z, fromX = CastPos.x, fromY = CastPos.z }):send()
@@ -842,48 +844,48 @@ function SetPriority(table, hero, priority)
 	end
 end
 
---[[function DmgCalc()
+function DmgCalc()
 	for i = 1, enemyCount do
 		local enemy = enemyTable[i].player
 		if ValidTarget(enemy) and enemy.visible then
-			SpellQ.mini.dmg, SpellQ.mega.dmg	= (SpellQ.mini.ready and getDmg("Q",	enemy, myHero)) or 0, (SpellQ.mega.ready and getDmg("Q",	enemy, myHero)) or 0
-							 SpellQ.mega.dmg	= 															  (SpellW.mega.ready and getDmg("W",	enemy, myHero)) or 0
-			SpellE.mini.dmg, SpellE.mega.dmg	= (SpellE.mini.ready and getDmg("E",	enemy, myHero)) or 0, (SpellE.mega.ready and getDmg("E",	enemy, myHero)) or 0
-							 SpellR.mega.dmg	= 															  (SpellR.mega.ready and getDmg("R",	enemy, myHero)) or 0
+			SpellQ.mini.dmg, SpellQ.mega.dmg	= (SpellQ.mini.ready and (10 + (35 * (GetSpellData(_Q).level - 1)) + myHero.totalDamage)) or 0, (SpellQ.mega.ready and (10 + (40 * (GetSpellData(_Q).level - 1)) + myHero.totalDamage * 1.2)) or 0
+							 SpellW.mega.dmg	= 															  (SpellW.mega.ready and (25 + (20 * (GetSpellData(_W).level - 1)) + myHero.totalDamage)) or 0
+			SpellE.mini.dmg, SpellE.mega.dmg	= (SpellE.mini.ready and (20 + (40 * (GetSpellData(_E).level - 1)) + myHero.maxHealth * .06 )) or 0, (SpellE.mega.ready and (20 + (40 * (GetSpellData(_E).level - 1)) + myHero.maxHealth * .06 )) or 0
+							 SpellR.mega.dmg	= 															  (SpellR.mega.ready and (300 + (150 * (GetSpellData(_R).level - 1)) + myHero.totalDamage * .3)) or 0
 			SpellI.dmg							= (SpellI.ready 	 and getDmg("IGNITE", enemy, myHero)) or 0
 
-			if enemy.health < SpellR.mega.dmg then
+			if SpellP.enabled and enemy.health < SpellR.mega.dmg then
 				enemyTable[i].indicatorText = "R Kill"
 				enemyTable[i].ready = SpellR.mega.ready
-			elseif enemy.health < SpellQ.mega.dmg and SpellP.enabled or enemy.health < SpellQ.mini.dmg then
+			elseif SpellP.enabled and enemy.health < SpellQ.mega.dmg or enemy.health < SpellQ.mini.dmg then
 				enemyTable[i].indicatorText = "Q Kill"
-				enemyTable[i].ready = SpellQ[mini and mega].ready
+				enemyTable[i].ready = SpellQ.mega.ready or SpellQ.mini.ready
 			elseif enemy.health < SpellW.mega.dmg and SpellP.enabled then
 				enemyTable[i].indicatorText = "W Kill"
-				enemyTable[i].ready = SpellW.mega.ready
+				enemyTable[i].ready = SpellP.enabled and SpellW.mega.ready
 			elseif enemy.health < SpellE.mega.dmg and SpellP.enabled or enemy.health < SpellE.mini.dmg then
 				enemyTable[i].indicatorText = "E Kill"
-				enemyTable[i].ready = SpellE[mini and mega].ready
+				enemyTable[i].ready = SpellE.mega.ready or SpellE.mini.ready
 			elseif enemy.health < SpellQ.mega.dmg + SpellR.mega.dmg and SpellP.enabled then
 				enemyTable[i].indicatorText = "Q + R Kill"
-				enemyTable[i].ready = SpellQ[mini and mega].ready and SpellR.mega.ready
+				enemyTable[i].ready = SpellQ.mega.ready and SpellR.mega.ready
 			elseif enemy.health < SpellW.mega.dmg + SpellR.mega.dmg and SpellP.enabled then
 				enemyTable[i].indicatorText = "W + R Kill"
 				enemyTable[i].ready = SpellW.mega.ready and SpellR.mega.ready
 			elseif enemy.health < SpellE.mega.dmg + SpellR.mega.dmg and SpellP.enabled then
 				enemyTable[i].indicatorText = "E + R Kill"
-				enemyTable[i].ready = SpellE[mini and mega].ready and SpellR.mega.ready
+				enemyTable[i].ready =  SpellE.mega.ready and SpellR.mega.ready
 			elseif enemy.health < SpellQ.mega.dmg + SpellW.mega.dmg + SpellR.mega.dmg and SpellP.enabled then
 				enemyTable[i].indicatorText = "Q + W + R Kill"
-				enemyTable[i].ready = SpellQ.ready and SpellW.mega.ready and SpellR.mega.ready
+				enemyTable[i].ready = SpellQ.mega.ready and SpellW.mega.ready and SpellR.mega.ready
 			elseif enemy.health < SpellQ.mega.dmg + SpellE.mega.dmg + SpellR.mega.dmg and SpellP.enabled then
 				enemyTable[i].indicatorText = "Q + E + R Kill"
-				enemyTable[i].ready = SpellQ.ready and SpellE[mini and mega].ready and SpellR.mega.ready
+				enemyTable[i].ready =  SpellQ.mega.ready and SpellE.mega.ready and SpellR.mega.ready
 			elseif enemy.health < SpellQ.mega.dmg + SpellW.mega.dmg + SpellR.mega.dmg and SpellP.enabled then
 				enemyTable[i].indicatorText = "All-In Kill"
-				enemyTable[i].ready = SpellQ[mini and mega].ready and SpellW.mega.ready and SpellE[mini and mega].ready and SpellR.mega.ready
+				enemyTable[i].ready =  SpellQ.mega.ready and SpellW.mega.ready and SpellE.mega.ready and SpellR.mega.ready
 			else
-				local dmgTotal = SpellQ[mini and mega].dmg + SpellW.mega.dmg + SpellE[mini and mega].dmg + SpellR.mega.dmg
+				local dmgTotal = (SpellP.enabled and SpellQ.mega.dmg or SpellQ.mini.dmg) + SpellW.mega.dmg + (SpellP.enabled and SpellE.mega.dmg or SpellE.mini.dmg) + SpellR.mega.dmg
 				local hpLeft = math.round(enemy.health - dmgTotal)
 				local percentLeft = math.round(hpLeft / enemy.maxHealth * 100)
 
@@ -893,7 +895,7 @@ end
 
 			local enemyAD = getDmg("AD", myHero, enemy)
 		 
-			enemyTable[i].damageGettingText = enemy.charName.." kills me with "..math.ceil(myHero.health / enemyAD).." hits"
+			enemyTable[i].damageGettingText = enemy.charName .. " kills me with " .. math.ceil(myHero.health / enemyAD) .. " hits"
 		end
 	end
 end
@@ -937,7 +939,7 @@ function AutoIgnite(unit)
 			CastSpell(SpellI.variable, unit)
 		end
 	end
-end]]--
+end
 
 function CountEnemiesNearUnit(unit, range)
 	local count = 0
@@ -950,6 +952,14 @@ function CountEnemiesNearUnit(unit, range)
 	end
 
 	return count
+end
+
+function TargetSelectorRange()
+	if SpellP.enabled then
+		return SpellQ.mega.ready and SpellQ.mega.range or SpellE.mega.range
+	else
+		return SpellQ.mini.ready and SpellQ.mini.range or SpellE.mini.range
+	end
 end
 
 -- UpdateWeb
