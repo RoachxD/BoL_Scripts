@@ -1,4 +1,4 @@
-_G.Gnar_Version = 1.0
+_G.Gnar_Version = 1.01
 --[[
 
 
@@ -9,11 +9,15 @@ _G.Gnar_Version = 1.0
 		88. ~8~ 88  V888 88   88 88 `88.
 		 Y888P  VP   V8P YP   YP 88   YD
 
-	Script - Gnar - The Missing Link 1.0a
+	Script - Gnar - The Missing Link 1.01
 
 	Changelog:
 		1.0a
 			- Pre-Release
+
+		1.01
+			- Official Release (Champion Released)
+
 ]]--
 
 if myHero.charName ~= "Gnar" then return end
@@ -52,7 +56,7 @@ if lib_downloadNeeded then return end
 
 local script_downloadName = "Gnar - The Missing Link"
 local script_downloadHost = "raw.github.com"
-local script_downloadPath = "/RoachxD/BoL_Scripts/master/Gnar%20-%20The%20Missing%20Link.lua".."?rand="..math.random(1, 10000)
+local script_downloadPath = "/RoachxD/BoL_Scripts/master/Gnar%20-%20The%20Missing%20Link.lua" .. "?rand=" .. math.random(1, 10000)
 local script_downloadUrl = "https://" .. script_downloadHost .. script_downloadPath
 local script_filePath = SCRIPT_PATH .. GetCurrentEnv().FILE_NAME .. ".lua"
 
@@ -140,7 +144,7 @@ function OnTick()
 		for i = 1, enemyCount do
 			local enemy = enemyTable[i].player
 
-			CastR(enemy, GnarMenu.misc.megaR.mec.minEnemies, Gnarmenu.misc.megaR.mec.accuracy)
+			CastR(enemy, GnarMenu.misc.megaR.mec.minEnemies, GnarMenu.misc.megaR.mec.accuracy)
 		end
 	end
 
@@ -888,25 +892,25 @@ function KillSteal()
 	for i = 1, enemyCount do
 		local enemy = enemyTable[i].player
 		if ValidTarget(enemy) and enemy.visible then
-			if enemy.health < SpellR.dmg and GnarMenu.ks.useR then
+			if enemy.health < SpellR.mega.dmg and GnarMenu.ks.useR then
 				CastR(enemy, 1, 1)
-			elseif enemy.health < SpellQ.dmg then
+			elseif enemy.health < SpellQ.mega.dmg and SpellP.enabled or enemy.health < SpellQ.mini.dmg then
 				CastQ(enemy)
-			elseif enemy.health < SpellW.dmg and SpellP.enabled then
+			elseif enemy.health < SpellW.mega.dmg and SpellP.enabled then
 				CastW(enemy)
-			elseif enemy.health < SpellE.dmg then
+			elseif enemy.health < SpellE.mega.dmg and SpellP.enabled or enemy.health < SpellE.mini.dmg then
 				CastE(enemy)
-			elseif enemy.health < SpellQ.dmg + SpellR.dmg and SpellP.enabled and GnarMenu.ks.useR then
+			elseif enemy.health < SpellQ.mega.dmg + SpellR.mega.dmg and SpellP.enabled and GnarMenu.ks.useR then
 				CastQ(enemy)
-			elseif enemy.health < SpellW.dmg + SpellR.dmg and SpellP.enabled and GnarMenu.ks.useR then
+			elseif enemy.health < SpellW.mega.dmg + SpellR.mega.dmg and SpellP.enabled and GnarMenu.ks.useR then
 				CastW(enemy)
-			elseif enemy.health < SpellE.dmg + SpellR.dmg and SpellP.enabled and GnarMenu.ks.useR then
+			elseif enemy.health < SpellE.mega.dmg + SpellR.mega.dmg and SpellP.enabled and GnarMenu.ks.useR then
 				CastE(enemy)
-			elseif enemy.health < SpellQ.dmg + SpellW.dmg + SpellR.dmg and SpellP.enabled and GnarMenu.ks.useR then
+			elseif enemy.health < SpellQ.mega.dmg + SpellW.mega.dmg + SpellR.mega.dmg and SpellP.enabled and GnarMenu.ks.useR then
 				CastE(enemy)
-			elseif enemy.health < SpellQ.dmg + SpellE.dmg + SpellR.dmg and SpellP.enabled and GnarMenu.ks.useR then
+			elseif enemy.health < SpellQ.mega.dmg + SpellE.mega.dmg + SpellR.mega.dmg and SpellP.enabled and GnarMenu.ks.useR then
 				CastE(enemy)
-			elseif enemy.health < SpellQ.dmg + SpellW.dmg + SpellR.dmg and SpellP.enabled and GnarMenu.ks.useR then
+			elseif enemy.health < SpellQ.mega.dmg + SpellW.mega.dmg + SpellR.mega.dmg and SpellP.enabled and GnarMenu.ks.useR then
 				CastE(enemy)
 			end
 
