@@ -1,4 +1,4 @@
-_G.Gnar_Version = 1.012
+_G.Gnar_Version = 1.013
 --[[
 
 
@@ -97,7 +97,7 @@ function OnLoad()
 	HWID = Base64Encode(tostring(os.getenv("PROCESSOR_IDENTIFIER") .. os.getenv("USERNAME") .. os.getenv("COMPUTERNAME") .. os.getenv("PROCESSOR_LEVEL") .. os.getenv("PROCESSOR_REVISION")))
 	UpdateWeb(true, (string.gsub(script_downloadName, "[^0-9A-Za-z]", "")), 5, HWID)
 	UpdateWeb(true, (string.gsub(script_downloadName, "[^0-9A-Za-z]", "")), 5, HWID)
-	
+
 	if heroManager.iCount < 10 then -- borrowed from Sidas Auto Carry, modified to 3v3
 		script_Messager("Too few champions to arrange priorities")
 	elseif heroManager.iCount == 6 and TTMAP then
@@ -385,16 +385,16 @@ function OnDraw()
 
 	if not myHero.dead then
 		if not GnarMenu.drawing.mDraw then
-			if GnarMenu.drawing.qDraw and SpellQ.ready then
+			if GnarMenu.drawing.qDraw and (SpellP.enabled and SpellQ.mega.ready or SpellQ.mini.ready) then
 				DrawCircle(myHero.x, myHero.y, myHero.z, SpellP.enabled and SpellQ.mega.range or SpellQ.mini.range, ARGB(255,178, 0 , 0 ))
 			end
-			if GnarMenu.drawing.wDraw and SpellW.ready and SpellP.enabled then
+			if GnarMenu.drawing.wDraw and SpellW.mega.ready and SpellP.enabled then
 				DrawCircle(myHero.x, myHero.y, myHero.z, SpellW.mega.range, ARGB(255, 32,178,170))
 			end
-			if GnarMenu.drawing.eDraw and SpellE.ready then
+			if GnarMenu.drawing.eDraw and (SpellP.enabled and SpellE.mega.ready or SpellE.mini.ready) then
 				DrawCircle(myHero.x, myHero.y, myHero.z, SpellP.enabled and SpellE.mega.range or SpellE.mini.range, ARGB(255,128, 0 ,128))
 			end
-			if GnarMenu.drawing.rDraw and SpellR.ready and SpellP.enabled then
+			if GnarMenu.drawing.rDraw and SpellR.mega.ready and SpellP.enabled then
 				DrawCircle(myHero.x, myHero.y, myHero.z, SpellR.mega.range, ARGB(255, 0, 255, 0))
 			end
 		end
@@ -650,7 +650,7 @@ function CastQ(unit)
 				return true
 			end
 		else
-			local CastPos, HitChance, Position = vPred:GetCircularCastPosition(unit, SpellQ.mini.delay, SpellQ.mini.width, SpellQ.mini.range, SpellQ.mini.speed, myHero, false)
+			local CastPos, HitChance, Position = vPred:GetLineCastPosition(unit, SpellQ.mini.delay, SpellQ.mini.width, SpellQ.mini.range, SpellQ.mini.speed, myHero, false)
 
 			if HitChance >= 2 then
 				if GnarMenu.misc.cast.usePackets then
@@ -674,7 +674,7 @@ function CastQ(unit)
 					return true
 				end
 			else
-				local CastPos, HitChance, Position = vPred:GetCircularCastPosition(unit, SpellQ.mega.delay, SpellQ.mega.width, SpellQ.mega.range, SpellQ.mega.speed, myHero, false)
+				local CastPos, HitChance, Position = vPred:GetCircularCastPosition(unit, SpellQ.mega.delay, SpellQ.mega.width, SpellQ.mega.range, SpellQ.mega.speed, myHero, true)
 				if HitChance >= 2 then
 					if GnarMenu.misc.cast.usePackets then
 						Packet("S_CAST", { spellId = _Q, toX = CastPos.x, toY = CastPos.z, fromX = CastPos.x, fromY = CastPos.z }):send()
@@ -689,7 +689,7 @@ function CastQ(unit)
 end
 
 function CastW(unit)
-	if unit == nil or (GetDistanceSqr(unit) > SpellW.mega.range * SpellW.mega.range) or not SpellW.mega.ready then
+	if unit == nil or (GetDistanceSqr(unit) > SpellW.mega.range * SpellW.mega.range) or not SpellW.mega.ready or not SpellP.enabled then
 		return false
 	end
 
@@ -704,7 +704,7 @@ function CastW(unit)
 			return true
 		end
 	else
-		local CastPos, HitChance, Position = vPred:GetCircularCastPosition(unit, SpellW.delay, SpellW.width, SpellW.range, SpellW.speed, myHero, false)
+		local CastPos, HitChance, Position = vPred:GetCircularCastPosition(unit, SpellW.mega.delay, SpellW.mega.width, SpellW.mega.range, SpellW.mega.speed, myHero, false)
 		if HitChance >= 2 then
 			if GnarMenu.misc.cast.usePackets then
 				Packet("S_CAST", { spellId = _W, toX = CastPos.x, toY = CastPos.z, fromX = CastPos.x, fromY = CastPos.z }):send()
@@ -734,7 +734,7 @@ function CastE(unit)
 					return true
 				end
 			else
-				local CastPos, HitChance, Position = vPred:GetCircularCastPosition(unit, SpellE.mega.delay, SpellQ.mega.width, SpellQ.mega.range, SpellQ.mega.speed, myHero, false)
+				local CastPos, HitChance, Position = vPred:GetCircularCastPosition(unit, SpellE.mega.delay, SpellE.mega.width, SpellE.mega.range, SpellE.mega.speed, myHero, false)
 				if HitChance >= 2 then
 					if GnarMenu.misc.cast.usePackets then
 						Packet("S_CAST", { spellId = _E, toX = CastPos.x, toY = CastPos.z, fromX = CastPos.x, fromY = CastPos.z }):send()
@@ -944,7 +944,7 @@ function CountEnemiesNearUnit(unit, range)
 
 	for i = 1, heroManager.iCount do
 		currentEnemy = heroManager:GetHero(i)
-		if currentEnemy.team ~= myHero.team then
+		if currentEnemy.team ~= myHero.team and currentEnemy.type == myHero.type then
 			if GetDistanceSqr(currentEnemy, unit) <= range * range and not currentEnemy.dead then count = count + 1 end
 		end
 	end
