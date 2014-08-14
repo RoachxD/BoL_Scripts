@@ -1,4 +1,4 @@
-_G.Gnar_Version = 1.014
+_G.Gnar_Version = 1.015
 --[[
 
 
@@ -338,7 +338,7 @@ function Menu()
 		GnarMenu:addSubMenu("["..myHero.charName.."] - Orbwalking Settings", "Orbwalking") -- Done
 			gSOW:LoadToMenu(GnarMenu.Orbwalking) -- Done
 
-	GnarMenu:addParam("predType", "Prediction Type", SCRIPT_PARAM_LIST, 1, { "Prodiction", "VPrediction" }) -- Done
+	GnarMenu:addParam("predType", "Prediction Type", SCRIPT_PARAM_LIST, 2, { "Prodiction", "VPrediction" }) -- Done
 
 	TargetSelector = TargetSelector(TARGET_LESS_CAST, SpellQ.mini.range, DAMAGE_PHYSICAL)
 	TargetSelector.name = "Gnar"
@@ -757,7 +757,7 @@ function CastR(unit, count, accuracy)
 
 	if CountEnemiesNearUnit(myHero, SpellR.mega.range) >= count then
 		if GnarMenu.misc.megaR.mec.posTo == 1 then
-			local pushLocation = NearestWall(myHero.x, myHero.y, myHero.z, SpellR.mega.range + (SpellR.mega.range *.25), 30)
+			local pushLocation = NearestWall(myHero.x, myHero.y, myHero.z, SpellR.mega.range + (SpellR.mega.range *.2), 30)
 
 			CastSpell(_R, pushLocation.x, pushLocation.z)
 		else
