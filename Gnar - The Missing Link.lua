@@ -1,4 +1,4 @@
-_G.Gnar_Version = 1.018
+_G.Gnar_Version = 1.019
 --[[
 
 
@@ -141,11 +141,11 @@ function OnTick()
 		KillSteal()
 	end
 
-	if GnarMenu.misc.megaR.mec.Enable then
+	if GnarMenu.misc.mec.Enable then
 		for i = 1, enemyCount do
 			local enemy = enemyTable[i].player
 
-			CastR(enemy, GnarMenu.misc.megaR.mec.minEnemies, GnarMenu.misc.megaR.mec.accuracy)
+			CastR(GnarMenu.misc.mec.minEnemies, GnarMenu.misc.mec.accuracy)
 		end
 	end
 
@@ -166,7 +166,7 @@ function Variables()
 	}
 	SpellW =
 	{
-		mega = { name = "Wallop",			range =  525, delay = 0.5, speed = math.huge, width =  80, ready = false, pos = nil, dmg = 0		 }
+		mega = { name = "Wallop",			range =  525, delay = 0.5, speed =    0, width =  80, ready = false, pos = nil, dmg = 0		 }
 	}
 	SpellE =
 	{
@@ -247,6 +247,8 @@ function Variables()
 
 	buffTypes = { BUFF_STUN, BUFF_ROOT, BUFF_KNOCKUP, BUFF_SUPPRESS, BUFF_SLOW, BUFF_CHARM, BUFF_FEAR, BUFF_TAUNT }
 
+	qObject = { variable = nil, endVariable = nil }
+
 	enemyCount = 0
 	enemyTable = {}
 
@@ -302,6 +304,7 @@ function Menu()
 		GnarMenu.drawing:addParam("Target", "Draw Circle on Target", SCRIPT_PARAM_ONOFF, true) -- Done
 		GnarMenu.drawing:addParam("cDraw", "Draw Damage Text", SCRIPT_PARAM_ONOFF, true) -- Done
 		GnarMenu.drawing:addParam("myHero", "Draw My Hero's Range", SCRIPT_PARAM_ONOFF, true) -- Done
+		GnarMenu.drawing:addParam("catcher", "Draw Q-Catch Helper", SCRIPT_PARAM_ONOFF, true) -- Done
 		GnarMenu.drawing:addParam("qDraw", "Draw " .. SpellQ.mini.name .. ' / ' .. SpellQ.mega.name .. " (Q) Range", SCRIPT_PARAM_ONOFF, true) -- Done
 		GnarMenu.drawing:addParam("wDraw", "Draw " .. SpellW.mega.name .. " (W) Range", SCRIPT_PARAM_ONOFF, false) -- Done
 		GnarMenu.drawing:addParam("eDraw", "Draw " .. SpellE.mini.name .. ' / ' .. SpellE.mega.name .. " (E) Range", SCRIPT_PARAM_ONOFF, true) -- Done
@@ -320,17 +323,17 @@ function Menu()
 			GnarMenu.misc.megaQ:addParam("howTo", "Use " .. SpellQ.mega.name .. " (Q): ", SCRIPT_PARAM_LIST, 1, { "If outside of Melee Range", "When Available" }) -- Done
 		GnarMenu.misc:addSubMenu("Spells - " .. SpellW.mega.name .. " (W) Settings", "megaW") -- Done
 			GnarMenu.misc.megaW:addParam("interrupt", "Auto-interrupt Channeling Spells with " .. SpellW.mega.name .. " (W)", SCRIPT_PARAM_ONOFF, true) -- Done
-			GnarMenu.misc.megaW:addParam("turretAggro", "Try to stun enemies in allied Turret Range", SCRIPT_PARAM_ONOFF, true)
-		GnarMenu.misc:addSubMenu("Spells - " .. SpellE.mega.name .. " (E) Settings", "megaE")
+			GnarMenu.misc.megaW:addParam("turretAggro", "Try to stun enemies in allied Turret Range", SCRIPT_PARAM_ONOFF, true) -- Done
+		GnarMenu.misc:addSubMenu("Spells - " .. SpellE.mega.name .. " (E) Settings", "megaE") -- Done
 			GnarMenu.misc.megaE:addParam("howTo", "Use " .. SpellE.mega.name .. " (E): ", SCRIPT_PARAM_LIST, 1, { "If outside of Melee Range", "When Available" }) -- Done
-		GnarMenu.misc:addSubMenu("Spells - " .. SpellR.mega.name .. " (R) Settings", "megaR")
-			GnarMenu.misc.megaR:addSubMenu("Spells - " .. SpellR.mega.name .. " (R) MEC Settings", "mec") -- Done
-				GnarMenu.misc.megaR.mec:addParam("Enable", "Enable the use of Mec to cast " .. SpellR.mega.name .. " (R)", SCRIPT_PARAM_ONOFF, true) -- Done
-				GnarMenu.misc.megaR.mec:addParam("minEnemies", "Min. Enemies to use " .. SpellR.mega.name .. " (R): ", SCRIPT_PARAM_SLICE, 2, 2, 5, 0) -- Done
-				GnarMenu.misc.megaR.mec:addParam("posTo", "Position to throw the enemies: ", SCRIPT_PARAM_LIST, 1, { "Closest Wall", "Mouse-Position" }) -- Done
-				GnarMenu.misc.megaR.mec:addParam("accuracy", "Accuracy to hit the Wall: ", SCRIPT_PARAM_SLICE, 30, 1, 40, 0) -- Done
+		GnarMenu.misc:addSubMenu("Spells - " .. SpellR.mega.name .. " (R) Settings", "megaR") -- Done
 			GnarMenu.misc.megaR:addParam("interrupt", "Auto-interrupt Channeling Spells with " .. SpellR.mega.name .. " (R)", SCRIPT_PARAM_ONOFF, false) -- Done
-			GnarMenu.misc.megaR:addParam("turretAggro", "Try to stun enemies in allied Turret Range", SCRIPT_PARAM_ONOFF, true)
+			GnarMenu.misc.megaR:addParam("turretAggro", "Try to stun enemies in allied Turret Range", SCRIPT_PARAM_ONOFF, true) -- Done
+		GnarMenu.misc:addSubMenu("Spells - " .. SpellR.mega.name .. " (R) MEC Settings", "mec") -- Done
+			GnarMenu.misc.mec:addParam("Enable", "Enable the use of Mec to cast " .. SpellR.mega.name .. " (R)", SCRIPT_PARAM_ONOFF, true) -- Done
+			GnarMenu.misc.mec:addParam("minEnemies", "Min. Enemies to use " .. SpellR.mega.name .. " (R): ", SCRIPT_PARAM_SLICE, 2, 2, 5, 0) -- Done
+			GnarMenu.misc.mec:addParam("posTo", "Position to throw the enemies: ", SCRIPT_PARAM_LIST, 1, { "Closest Wall", "Mouse-Position" }) -- Done
+			GnarMenu.misc.mec:addParam("accuracy", "Accuracy to hit the Wall: ", SCRIPT_PARAM_SLICE, 30, 1, 50, 0) -- Done
 
 		GnarMenu.misc:addSubMenu("Spells - Cast Settings", "cast") -- Done
 			GnarMenu.misc.cast:addParam("usePackets", "Use Packets to Cast Spells", SCRIPT_PARAM_ONOFF, false) -- Done
@@ -359,12 +362,27 @@ function OnProcessSpell(unit, spell)
 	end
 
 	if unit == myHero then
-		if spell.name == "GnarE" then
-			gSOW:resetAA()
-		end
-
 		if not spell.name:lower():find("attack") and myHero.mana == 100 then
 			SpellP.enabled = true
+		end
+	end
+
+	if unit.type == "Obj_AI_Turret" then
+		for _, enemy in pairs(GetEnemyHeroes()) do
+			if spell.target == enemy and (GnarMenu.misc.megaR.turretAggro or GnarMenu.misc.megaW.turretAggro) and not enemy.canMove and SpellP.enabled then
+				if GnarMenu.misc.megaW.turretAggro then
+					CastW(enemy)
+				elseif GnarMenu.misc.megaR.turretAggro then
+					CastR(1, GnarMenu.misc.mec.accuracy, enemy)
+				else
+					CastW(enemy)
+					DelayAction(function()
+									if enemy.canMove and not SpellW.mega.ready then
+										CastR(1, GnarMenu.misc.mec.accuracy, enemy)
+									end
+								end, 0.3)
+				end
+			end
 		end
 	end
 end
@@ -385,6 +403,11 @@ end
 function OnDraw()
 	if GnarMenu.drawing.myHero then
 		gSOW:DrawAARange(1, ARGB(255, 0, 189, 22))
+	end
+	if GnarMenu.drawing.catcher then
+		if (qObject.variable ~= nil and qObject.variable.valid) and (qObject.endVariable ~= nil and qObject.endVariable.valid) then
+			DrawLineBorder3D(qObject.variable.x, qObject.variable.y, qObject.variable.z, qObject.endVariable.x, qObject.endVariable.y, qObject.endVariable.z, 125, GetHeroQRectangle(myHero, qObject.variable.x, qObject.variable.z, qObject.endVariable.x, qObject.endVariable.z) and ARGB(255, 255, 255, 255) or ARGB(255, 150, 3, 3), 1)
+		end
 	end
 
 	if not myHero.dead then
@@ -425,6 +448,20 @@ end
 
 function OnBugsplat()
 	UpdateWeb(false, (string.gsub(script_downloadName, "[^0-9A-Za-z]", "")), 5, HWID)
+end
+
+function OnCreateObj(object)
+	if not SpellQ.mini.ready then
+		if (qObject.variable == nil or not qObject.variable.valid) or (qObject.endVariable == nil or not qObject.endVariable.valid) then
+			if object.name:find("Q_mis.troy") and GetDistanceSqr(myHero, object) > 75 * 75 then
+				qObject.variable = object
+			end
+
+			if object.name:find("Q_Target.troy") then
+				qObject.endVariable = object
+			end
+		end
+	end
 end
 
 function TickChecks()
@@ -488,9 +525,8 @@ function Combo(unit)
 		CastW(unit)
 		CastE(unit)
 
-		SpellR.dmg = (SpellR.mega.ready and getDmg("R", unit, myHero))
 		if GnarMenu.combo.useR == 1 and unit.health < SpellR.mega.dmg or GnarMenu.combo.useR == 2 then
-			CastR(unit, 1, GnarMenu.combo.useR == 1 and 1 or GnarMenu.misc.megaR.mec.accuracy)
+			CastR(1, 50, unit)
 		end
 	end
 end
@@ -756,18 +792,28 @@ function CastE(unit)
 	end
 end
 
-function CastR(unit, count, accuracy)
-	if unit == nil or (GetDistanceSqr(unit) > SpellR.mega.range * SpellR.mega.range) or not SpellR.mega.ready or not SpellP.enabled then
-		return false
+function CastR(count, accuracy, unit)
+	if unit ~= nil then
+		if not unit.valid or (GetDistanceSqr(unit) > SpellR.mega.range * SpellR.mega.range) or not SpellR.mega.ready or not SpellP.enabled then
+			return false
+		end
 	end
 
 	if CountEnemiesNearUnit(myHero, SpellR.mega.range) >= count then
-		if GnarMenu.misc.megaR.mec.posTo == 1 then
-			local pushLocation = NearestWall(myHero.x, myHero.y, myHero.z, SpellR.mega.range + (SpellR.mega.range *.2), 30)
+		if GnarMenu.misc.mec.posTo == 1 then
+			local pushLocation = NearestWall(myHero.x, myHero.y, myHero.z, SpellR.mega.range + (SpellR.mega.range *.2), accuracy)
 
-			CastSpell(_R, pushLocation.x, pushLocation.z)
+			if GnarMenu.misc.cast.usePackets then
+				Packet("S_CAST", { spellId = _R, toX = pushLocation.x, toY = pushLocation.z, fromX = pushLocation.x, fromY = pushLocation.z }):send()
+			else
+				CastSpell(_R, pushLocation.x, pushLocation.z)
+			end
 		else
-			CastSpell(_R, mousePos.x, mousePos.z)
+			if GnarMenu.misc.cast.usePackets then
+				Packet("S_CAST", { spellId = _R, toX = mousePos.x, toY = mousePos.z, fromX = mousePos.x, fromY = mousePos.z }):send()
+			else
+				CastSpell(_R, mousePos.x, mousePos.z)
+			end
 		end
 	end
 end
@@ -855,9 +901,9 @@ function DmgCalc()
 		local enemy = enemyTable[i].player
 		if ValidTarget(enemy) and enemy.visible then
 			SpellQ.mini.dmg, SpellQ.mega.dmg	= (SpellQ.mini.ready and (10 + (35 * (GetSpellData(_Q).level - 1)) + myHero.totalDamage)) or 0, (SpellQ.mega.ready and (10 + (40 * (GetSpellData(_Q).level - 1)) + myHero.totalDamage * 1.2)) or 0
-							 SpellW.mega.dmg	= 															  (SpellW.mega.ready and (25 + (20 * (GetSpellData(_W).level - 1)) + myHero.totalDamage)) or 0
+							 SpellW.mega.dmg	= 															  									(SpellW.mega.ready and (25 + (20 * (GetSpellData(_W).level - 1)) + myHero.totalDamage)) or 0
 			SpellE.mini.dmg, SpellE.mega.dmg	= (SpellE.mini.ready and (20 + (40 * (GetSpellData(_E).level - 1)) + myHero.maxHealth * .06 )) or 0, (SpellE.mega.ready and (20 + (40 * (GetSpellData(_E).level - 1)) + myHero.maxHealth * .06 )) or 0
-							 SpellR.mega.dmg	= 															  (SpellR.mega.ready and (300 + (150 * (GetSpellData(_R).level - 1)) + myHero.totalDamage * .3)) or 0
+							 SpellR.mega.dmg	= 															  									(SpellR.mega.ready and (200 + (100 * (GetSpellData(_R).level - 1)) + myHero.totalDamage * .2)) or 0
 			SpellI.dmg							= (SpellI.ready 	 and getDmg("IGNITE", enemy, myHero)) or 0
 
 			if SpellP.enabled and enemy.health < SpellR.mega.dmg then
@@ -911,7 +957,7 @@ function KillSteal()
 		local enemy = enemyTable[i].player
 		if ValidTarget(enemy) and enemy.visible then
 			if enemy.health < SpellR.mega.dmg and GnarMenu.ks.useR then
-				CastR(enemy, 1, 1)
+				CastR(1, 50, enemy)
 			elseif enemy.health < SpellQ.mega.dmg and SpellP.enabled or enemy.health < SpellQ.mini.dmg then
 				CastQ(enemy)
 			elseif enemy.health < SpellW.mega.dmg and SpellP.enabled then
@@ -966,6 +1012,23 @@ function TargetSelectorRange()
 	else
 		return SpellQ.mini.ready and SpellQ.mini.range or SpellE.mini.range
 	end
+end
+
+function GetHeroQRectangle(unit, x1, y1, x2, y2)
+	local o = { x = -(y2 - y1), y = x2 - x1 }
+	local len = math.sqrt((o.x * o.x) + (o.y * o.y))
+	o.x, o.y = o.x / len * 250 / 2, o.y / len * 250 / 2
+
+	local points = {
+        D3DXVECTOR2(x1 + o.x, y1 + o.y),
+        D3DXVECTOR2(x1 - o.x, y1 - o.y),
+        D3DXVECTOR2(x2 - o.x, y2 - o.y),
+        D3DXVECTOR2(x2 + o.x, y2 + o.y)
+    }
+
+	_polygon = Polygon(Point(points[1].x, points[1].y), Point(points[2].x, points[2].y), Point(points[3].x, points[3].y), Point(points[4].x, points[4].y))
+
+	return _polygon:contains(Point(unit.x, unit.z))
 end
 
 -- UpdateWeb
