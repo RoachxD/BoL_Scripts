@@ -1,4 +1,4 @@
-_G.Gnar_Version = 1.02
+_G.Gnar_Version = 1.021
 --[[
 
 
@@ -180,7 +180,7 @@ function Variables()
 	}
 	SpellW =
 	{
-		mega = { name = "Wallop",			range =  525, delay = 0.5, speed =    0, width =  80, ready = false, pos = nil, dmg = 0		 }
+		mega = { name = "Wallop",			range =  525, delay = 0.5, speed =	0, width =  80, ready = false, pos = nil, dmg = 0		 }
 	}
 	SpellE =
 	{
@@ -666,7 +666,8 @@ function UnitHop()
 				end
 			end
 
-			for i, obj in pairs(petMinions) do 
+			petMinions:update()
+			for i, obj in pairs(petMinions.objects) do 
 				if obj.valid and obj ~= nil then
 					if table.contains(petNames, obj.name:lower()) then
 						MousePos = getMousePos()
@@ -833,43 +834,43 @@ function CastR(count, accuracy, unit)
 end
 
 function NearestWall(_x, _y, _z, _radius, accuracy)
-    local vec = D3DXVECTOR3(_x, _y, _z)
-    
-    accuracy = accuracy or 50
-    _radius = _radius and math.floor(_radius / accuracy) or math.huge
-    
-    _x, _z = math.round(_x / accuracy) * accuracy, math.round(_z / accuracy) * accuracy
+	local vec = D3DXVECTOR3(_x, _y, _z)
+	
+	accuracy = accuracy or 50
+	_radius = _radius and math.floor(_radius / accuracy) or math.huge
+	
+	_x, _z = math.round(_x / accuracy) * accuracy, math.round(_z / accuracy) * accuracy
 
-    local radius = 2
-    
-    local function checkP(x, y) 
-        vec.x, vec.z = _x + x * accuracy, _z + y * accuracy 
+	local radius = 2
+	
+	local function checkP(x, y) 
+		vec.x, vec.z = _x + x * accuracy, _z + y * accuracy 
 
-        return IsWall(vec) 
-    end
-    
-    while radius <= _radius do
-        if checkP(0, radius) or checkP(radius, 0) or checkP(0, -radius) or checkP(-radius, 0) then
-            return vec
-        end
+		return IsWall(vec) 
+	end
+	
+	while radius <= _radius do
+		if checkP(0, radius) or checkP(radius, 0) or checkP(0, -radius) or checkP(-radius, 0) then
+			return vec
+		end
 
-        local f, x, y = 1 - radius, 0, radius
-        while x < y - 1 do
-            x = x + 1
+		local f, x, y = 1 - radius, 0, radius
+		while x < y - 1 do
+			x = x + 1
 
-            if f < 0 then 
-                f = f + 1 + 2 * x
-            else 
-                y, f = y - 1, f + 1 + 2 * (x - y)
-            end
+			if f < 0 then 
+				f = f + 1 + 2 * x
+			else 
+				y, f = y - 1, f + 1 + 2 * (x - y)
+			end
 
-            if checkP(x, y) or checkP(-x, y) or checkP(x, -y) or checkP(-x, -y) or checkP(y, x) or checkP(-y, x) or checkP(y, -x) or checkP(-y, -x) then 
-                return vec 
-            end
-        end
+			if checkP(x, y) or checkP(-x, y) or checkP(x, -y) or checkP(-x, -y) or checkP(y, x) or checkP(-y, x) or checkP(y, -x) or checkP(-y, -x) then 
+				return vec 
+			end
+		end
 
-        radius = radius + 1
-    end
+		radius = radius + 1
+	end
 end
 
 function moveToCursor()
@@ -1038,11 +1039,11 @@ function GetHeroQRectangle(unit, x1, y1, x2, y2)
 	o.x, o.y = o.x / len * 250 / 2, o.y / len * 250 / 2
 
 	local points = {
-        D3DXVECTOR2(x1 + o.x, y1 + o.y),
-        D3DXVECTOR2(x1 - o.x, y1 - o.y),
-        D3DXVECTOR2(x2 - o.x, y2 - o.y),
-        D3DXVECTOR2(x2 + o.x, y2 + o.y)
-    }
+		D3DXVECTOR2(x1 + o.x, y1 + o.y),
+		D3DXVECTOR2(x1 - o.x, y1 - o.y),
+		D3DXVECTOR2(x2 - o.x, y2 - o.y),
+		D3DXVECTOR2(x2 + o.x, y2 + o.y)
+	}
 
 	_polygon = Polygon(Point(points[1].x, points[1].y), Point(points[2].x, points[2].y), Point(points[3].x, points[3].y), Point(points[4].x, points[4].y))
 
