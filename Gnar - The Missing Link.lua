@@ -1,4 +1,4 @@
-_G.Gnar_Version = 1.019
+_G.Gnar_Version = 1.02
 --[[
 
 
@@ -17,6 +17,22 @@ _G.Gnar_Version = 1.019
 
 		1.01
 			- Official Release (Champion Released)
+
+		1.02
+			- Updated Values of the Spells
+			- Both Forms are fully working
+			- Fixed W not working on Mega Form
+			- Fixed Damage Calculations
+			- Fixed Spells not casting
+			- Fixed a Menu bug
+			- Fixed E not casting in Mega Form
+			- Fixed bug where AA wasn't reset after using E in Mini Form (Update your SOW)
+			- Fixed farming Bug where Gnar was farming with Spells even if the options were disabled in the Menu
+			- Fixed a bug where Gnar would not cast E or W in Mega Form
+			- Added option to Stun enemies in Ally turrets when the Aggro is on them
+			- Added Q-Catcher Helper (Drawing)
+			- Fixed Unit-Hop and added a Cool feature to jump on Pets
+			- Re-wrote Ult Function and Tested it, works like a charm
 
 ]]--
 
@@ -143,8 +159,6 @@ function OnTick()
 
 	if GnarMenu.misc.mec.Enable then
 		for i = 1, enemyCount do
-			local enemy = enemyTable[i].player
-
 			CastR(GnarMenu.misc.mec.minEnemies, GnarMenu.misc.mec.accuracy)
 		end
 	end
@@ -180,7 +194,7 @@ function Variables()
 
 	SpellI = { name = "SummonerDot",		range =  600,									   ready = false,			 dmg = 0, variable = nil }
 
-	SpellW_= {								range =  525, 									   lastJump = 0										 }
+	SpellW_= {								range =  300, 									   lastJump = 0										 }
 
 	vPred = VPrediction()
 
@@ -204,7 +218,7 @@ function Variables()
 				"Talon","Tryndamere", "Tristana", "Twitch", "Urgot", "Varus", "Vayne", "Yasuo", "Zed"
 			},
 			Bruiser = {
-				"Aatrox", "Darius", "Elise", "Fiora", "Gangplank", "Garen", "Irelia", "JarvanIV", "Jax", "Khazix", "LeeSin", "Nocturne", "Olaf", "Poppy",
+				"Aatrox", "Darius", "Elise", "Fiora", "Gangplank", "Garen", "Gnar", "Irelia", "JarvanIV", "Jax", "Khazix", "LeeSin", "Nocturne", "Olaf", "Poppy",
 				"Renekton", "Rengar", "Riven", "Rumble", "Shyvana", "Trundle", "Udyr", "Vi", "MonkeyKing", "XinZhao"
 			}
 		}
@@ -240,10 +254,12 @@ function Variables()
 		["YGB"]			= { id = 3142, range = 350 }
 	}
 
-	allyMinions = minionManager(MINION_ALLY, 1100, myHero.visionPos, MINION_SORT_MAXHEALTH_DEC)
-	enemyMinions = minionManager(MINION_ENEMY, 1100, myHero.visionPos, MINION_SORT_MAXHEALTH_DEC)
-	jungleMinions = minionManager(MINION_JUNGLE, 1100, myHero.visionPos, MINION_SORT_MAXHEALTH_DEC)
-	pets = { "annietibbers", "shacobox", "malzaharvoidling", "heimertyellow", "heimertblue", "yorickdecayedghoul" }
+	allyMinions = minionManager(MINION_ALLY, SpellQ.mini.range, myHero.visionPos)
+	enemyMinions = minionManager(MINION_ENEMY, SpellQ.mini.range, myHero.visionPos)
+	jungleMinions = minionManager(MINION_JUNGLE, SpellQ.mini.range, myHero.visionPos)
+	petMinions = minionManager(MINION_OTHER, SpellQ.mini.range, myHero.visionPos)
+
+	petNames = { "annietibbers", "shacobox", "malzaharvoidling", "heimertyellow", "heimertblue", "yorickdecayedghoul" }
 
 	buffTypes = { BUFF_STUN, BUFF_ROOT, BUFF_KNOCKUP, BUFF_SUPPRESS, BUFF_SLOW, BUFF_CHARM, BUFF_FEAR, BUFF_TAUNT }
 
@@ -613,58 +629,54 @@ function JungleClear()
 end
 
 function UnitHop()
-	if not SpellP.enabled and GnarMenu.misc.hop.warn or not GnarMenu.misc.hop.warn then
+	if GnarMenu.misc.hop.warn and not SpellP.enabled or not GnarMenu.misc.hop.warn then
 		if SpellE.mini.ready or SpellE.mega.ready then
 			local Distance = SpellW_.range
-	
 
-			if next(allyMinions.objects) ~= nil then
-				for i, obj in pairs(allyMinions.objects) do 
-					if obj.valid then
-						MousePos = getMousePos()
-						if GetDistanceSqr(obj, MousePos) <= Distance * Distance then
-							CastSpell(_E, obj.x, obj.z)
-							SpellW_.lastJump = os.clock() + 2
-						 end
+			allyMinions:update()
+			for i, obj in pairs(allyMinions.objects) do 
+				if obj.valid and obj ~= nil then
+					MousePos = getMousePos()
+					if GetDistanceSqr(obj, MousePos) <= Distance * Distance and GetDistanceSqr(obj, myHero) <= SpellE.mini.range * SpellE.mini.range then
+						CastSpell(_E, obj.x, obj.z)
+						SpellW_.lastJump = os.clock() + 2
 					end
 				end
 			end
 
-			if next(enemyMinions.objects) ~= nil then
-				for i, obj in pairs(enemyMinions.objects) do 
-					if obj.valid then
-						MousePos = getMousePos()
-						if GetDistanceSqr(obj, MousePos) <= Distance * Distance then
-							CastSpell(_E, obj.x, obj.z)
-							SpellW_.lastJump = os.clock() + 2
-						 end
+			enemyMinions:update()
+			for i, obj in pairs(enemyMinions.objects) do 
+				if obj.valid and obj ~= nil then
+					MousePos = getMousePos()
+					if GetDistanceSqr(obj, MousePos) <= Distance * Distance and GetDistanceSqr(obj, myHero) <= SpellE.mini.range * SpellE.mini.range then
+						CastSpell(_E, obj.x, obj.z)
+						SpellW_.lastJump = os.clock() + 2
 					end
 				end
 			end
 
-			if next(jungleMinions.objects) ~= nil then
-				for i, obj in pairs(jungleMinions.objects) do 
-					if obj.valid then
-						MousePos = getMousePos()
-						if GetDistanceSqr(obj, MousePos) <= Distance * Distance then
-							CastSpell(_E, obj.x, obj.z)
-							SpellW_.lastJump = os.clock() + 2
-						 end
+			jungleMinions:update()
+			for i, obj in pairs(jungleMinions.objects) do 
+				if obj.valid and obj ~= nil then
+					MousePos = getMousePos()
+					if GetDistanceSqr(obj, MousePos) <= Distance * Distance and GetDistanceSqr(obj, myHero) <= SpellE.mini.range * SpellE.mini.range then
+						CastSpell(_E, obj.x, obj.z)
+						SpellW_.lastJump = os.clock() + 2
 					end
 				end
 			end
 
-			--[[if next(pets) ~= nil then
-				for i, obj in pairs(pets) do 
-					if obj.valid then
+			for i, obj in pairs(petMinions) do 
+				if obj.valid and obj ~= nil then
+					if table.contains(petNames, obj.name:lower()) then
 						MousePos = getMousePos()
-						if GetDistanceSqr(obj, MousePos) <= Distance * Distance then
+						if GetDistanceSqr(obj, MousePos) <= Distance * Distance and GetDistanceSqr(obj, myHero) <= SpellE.mini.range * SpellE.mini.range then
 							CastSpell(_E, obj.x, obj.z)
 							SpellW_.lastJump = os.clock() + 2
-						 end
+						end
 					end
 				end
-			end]]--
+			end
 		end
 	end
 end
@@ -793,6 +805,8 @@ function CastE(unit)
 end
 
 function CastR(count, accuracy, unit)
+	unit = unit and unit or nil
+
 	if unit ~= nil then
 		if not unit.valid or (GetDistanceSqr(unit) > SpellR.mega.range * SpellR.mega.range) or not SpellR.mega.ready or not SpellP.enabled then
 			return false
@@ -804,9 +818,9 @@ function CastR(count, accuracy, unit)
 			local pushLocation = NearestWall(myHero.x, myHero.y, myHero.z, SpellR.mega.range + (SpellR.mega.range *.2), accuracy)
 
 			if GnarMenu.misc.cast.usePackets then
-				Packet("S_CAST", { spellId = _R, toX = pushLocation.x, toY = pushLocation.z, fromX = pushLocation.x, fromY = pushLocation.z }):send()
+				Packet("S_CAST", { spellId = _R, toX = pushLocation.x, toY = pushLocation.y, fromX = pushLocation.x, fromY = pushLocation.y }):send()
 			else
-				CastSpell(_R, pushLocation.x, pushLocation.z)
+				CastSpell(_R, pushLocation.x, pushLocation.y)
 			end
 		else
 			if GnarMenu.misc.cast.usePackets then
@@ -818,40 +832,44 @@ function CastR(count, accuracy, unit)
 	end
 end
 
-function NearestWall(x, y, z, maxRadius, accuracy) 
-	local vec = D3DXVECTOR3(x, y, z)
+function NearestWall(_x, _y, _z, _radius, accuracy)
+    local vec = D3DXVECTOR3(_x, _y, _z)
+    
+    accuracy = accuracy or 50
+    _radius = _radius and math.floor(_radius / accuracy) or math.huge
+    
+    _x, _z = math.round(_x / accuracy) * accuracy, math.round(_z / accuracy) * accuracy
 
-	accuracy = accuracy or 50
-	maxRadius = maxRadius and math.floor(maxRadius / accuracy) or math.huge
+    local radius = 2
+    
+    local function checkP(x, y) 
+        vec.x, vec.z = _x + x * accuracy, _z + y * accuracy 
 
-	x, z = math.round(x / accuracy) * accuracy, math.round(z / accuracy) * accuracy
+        return IsWall(vec) 
+    end
+    
+    while radius <= _radius do
+        if checkP(0, radius) or checkP(radius, 0) or checkP(0, -radius) or checkP(-radius, 0) then
+            return vec
+        end
 
-	local radius = 2
+        local f, x, y = 1 - radius, 0, radius
+        while x < y - 1 do
+            x = x + 1
 
-	local function checkPos(x, y) 
-		vec.x, vec.z = x + x * accuracy, z + y * accuracy 
-		return IsWall(vec) 
-	end
+            if f < 0 then 
+                f = f + 1 + 2 * x
+            else 
+                y, f = y - 1, f + 1 + 2 * (x - y)
+            end
 
-	while radius <= maxRadius do
-		if checkPos(0, radius) or checkPos(radius, 0) or checkPos(0, -radius) or checkPos(-radius, 0) then 
-			return vec 
-		end
-		local f, x, y = 1 - radius, 0, radius
-		while x < y - 1 do
-			x = x + 1
-			if f < 0 then 
-				f = f + 1 + 2 * x
-			else 
-				y, f = y - 1, f + 1 + 2 * (x - y)
-			end
-			if checkPos(x, y) or checkPos(-x, y) or checkPos(x, -y) or checkPos(-x, -y) or checkPos(y, x) or checkPos(-y, x) or checkPos(y, -x) or checkPos(-y, -x) then 
-				return vec 
-			end
-		end
+            if checkP(x, y) or checkP(-x, y) or checkP(x, -y) or checkP(-x, -y) or checkP(y, x) or checkP(-y, x) or checkP(y, -x) or checkP(-y, -x) then 
+                return vec 
+            end
+        end
 
-		radius = radius + 1
-	end
+        radius = radius + 1
+    end
 end
 
 function moveToCursor()
