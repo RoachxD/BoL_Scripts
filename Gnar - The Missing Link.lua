@@ -1,4 +1,4 @@
-_G.Gnar_Version = 1.021
+_G.Gnar_Version = 1.022
 --[[
 
 
@@ -60,6 +60,8 @@ for lib_downloadName, lib_downloadUrl in pairs(lib_Required) do
 	local lib_fileName = LIB_PATH .. lib_downloadName .. ".lua"
 
 	if FileExist(lib_fileName) then
+		if lib_fileName == "Prodiction" and not VIP_USER then return end
+
 		require(lib_downloadName)
 	else
 		lib_downloadNeeded = true
@@ -818,10 +820,12 @@ function CastR(count, accuracy, unit)
 		if GnarMenu.misc.mec.posTo == 1 then
 			local pushLocation = NearestWall(myHero.x, myHero.y, myHero.z, SpellR.mega.range + (SpellR.mega.range *.2), accuracy)
 
-			if GnarMenu.misc.cast.usePackets then
-				Packet("S_CAST", { spellId = _R, toX = pushLocation.x, toY = pushLocation.y, fromX = pushLocation.x, fromY = pushLocation.y }):send()
-			else
-				CastSpell(_R, pushLocation.x, pushLocation.y)
+			if pushLocation ~= nil then
+				if GnarMenu.misc.cast.usePackets then
+					Packet("S_CAST", { spellId = _R, toX = pushLocation.x, toY = pushLocation.y, fromX = pushLocation.x, fromY = pushLocation.y }):send()
+				else
+					CastSpell(_R, pushLocation.x, pushLocation.y)
+				end
 			end
 		else
 			if GnarMenu.misc.cast.usePackets then
