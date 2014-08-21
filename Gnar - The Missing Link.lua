@@ -1,4 +1,4 @@
-_G.Gnar_Version = 1.023
+_G.Gnar_Version = 1.024
 --[[
 
 
@@ -60,7 +60,7 @@ for lib_downloadName, lib_downloadUrl in pairs(lib_Required) do
 	local lib_fileName = LIB_PATH .. lib_downloadName .. ".lua"
 
 	if FileExist(lib_fileName) then
-		if lib_fileName == "Prodiction.lua" and not VIP_USER then return end
+		if lib_downloadName == "Prodiction" and not VIP_USER then return end
 
 		require(lib_downloadName)
 	else
