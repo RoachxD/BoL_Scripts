@@ -1,4 +1,4 @@
-_G.Gnar_Version = 1.022
+_G.Gnar_Version = 1.023
 --[[
 
 
@@ -60,7 +60,7 @@ for lib_downloadName, lib_downloadUrl in pairs(lib_Required) do
 	local lib_fileName = LIB_PATH .. lib_downloadName .. ".lua"
 
 	if FileExist(lib_fileName) then
-		if lib_fileName == "Prodiction" and not VIP_USER then return end
+		if lib_fileName == "Prodiction.lua" and not VIP_USER then return end
 
 		require(lib_downloadName)
 	else
@@ -83,7 +83,7 @@ function script_Messager(message) print("<font color=\"#FF0000\">" .. script_dow
 if _G.Gnar_Autoupdate then
 	local script_webResult = GetWebResult(script_downloadHost, script_downloadPath)
 	if script_webResult then
-		local script_serverVersion = string.match(script_webResult, "%s*_G.Gnar_Version%s+=%s+.*%d+%.%d+")
+		local script_serverVersion = string.match(script_webResult, "%s*_G.Gnar_Version%s+=%s+%d+%.%d+")
 
 		if script_serverVersion then
 			script_serverVersion = tonumber(string.match(script_serverVersion or "", "%d+%.?%d*"))
