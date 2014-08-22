@@ -1,4 +1,4 @@
-_G.Gnar_Version = 1.024
+_G.Gnar_Version = 1.025
 --[[
 
 
@@ -9,7 +9,7 @@ _G.Gnar_Version = 1.024
 		88. ~8~ 88  V888 88   88 88 `88.
 		 Y888P  VP   V8P YP   YP 88   YD
 
-	Script - Gnar - The Missing Link 1.01
+	Script - Gnar - The Missing Link 1.02
 
 	Changelog:
 		1.0a
@@ -57,11 +57,11 @@ function AfterDownload()
 end
 
 for lib_downloadName, lib_downloadUrl in pairs(lib_Required) do
+	if lib_downloadName == "Prodiction" and not VIP_USER then return end
+
 	local lib_fileName = LIB_PATH .. lib_downloadName .. ".lua"
 
 	if FileExist(lib_fileName) then
-		if lib_downloadName == "Prodiction" and not VIP_USER then return end
-
 		require(lib_downloadName)
 	else
 		lib_downloadNeeded = true
@@ -177,21 +177,21 @@ function Variables()
 
 	SpellQ =
 	{
-		mini = { name = "Boomerang Throw",	range = 1100, delay = 0.5, speed = 1200, width =  50, ready = false, pos = nil, dmg = 0				 },
-		mega = { name = "Boulder Toss",		range = 1100, delay = 0.5, speed = 1200, width =  70, ready = false, pos = nil, dmg = 0				 }
+		mini = { name = "Boomerang Throw",	range = 1100, delay = 0.066, speed = 1200, width =  50, ready = false, pos = nil, dmg = 0			 },
+		mega = { name = "Boulder Toss",		range = 1100, delay = 0.066, speed = 1200, width =  70, ready = false, pos = nil, dmg = 0			 }
 	}
 	SpellW =
 	{
-		mega = { name = "Wallop",			range =  525, delay = 0.5, speed =	0, width =  80, ready = false, pos = nil, dmg = 0		 }
+		mega = { name = "Wallop",			range =  525, delay = 0.25, speed =	0, width =  80, ready = false, pos = nil, dmg = 0		 		 }
 	}
 	SpellE =
 	{
-		mini = { name = "Hop",				range =  475, delay = 0.5, speed = math.huge, width = 150, ready = false, pos = nil, dmg = 0		 },
-		mega = { name = "Crunch",			range =  475, delay = 0.5, speed = math.huge, width = 350, ready = false, pos = nil, dmg = 0		 }
+		mini = { name = "Hop",				range =  475, delay = 0.695, speed = math.huge, width = 150, ready = false, pos = nil, dmg = 0		 },
+		mega = { name = "Crunch",			range =  475, delay = 0.695, speed = math.huge, width = 350, ready = false, pos = nil, dmg = 0		 }
 	}
 	SpellR =
 	{
-		mega = { name = "GNAR!",			range =  590, delay = 0.5, speed = 1200, width = 210, ready = false, pos = nil, dmg = 0				 }
+		mega = { name = "GNAR!",			range =  590, delay = 0.066, speed = 1200, width = 210, ready = false, pos = nil, dmg = 0			 }
 	}
 
 	SpellI = { name = "SummonerDot",		range =  600,									   ready = false,			 dmg = 0, variable = nil }
