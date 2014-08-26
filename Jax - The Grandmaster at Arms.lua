@@ -1,4 +1,4 @@
-local version = "1.279"
+local version = "1.28"
 --[[
 
 
@@ -26,6 +26,7 @@ local version = "1.279"
 				- Fixed a Range bug:
 					- Target Selector was selecting the Target in Q-Range even if Q wasn't available, so this was Lethal in a Team-Fight
 				- Modified E's Range
+				- Using SxOrbWalker
 
 			1.1
 				- Fixed Target Selector Range
@@ -45,34 +46,33 @@ if myHero.charName ~= "Jax" then return end
 
 _G.Jax_Autoupdate = true
 
-local lib_Required = {
-	["SOW"]			= "https://raw.githubusercontent.com/Hellsing/BoL/master/Common/SOW.lua",
-	["VPrediction"]	= "https://raw.githubusercontent.com/Hellsing/BoL/master/Common/VPrediction.lua"
-}
-
-local lib_downloadNeeded, lib_downloadCount = false, 0
+local SxOW_downloadNeeded, SxOW_downloadName = false, "SxOrbWalk"
 
 function AfterDownload()
-	lib_downloadCount = lib_downloadCount - 1
-	if lib_downloadCount == 0 then
-		lib_downloadNeeded = false
-		print("<font color=\"#FF0000\">Jax - The Grandmaster at Arms:</font> <font color=\"#FFFFFF\">Required libraries downloaded successfully, please reload (double F9).</font>")
-	end
+	SxOW_downloadNeeded = false
+	print("<font color=\"#FF0000\">Jax - The Grandmaster at Arms:</font> <font color=\"#FFFFFF\">Orbwalker library downloaded successfully, please reload (double F9).</font>")
 end
 
-for lib_downloadName, lib_downloadUrl in pairs(lib_Required) do
-	local lib_fileName = LIB_PATH .. lib_downloadName .. ".lua"
+local SxOW_fileName = LIB_PATH .. SxOW_downloadName .. ".lua"
 
-	if FileExist(lib_fileName) then
-		require(lib_downloadName)
-	else
-		lib_downloadNeeded = true
-		lib_downloadCount = lib_downloadCount and lib_downloadCount + 1 or 1
-		DownloadFile(lib_downloadUrl, lib_fileName, function() AfterDownload() end)
-	end
+if FileExist(SxOW_fileName) then
+	require(SxOW_downloadName)
+else
+	SxOW_downloadNeeded = true
+
+	LuaSocket = require("socket")
+	ScriptSocket = LuaSocket.connect("sx-bol.eu", 80)
+	ScriptSocket:send("GET /BoL/TCPUpdater/GetScript.php?script=raw.githubusercontent.com/Superx321/BoL/master/common/SxOrbWalk.lua&rand=" .. tostring(math.random(1000)) .. " HTTP/1.0\r\n\r\n")
+	ScriptReceive, ScriptStatus = ScriptSocket:receive('*a')
+	ScriptRaw = string.sub(ScriptReceive, string.find(ScriptReceive, "<bols" .. "cript>") + 11, string.find(ScriptReceive, "</bols" .. "cript>") - 1)
+	ScriptFileOpen = io.open(SxOW_fileName, "w+")
+	ScriptFileOpen:write(ScriptRaw)
+	ScriptFileOpen:close()
+
+	DelayAction(function() AfterDownload() end, 0.3)
 end
 
-if lib_downloadNeeded then return end
+if SxOW_downloadNeeded then return end
 
 local script_downloadName = "Jax - The Grandmaster at Arms"
 local script_downloadHost = "raw.github.com"
@@ -186,10 +186,6 @@ function Variables()
 	}
 
 	Wards_ = {}
-
-	vPred = VPrediction()
-
-	jSOW = SOW(vPred)
 
 	enemyMinions	= minionManager(MINION_ENEMY,	SpellQ.range, myHero.visionPos, MINION_SORT_HEALTH_ASC)
 
@@ -402,7 +398,7 @@ function Menu()
 			JaxMenu.misc.ult:addParam("minEnemies", "Min. Enemies in Range: ", SCRIPT_PARAM_SLICE, 2, 2, 5, 0)
 
 		JaxMenu:addSubMenu("[" .. myHero.charName .. "] - Orbwalking Settings", "Orbwalking")
-			jSOW:LoadToMenu(JaxMenu.Orbwalking)
+			SxOrb:LoadToMenu(JaxMenu.Orbwalking, false)
 
 	TargetSelector = TargetSelector(TARGET_LESS_CAST, SpellQ.range, DAMAGE_PHYSICAL)
 	TargetSelector.name = "Jax"
@@ -420,8 +416,8 @@ function OnProcessSpell(unit, spell)
 		end
 		if unit.isMe then
 			if spell.name ~= "jaxrelentlessattack" and JaxMenu.misc.w.howTo == 2 then
-				for i, cb in ipairs(jSOW.AfterAttackCallbacks) do
-					table.remove(jSOW.AfterAttackCallbacks, i)
+				for i, cb in ipairs(SxOrb.AfterAttackCallbacks) do
+					table.remove(SxOrb.AfterAttackCallbacks, i)
 				end
 			end
 		end
@@ -462,10 +458,6 @@ function OnDeleteObj(obj)
 end
 
 function OnDraw()
-	if JaxMenu.drawing.myHero then
-		jSOW:DrawAARange(1, ARGB(255, 0, 189, 22))
-	end
-
 	if not myHero.dead then
 		if not JaxMenu.drawing.mDraw then
 			if JaxMenu.drawing.qDraw and SpellQ.ready then
@@ -531,13 +523,13 @@ function TickChecks()
 	TargetSelector.range = TargetSelectorRange()
 
 	Target = GetCustomTarget()
-	jSOW:ForceTarget(Target)
+	SxOrb:ForceTarget(Target)
 
 	DmgCalc()
 
 	if not JaxMenu.combo.comboKey and not JaxMenu.farming.farmKey and not JaxMenu.harass.harassKey and not JaxMenu.jungle.jungleKey then
-		for i, cb in ipairs(jSOW.AfterAttackCallbacks) do
-			table.remove(jSOW.AfterAttackCallbacks, i)
+		for i, cb in ipairs(SxOrb.AfterAttackCallbacks) do
+			table.remove(SxOrb.AfterAttackCallbacks, i)
 		end
 	end
 
@@ -581,11 +573,11 @@ function Combo(unit)
 
 		if JaxMenu.combo.useW then
 			if JaxMenu.misc.w.howTo ~= 3 then
-				jSOW:RegisterAfterAttackCallback(function()
+				SxOrb:RegisterAfterAttackCallback(function()
 													CastSpell(_W)
 												end)
 			else
-				if GetDistanceSqr(unit, myHero) <= jSOW:MyRange(unit) * jSOW:MyRange(unit) then
+				if GetDistanceSqr(unit, myHero) <= SxOrb.MyRange * SxOrb.MyRange then
 					CastSpell(_W)
 				end
 			end
@@ -599,7 +591,7 @@ function Harass(unit)
 			if GetDistanceSqr(unit, myHero) <= SpellQ.range * SpellQ.range and JaxMenu.harass.useQ and SpellQ.ready then
 				CastSpell(_W)
 			elseif not JaxMenu.harass.useQ then
-				jSOW:RegisterAfterAttackCallback(function()
+				SxOrb:RegisterAfterAttackCallback(function()
 												CastSpell(_W)
 											end)
 			end
@@ -618,7 +610,7 @@ function Farm()
 	enemyMinions:update()
 	for i, minion in pairs(enemyMinions.objects) do
 		if ValidTarget(minion) and minion ~= nil then
-			if minion.health <= SpellQ.dmg and (not jSOW:CanAttack() or GetDistanceSqr(minion, myHero) > jSOW:MyRange(minion) * jSOW:MyRange(minion)) and JaxMenu.farming.qFarm and not isLow('Mana', myHero, JaxMenu.farming.FarmMana) then
+			if minion.health <= SpellQ.dmg and (not SxOrb:CanAttack() or GetDistanceSqr(minion, myHero) > SxOrb.MyRange * SxOrb.MyRange) and JaxMenu.farming.qFarm and not isLow('Mana', myHero, JaxMenu.farming.FarmMana) then
 				CastQ(minion)
 			end
 		end		 
@@ -638,11 +630,11 @@ function JungleClear()
 			end
 			if JaxMenu.combo.useW then
 			if JaxMenu.misc.w.howTo ~= 3 then
-				jSOW:RegisterAfterAttackCallback(function()
+				SxOrb.RegisterAfterAttackCallback(function()
 													CastSpell(_W)
 												end)
 			else
-				if GetDistanceSqr(JungleMob, myHero) <= jSOW:MyRange(JungleMob) * jSOW:MyRange(JungleMob) then
+				if GetDistanceSqr(JungleMob, myHero) <= SxOrb.MyRange * SxOrb.MyRange then
 					CastSpell(_W)
 				end
 			end
@@ -655,7 +647,7 @@ function CastQ(unit)
 	if unit == nil or not SpellQ.ready or (GetDistanceSqr(unit, myHero) > SpellQ.range * SpellQ.range) then
 		return false
 	end
-	if JaxMenu.misc.q.howTo == 1 or (JaxMenu.misc.q.howTo == 2 and GetDistanceSqr(unit, myHero) > jSOW:MyRange(unit) * jSOW:MyRange(unit)) or (JaxMenu.misc.q.howTo == 3 and GetDistanceSqr(unit, myHero) > SpellE.range * SpellE.range) then
+	if JaxMenu.misc.q.howTo == 1 or (JaxMenu.misc.q.howTo == 2 and GetDistanceSqr(unit, myHero) > SxOrb.MyRange * SxOrb.MyRange) or (JaxMenu.misc.q.howTo == 3 and GetDistanceSqr(unit, myHero) > SpellE.range * SpellE.range) then
 		if not VIP_USER or not JaxMenu.misc.cast.usePackets then
 			CastSpell(_Q, unit)
 		elseif VIP_USER and JaxMenu.misc.cast.usePackets then
