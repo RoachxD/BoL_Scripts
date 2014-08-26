@@ -1,4 +1,4 @@
-local Ziggs_Ver = "1.055"
+local Ziggs_Ver = "1.056"
 --[[
 
 
@@ -9,12 +9,18 @@ local Ziggs_Ver = "1.055"
 		 d8' db   .88.   88. ~8~ 88. ~8~ db   8D 
 		d88888P Y888888P  Y888P   Y888P  `8888Y' 
 
-	Script - Ziggs - The Hexplosives Expert 1.04
+	Script - Ziggs - The Hexplosives Expert 1.05
 
 	Changelog:
 		1.05
 			- Fixed Target Type Selection
 			- Updated Q's Width for a better Collision
+			- Using SxOrbWalker
+			- Fixed a Range bug:
+				- Target Selector was selecting the Target in Q-Range even if Q wasn't available, so this was Lethal in a Team-Fight
+			- The Script is not Free User Compatible
+			- Improved Spells's Info
+
 		1.04
 			- Added Custom Collision
 			- Improved Orbwalker
@@ -69,63 +75,74 @@ local Ziggs_Ver = "1.055"
 		1.00
 			- First Release
 ]]--
-if myHero.charName ~= "Ziggs" or not VIP_USER then return end
+if myHero.charName ~= "Ziggs" then return end
 
 _G.Ziggs_Autoupdate = true
 
-local REQUIRED_LIBS = {
+local lib_Required = {
 	["Collision"]	= "https://bitbucket.org/Klokje/public-klokjes-bol-scripts/raw/154ae5a9505b2af87c1a6049baa529b934a498a9/Common/Collision.lua",
-	["Prodiction"]	= "https://bitbucket.org/Klokje/public-klokjes-bol-scripts/raw/154ae5a9505b2af87c1a6049baa529b934a498a9/Common/Prodiction.lua",
-	["SOW"]			= "https://raw.githubusercontent.com/honda7/BoL/master/Common/SOW.lua",
+	["Prodiction"]	= "https://bitbucket.org/Klokje/public-klokjes-bol-scripts/raw/ec830facccefb3b52212dba5696c08697c3c2854/Test/Prodiction/Prodiction.lua",
+	["SxOrbWalk"]	= "https://raw.githubusercontent.com/Superx321/BoL/master/common/SxOrbWalk.lua",
 	["VPrediction"] = "https://raw.githubusercontent.com/honda7/BoL/master/Common/VPrediction.lua"
 }
 
-local DOWNLOADING_LIBS, DOWNLOAD_COUNT = false, 0
+local lib_downloadNeeded, lib_downloadCount = false, 0
 
 function AfterDownload()
-	DOWNLOAD_COUNT = DOWNLOAD_COUNT - 1
-	if DOWNLOAD_COUNT == 0 then
-		DOWNLOADING_LIBS = false
-		print("<font color=\"#FF0000\"><b>Ziggs - The Hexplosives Expert:</b></font> <font color=\"#FFFFFF\">Required libraries downloaded successfully, please reload (double F9).</font>")
+	lib_downloadCount = lib_downloadCount - 1
+	if lib_downloadCount == 0 then
+		lib_downloadNeeded = false
+		print("<font color=\"#FF0000\">Ziggs - The Hexplosives Expert:</font> <font color=\"#FFFFFF\">Required libraries downloaded successfully, please reload (double F9).</font>")
 	end
 end
 
-for DOWNLOAD_LIB_NAME, DOWNLOAD_LIB_URL in pairs(REQUIRED_LIBS) do
-	if FileExist(LIB_PATH .. DOWNLOAD_LIB_NAME .. ".lua") then
-		require(DOWNLOAD_LIB_NAME)
+for lib_downloadName, lib_downloadUrl in pairs(lib_Required) do
+	if lib_downloadName == "Prodiction" and not VIP_USER then return end
+
+	local lib_fileName = LIB_PATH .. lib_downloadName .. ".lua"
+
+	if FileExist(lib_fileName) then
+		require(lib_downloadName)
 	else
-		DOWNLOADING_LIBS = true
-		DOWNLOAD_COUNT = DOWNLOAD_COUNT + 1
-		DownloadFile(DOWNLOAD_LIB_URL, LIB_PATH .. DOWNLOAD_LIB_NAME..".lua", AfterDownload)
+		lib_downloadNeeded = true
+		lib_downloadCount = lib_downloadCount and lib_downloadCount + 1 or 1
+		DownloadFile(lib_downloadUrl, lib_fileName, function() AfterDownload() end)
 	end
 end
 
-if DOWNLOADING_LIBS then return end
+if lib_downloadNeeded then return end
 
-local UPDATE_NAME = "Ziggs - The Hexplosives Expert"
-local UPDATE_HOST = "raw.github.com"
-local UPDATE_PATH = "/RoachxD/BoL_Scripts/master/Ziggs%20-%20The%20Hexplosives%20Expert.lua".."?rand="..math.random(1,10000)
-local UPDATE_FILE_PATH = SCRIPT_PATH..UPDATE_NAME..".lua"
-local UPDATE_URL = "https://"..UPDATE_HOST..UPDATE_PATH
+local script_downloadName = "Ziggs - The Hexplosives Expert"
+local script_downloadHost = "raw.github.com"
+local script_downloadPath = "/RoachxD/BoL_Scripts/master/Ziggs%20-%20The%20Hexplosives%20Expert.lua" .. "?rand=" .. math.random(1, 10000)
+local script_downloadUrl = "https://" .. script_downloadHost .. script_downloadPath
+local script_filePath = SCRIPT_PATH .. script_downloadName .. ".lua"
 
-function AutoupdaterMsg(msg) print("<font color=\"#FF0000\">"..UPDATE_NAME..":</font> <font color=\"#FFFFFF\">"..msg..".</font>") end
+function script_Messager(msg) print("<font color=\"#FF0000\">" .. script_downloadName .. ":</font> <font color=\"#FFFFFF\">" .. msg .. ".</font>") end
+
 if _G.Ziggs_Autoupdate then
-	local ServerData = GetWebResult(UPDATE_HOST, UPDATE_PATH)
-	if ServerData then
-		local ServerVersion = string.match(ServerData, "local Ziggs_Ver = \"%d+.%d+\"")
-		ServerVersion = string.match(ServerVersion and ServerVersion or "", "%d+.%d+")
-		if ServerVersion then
-			ServerVersion = tonumber(ServerVersion)
-			if tonumber(Ziggs_Ver) < ServerVersion then
-				AutoupdaterMsg("New version available"..ServerVersion)
-				AutoupdaterMsg("Updating, please don't press F9")
-				DownloadFile(UPDATE_URL, UPDATE_FILE_PATH, function () AutoupdaterMsg("Successfully updated. ("..Ziggs_Ver.." => "..ServerVersion.."), press F9 twice to load the updated version.") end)	 
+	local script_webResult = GetWebResult(script_downloadHost, script_downloadPath)
+	if script_webResult then
+		local script_serverVersion = string.match(script_webResult, "local%s+Ziggs_Ver%s+=%s+\"%d+.%d+\"")
+		
+		if script_serverVersion then
+			script_serverVersion = tonumber(string.match(script_serverVersion or "", "%d+%.?%d*"))
+
+			if not script_serverVersion then
+				script_Messager("Please contact the developer of the script \"" .. script_downloadName .. "\", since the auto updater returned an invalid version.")
+				return
+			end
+
+			if tonumber(Ziggs_Ver) < script_serverVersion then
+				script_Messager("New version available: " .. script_serverVersion)
+				script_Messager("Updating, please don't press F9")
+				DelayAction(function () DownloadFile(script_downloadUrl, script_filePath, function() script_Messager("Successfully updated the script, please reload!") end) end, 2)
 			else
-				AutoupdaterMsg("You have got the latest version ("..ServerVersion..")")
+				script_Messager("You've got the latest version: " .. script_serverVersion)
 			end
 		end
 	else
-		AutoupdaterMsg("Error downloading version info")
+		script_Messager("Error downloading server version!")
 	end
 end
 
@@ -137,7 +154,7 @@ function OnLoad()
 	UpdateWeb(true, (string.gsub(UPDATE_NAME, "[^0-9A-Za-z]", "")), 5, HWID)
 
 	if heroManager.iCount < 10 then -- borrowed from Sidas Auto Carry, modified to 3v3
-			AutoupdaterMsg("Too few champions to arrange priorities")
+			script_Messager("Too few champions to arrange priorities")
 	elseif heroManager.iCount == 6 and TTMAP then
 		ArrangeTTPriorities()
 	else
@@ -202,18 +219,14 @@ function Variables()
 		TTMAP = false
 	end
 
-	SpellP = {name = "Short Fuse",			buffName = "ZiggsPassiveBuff",																   ready = false,			 dmg = 0								 }
+	SpellP = {name = "Short Fuse",			buffName = "ZiggsPassiveBuff",																   		 ready = false,			   dmg = 0									}
 
-	SpellQ = {name = "Bouncing Bomb",		minrange =  850, maxrange = 1400, mindelay = 0.25, maxdelay = 0.5,	speed = math.huge, width = 150, ready = false, pos = nil, dmg = 0, manaUsage = 0					 }
-	SpellW = {name = "Satchel Charge",	       range = 1000,					 delay = 0.50, behindpos = nil,	speed = math.huge, width = 275, ready = false, pos = nil, dmg = 0, manaUsage = 0, canJump = false }
-	SpellE = {name = "Hexplosive Minefield",   range =  900,					 delay = 0.25,					speed = math.huge, width = 235, ready = false, pos = nil, dmg = 0, manaUsage = 0					 }
-	SpellR = {name = "Mega Inferno Bomb",	   range = 5300, 					 delay = math.huge,					speed = math.huge, width = 550, ready = false, pos = nil, dmg = 0, manaUsage = 0					 }
+	SpellQ = {name = "Bouncing Bomb",		minrange =  850, maxrange = 1400, mindelay = 0.30, maxdelay = 0.85,	speed = 1700,		width = 130, ready = false, pos = nil, dmg = 0, manaUsage = 0					}
+	SpellW = {name = "Satchel Charge",	       range = 1000,					 delay = 0.25, behindpos = nil,	speed = 1750,		width = 275, ready = false, pos = nil, dmg = 0, manaUsage = 0, canJump = false	}
+	SpellE = {name = "Hexplosive Minefield",   range =  900,					 delay = 0.50,					speed = 1750, 		width = 235, ready = false, pos = nil, dmg = 0, manaUsage = 0					}
+	SpellR = {name = "Mega Inferno Bomb",	   range = 5300, 					 delay = 1.00,					speed = math.huge,	width = 500, ready = false, pos = nil, dmg = 0, manaUsage = 0					}
 
-	SpellI = {name = "SummonerDot",			   range =  600,																			   ready = false,			 dmg = 0,				 variable = nil  }
-
-	vPred = VPrediction()
-
-	zSOW = SOW(vPred)
+	SpellI = {name = "SummonerDot",			   range =  600,																					 ready = false,			   dmg = 0,				   variable = nil	}
 
 	Prodict = ProdictManager.GetInstance()
 	ProdQMin = Prodict:AddProdictionObject(_Q, SpellQ.minrange, SpellQ.speed, SpellQ.mindelay, SpellQ.width)
@@ -235,7 +248,7 @@ function Variables()
 			AP = {
 				"Annie", "Ahri", "Akali", "Anivia", "Annie", "Brand", "Cassiopeia", "Diana", "Evelynn", "FiddleSticks", "Fizz", "Gragas", "Heimerdinger", "Karthus",
 				"Kassadin", "Katarina", "Kayle", "Kennen", "Leblanc", "Lissandra", "Lux", "Malzahar", "Mordekaiser", "Morgana", "Nidalee", "Orianna",
-				"Ryze", "Sion", "Swain", "Syndra", "Teemo", "TwistedFate", "Veigar", "Viktor", "Vladimir", "Xerath", "Ziggs", "Zyra"
+				"Ryze", "Sion", "Swain", "Syndra", "Teemo", "TwistedFate", "Veigar", "Viktor", "Vladimir", "VelKoz", "Xerath", "Ziggs", "Zyra"
 			},
 			Support = {
 				"Alistar", "Blitzcrank", "Janna", "Karma", "Leona", "Lulu", "Nami", "Nunu", "Sona", "Soraka", "Taric", "Thresh", "Zilean"
@@ -249,7 +262,7 @@ function Variables()
 				"Talon","Tryndamere", "Tristana", "Twitch", "Urgot", "Varus", "Vayne", "Yasuo","Zed"
 			},
 			Bruiser = {
-				"Aatrox", "Darius", "Elise", "Fiora", "Gangplank", "Garen", "Irelia", "JarvanIV", "Jax", "Khazix", "LeeSin", "Nocturne", "Olaf", "Poppy",
+				"Aatrox", "Darius", "Elise", "Fiora", "Gangplank", "Garen", "Gnar", "Irelia", "JarvanIV", "Jax", "Khazix", "LeeSin", "Nocturne", "Olaf", "Poppy",
 				"Renekton", "Rengar", "Riven", "Rumble", "Shyvana", "Trundle", "Udyr", "Vi", "MonkeyKing", "XinZhao"
 			}
 		}
@@ -424,7 +437,6 @@ function Menu()
 		ZiggsMenu.drawing:addParam("mDraw", "Disable All Range Draws", SCRIPT_PARAM_ONOFF, false)
 		ZiggsMenu.drawing:addParam("Target", "Draw Circle on Target", SCRIPT_PARAM_ONOFF, true)
 		ZiggsMenu.drawing:addParam("cDraw", "Draw Damage Text", SCRIPT_PARAM_ONOFF, true)
-		ZiggsMenu.drawing:addParam("myHero", "Draw My Hero's Range", SCRIPT_PARAM_ONOFF, true)
 		ZiggsMenu.drawing:addParam("qDraw", "Draw "..SpellQ.name.." (Q) Range", SCRIPT_PARAM_ONOFF, true)
 		ZiggsMenu.drawing:addParam("wDraw", "Draw "..SpellW.name.." (W) Range", SCRIPT_PARAM_ONOFF, false)
 		ZiggsMenu.drawing:addParam("eDraw", "Draw "..SpellE.name.." (E) Range", SCRIPT_PARAM_ONOFF, true)
@@ -461,7 +473,7 @@ function Menu()
 			ZiggsMenu.misc.ultAlert:addParam("alertInfo", "It will print a text in the middle of the screen if an Enemy is Killable", SCRIPT_PARAM_INFO, "")
 
 		ZiggsMenu:addSubMenu("["..myHero.charName.."] - Orbwalking Settings", "Orbwalking")
-			zSOW:LoadToMenu(ZiggsMenu.Orbwalking)
+			SxOrb:LoadToMenu(ZiggsMenu.Orbwalking, false)
 
 	ZiggsMenu:addParam("predType", "Prediction Type", SCRIPT_PARAM_LIST, 1, { "Prodiction", "VPrediction" })
 
@@ -558,10 +570,6 @@ function OnDeleteObj(obj)
 end
 
 function OnDraw()
-	if ZiggsMenu.drawing.myHero then
-		zSOW:DrawAARange(1, ARGB(255, 0, 189, 22))
-	end
-
 	if not myHero.dead then
 		if not ZiggsMenu.drawing.mDraw then
 			if ZiggsMenu.drawing.qDraw and SpellQ.ready then
@@ -621,10 +629,24 @@ function TickChecks()
 	end
 	SpellI.ready = (SpellI.variable ~= nil and myHero:CanUseSpell(SpellI.variable) == READY)
 
+	TargetSelector.range = TargetSelectorRange()
+
 	Target = GetCustomTarget()
-	zSOW:ForceTarget(Target)
+	SxOrb:ForceTarget(Target)
 
 	DmgCalc()
+
+	if not VIP_USER and ZiggsMenu.misc.cast.usePackets then
+		GnarMenu.misc.cast.usePackets = false
+
+		script_Messager("You can't activate Packet Cast as long as you are not a Vip User.")
+	end
+
+	if not VIP_USER and ZiggsMenu.predType == 1 then
+		GnarMenu.predType = 2
+
+		script_Messager("You can't use Prodiction as long as you are not a Vip User.")
+	end
 
 	if GetGame().isOver then
 		UpdateWeb(false, (string.gsub(UPDATE_NAME, "[^0-9A-Za-z]", "")), 5, HWID)
@@ -633,15 +655,15 @@ end
 
 function GetCustomTarget()
 	TargetSelector:update()
-    if _G.MMA_Target and _G.MMA_Target.type == myHero.type then
-    	return _G.MMA_Target
-   	elseif _G.AutoCarry and _G.AutoCarry.Crosshair and _G.AutoCarry.Attack_Crosshair then
-   		return _G.AutoCarry.Attack_Crosshair.target
-   	elseif TargetSelector.target and not TargetSelector.target.dead and TargetSelector.target.type  == myHero.type then
-    	return TargetSelector.target
-    else
-    	return nil
-    end
+	if _G.MMA_Target and _G.MMA_Target.type == myHero.type then
+		return _G.MMA_Target
+		elseif _G.AutoCarry and _G.AutoCarry.Crosshair and _G.AutoCarry.Attack_Crosshair then
+			return _G.AutoCarry.Attack_Crosshair.target
+		elseif TargetSelector.target and not TargetSelector.target.dead and TargetSelector.target.type  == myHero.type then
+		return TargetSelector.target
+	else
+		return nil
+	end
 end
 
 function UseItems(unit)
@@ -697,7 +719,7 @@ function Farm()
 	enemyMinions:update()
 	for i, minion in pairs(enemyMinions.objects) do
 		if ValidTarget(minion) and minion ~= nil then
-			if minion.health <= SpellQ.dmg and (GetDistanceSqr(minion) > myHero.range * myHero.range or not zSOW:CanAttack()) and GetDistanceSqr(minion) <= SpellQ.minrange * SpellQ.minrange and ZiggsMenu.farming.qFarm and not isLow('Mana', myHero, ZiggsMenu.farming.qFarmMana) then
+			if minion.health <= SpellQ.dmg and (GetDistanceSqr(minion) > myHero.range * myHero.range or not SxOrb:CanAttack()) and GetDistanceSqr(minion) <= SpellQ.minrange * SpellQ.minrange and ZiggsMenu.farming.qFarm and not isLow('Mana', myHero, ZiggsMenu.farming.qFarmMana) then
 				CastQ(minion)
 			end
 		end		 
@@ -1245,6 +1267,10 @@ function GetAoESpellPosition(radius, main_target, delay, speed)
 	end
 
 	return position
+end
+
+function TargetSelectorRange()
+	return SpellQ.ready and SpellQ.maxrange or (not SpellQ.ready and SpellW.Ready) and SpellW.range or (not SpellQ.ready and not SpellW.ready and SpellE.ready) and SpellE.range or SxOrb.MyRange
 end
 
 -- UpdateWeb
