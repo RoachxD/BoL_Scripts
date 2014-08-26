@@ -1,4 +1,4 @@
-local version = "4.134"
+local version = "4.136"
 --[[
 
 
@@ -20,6 +20,7 @@ local version = "4.134"
 				- Fixed Items interrupting E and Ult
 				- Improved Performance
 				- Fixed Jungle Clear
+				- Using SxOrbWalker
 
 			4.0
 				- Re-wrote the whole Script
@@ -178,57 +179,65 @@ if myHero.charName ~= "Pantheon" then return end
 
 _G.Panth_Autoupdate = true
 
-local REQUIRED_LIBS = {
-	["SOW"]			= "https://raw.githubusercontent.com/honda7/BoL/master/Common/SOW.lua",
-	["VPrediction"] = "https://raw.githubusercontent.com/honda7/BoL/master/Common/VPrediction.lua"
-}
-
-local DOWNLOADING_LIBS, DOWNLOAD_COUNT = false, 0
+local SxOW_downloadNeeded, SxOW_downloadName = false, "SxOrbWalk"
 
 function AfterDownload()
-	DOWNLOAD_COUNT = DOWNLOAD_COUNT - 1
-	if DOWNLOAD_COUNT == 0 then
-		DOWNLOADING_LIBS = false
-		print("<font color=\"#FF0000\">Pantheon - The Artisan of War:</font> <font color=\"#FFFFFF\">Required libraries downloaded successfully, please reload (double F9).</font>")
-	end
+	SxOW_downloadNeeded = false
+	print("<font color=\"#FF0000\">Pantheon - The Artisan of War:</font> <font color=\"#FFFFFF\">Orbwalker library downloaded successfully, please reload (double F9).</font>")
 end
 
-for DOWNLOAD_LIB_NAME, DOWNLOAD_LIB_URL in pairs(REQUIRED_LIBS) do
-	if FileExist(LIB_PATH .. DOWNLOAD_LIB_NAME .. ".lua") then
-		require(DOWNLOAD_LIB_NAME)
-	else
-		DOWNLOADING_LIBS = true
-		DOWNLOAD_COUNT = DOWNLOAD_COUNT + 1
-		DownloadFile(DOWNLOAD_LIB_URL, LIB_PATH .. DOWNLOAD_LIB_NAME..".lua", AfterDownload)
-	end
+local SxOW_fileName = LIB_PATH .. SxOW_downloadName .. ".lua"
+
+if FileExist(SxOW_fileName) then
+	require(SxOW_downloadName)
+else
+	SxOW_downloadNeeded = true
+
+	LuaSocket = require("socket")
+	ScriptSocket = LuaSocket.connect("sx-bol.eu", 80)
+	ScriptSocket:send("GET /BoL/TCPUpdater/GetScript.php?script=raw.githubusercontent.com/Superx321/BoL/master/common/SxOrbWalk.lua&rand=" .. tostring(math.random(1000)) .. " HTTP/1.0\r\n\r\n")
+	ScriptReceive, ScriptStatus = ScriptSocket:receive('*a')
+	ScriptRaw = string.sub(ScriptReceive, string.find(ScriptReceive, "<bols" .. "cript>") + 11, string.find(ScriptReceive, "</bols" .. "cript>") - 1)
+	ScriptFileOpen = io.open(SxOW_fileName, "w+")
+	ScriptFileOpen:write(ScriptRaw)
+	ScriptFileOpen:close()
+
+	DelayAction(function() AfterDownload() end, 0.3)
 end
 
-if DOWNLOADING_LIBS then return end
+if SxOW_downloadNeeded then return end
 
-local UPDATE_NAME = "Pantheon - The Artisan of War"
-local UPDATE_HOST = "raw.github.com"
-local UPDATE_PATH = "/RoachxD/BoL_Scripts/master/Pantheon%20-%20The%20Artisan%20of%20War.lua".."?rand="..math.random(1,10000)
-local UPDATE_FILE_PATH = SCRIPT_PATH..UPDATE_NAME..".lua"
-local UPDATE_URL = "https://"..UPDATE_HOST..UPDATE_PATH
+local script_downloadName = "Pantheon - The Artisan of War"
+local script_downloadHost = "raw.github.com"
+local script_downloadPath = "/RoachxD/BoL_Scripts/master/Pantheon%20-%20The%20Artisan%20of%20War.lua" .. "?rand=" .. math.random(1, 10000)
+local script_downloadUrl = "https://" .. script_downloadHost .. script_downloadPath
+local script_filePath = SCRIPT_PATH .. script_downloadName .. ".lua"
 
-function AutoupdaterMsg(msg) print("<font color=\"#FF0000\">"..UPDATE_NAME..":</font> <font color=\"#FFFFFF\">"..msg..".</font>") end
+function script_Messager(msg) print("<font color=\"#FF0000\">" .. script_downloadName .. ":</font> <font color=\"#FFFFFF\">" .. msg .. ".</font>") end
+
 if _G.Panth_Autoupdate then
-	local ServerData = GetWebResult(UPDATE_HOST, UPDATE_PATH)
-	if ServerData then
-		local ServerVersion = string.match(ServerData, "local version = \"%d+.%d+\"")
-		ServerVersion = string.match(ServerVersion and ServerVersion or "", "%d+.%d+")
-		if ServerVersion then
-			ServerVersion = tonumber(ServerVersion)
-			if tonumber(version) < ServerVersion then
-				AutoupdaterMsg("New version available"..ServerVersion)
-				AutoupdaterMsg("Updating, please don't press F9")
-				DownloadFile(UPDATE_URL, UPDATE_FILE_PATH, function () AutoupdaterMsg("Successfully updated. ("..version.." => "..ServerVersion.."), press F9 twice to load the updated version.") end)	 
+	local script_webResult = GetWebResult(script_downloadHost, script_downloadPath)
+	if script_webResult then
+		local script_serverVersion = string.match(script_webResult, "local%s+version%s+=%s+\"%d+.%d+\"")
+		
+		if script_serverVersion then
+			script_serverVersion = tonumber(string.match(script_serverVersion or "", "%d+%.?%d*"))
+
+			if not script_serverVersion then
+				script_Messager("Please contact the developer of the script \"" .. script_downloadName .. "\", since the auto updater returned an invalid version.")
+				return
+			end
+
+			if tonumber(version) < script_serverVersion then
+				script_Messager("New version available: " .. script_serverVersion)
+				script_Messager("Updating, please don't press F9")
+				DelayAction(function () DownloadFile(script_downloadUrl, script_filePath, function() script_Messager("Successfully updated the script, please reload!") end) end, 2)
 			else
-				AutoupdaterMsg("You have got the latest version ("..ServerVersion..")")
+				script_Messager("You've got the latest version: " .. script_serverVersion)
 			end
 		end
 	else
-		AutoupdaterMsg("Error downloading version info")
+		script_Messager("Error downloading server version!")
 	end
 end
 
@@ -240,7 +249,7 @@ function OnLoad()
 	UpdateWeb(true, (string.gsub(UPDATE_NAME, "[^0-9A-Za-z]", "")), 5, HWID)
 
 	if heroManager.iCount < 10 then -- borrowed from Sidas Auto Carry, modified to 3v3
-			AutoupdaterMsg("Too few champions to arrange priorities")
+			script_Messager("Too few champions to arrange priorities")
 	elseif heroManager.iCount == 6 and TTMAP then
 		ArrangeTTPriorities()
 	else
@@ -302,10 +311,6 @@ function Variables()
 
 	SpellI = {name = "SummonerDot",			range =  600, ready = false, dmg = 0,				variable = nil }
 
-	vPred = VPrediction()
-
-	pSOW = SOW(vPred)
-
 	enemyMinions	= minionManager(MINION_ENEMY,	SpellQ.range, myHero.visionPos, MINION_SORT_HEALTH_ASC)
 
 	JungleMobs = {}
@@ -315,7 +320,7 @@ function Variables()
 			AP = {
 				"Annie", "Ahri", "Akali", "Anivia", "Annie", "Brand", "Cassiopeia", "Diana", "Evelynn", "FiddleSticks", "Fizz", "Gragas", "Heimerdinger", "Karthus",
 				"Kassadin", "Katarina", "Kayle", "Kennen", "Leblanc", "Lissandra", "Lux", "Malzahar", "Mordekaiser", "Morgana", "Nidalee", "Orianna",
-				"Ryze", "Sion", "Swain", "Syndra", "Teemo", "TwistedFate", "Veigar", "Viktor", "Vladimir", "Xerath", "Ziggs", "Zyra"
+				"Ryze", "Sion", "Swain", "Syndra", "Teemo", "TwistedFate", "Veigar", "Viktor", "Vladimir", "VelKoz", "Xerath", "Ziggs", "Zyra"
 			},
 			Support = {
 				"Alistar", "Blitzcrank", "Janna", "Karma", "Leona", "Lulu", "Nami", "Nunu", "Sona", "Soraka", "Taric", "Thresh", "Zilean"
@@ -330,7 +335,7 @@ function Variables()
 			},
 			Bruiser = {
 				"Aatrox", "Darius", "Elise", "Fiora", "Gangplank", "Garen", "Irelia", "JarvanIV", "Jax", "Khazix", "LeeSin", "Nocturne", "Olaf", "Poppy",
-				"Renekton", "Rengar", "Riven", "Rumble", "Shyvana", "Trundle", "Udyr", "Vi", "MonkeyKing", "XinZhao"
+				"Renekton", "Rengar", "Riven", "Rumble", "Shyvana", "Trundle", "Udyr", "Vi", "MonkeyKing", "XinZhao", "Gnar"
 			}
 		}
 
@@ -500,7 +505,6 @@ function Menu()
 		PanthMenu.drawing:addParam("mDraw", "Disable All Range Draws", SCRIPT_PARAM_ONOFF, false)
 		PanthMenu.drawing:addParam("Target", "Draw Circle on Target", SCRIPT_PARAM_ONOFF, true)
 		PanthMenu.drawing:addParam("cDraw", "Draw Damage Text", SCRIPT_PARAM_ONOFF, true)
-		PanthMenu.drawing:addParam("myHero", "Draw My Hero's Range", SCRIPT_PARAM_ONOFF, true)
 		PanthMenu.drawing:addParam("qDraw", "Draw "..SpellQ.name.." (Q) Range", SCRIPT_PARAM_ONOFF, true)
 		PanthMenu.drawing:addParam("wDraw", "Draw "..SpellW.name.." (W) Range", SCRIPT_PARAM_ONOFF, false)
 		PanthMenu.drawing:addParam("eDraw", "Draw "..SpellE.name.." (E) Range", SCRIPT_PARAM_ONOFF, true)
@@ -522,9 +526,9 @@ function Menu()
 			PanthMenu.misc.ultAlert:addParam("alertInfo", "It will print a text in the middle of the screen if an Enemy is Killable", SCRIPT_PARAM_INFO, "")
 
 		PanthMenu:addSubMenu("["..myHero.charName.."] - Orbwalking Settings", "Orbwalking")
-			pSOW:LoadToMenu(PanthMenu.Orbwalking)
+			SxOrb:LoadToMenu(PanthMenu.Orbwalking, false)
 
-	TargetSelector = TargetSelector(TARGET_LESS_CAST, SpellQ.range, DAMAGE_PHYSICAL)
+	TargetSelector = TargetSelector(TARGET_LESS_CAST, SpellE.range, DAMAGE_PHYSICAL)
 	TargetSelector.name = "Pantheon"
 	PanthMenu:addTS(TargetSelector)
 
@@ -544,11 +548,11 @@ end
 function OnAnimation(unit, animationName)
 	if unit.isMe then 
 		if AnimationList[animationName] then
-			pSOW:DisableAttacks()
-			pSOW.Move = false
+			SxOrb:DisableAttacks()
+			SxOrb:DisableMove()
 		else
-			pSOW:EnableAttacks()
-			pSOW.Move = true
+			SxOrb:EnableAttacks()
+			SxOrb.EnableMove()
 		end
 	end
 end
@@ -575,9 +579,6 @@ function OnDeleteObj(obj)
 end
 
 function OnDraw()
-	if PanthMenu.drawing.myHero then
-		pSOW:DrawAARange(1, ARGB(255, 0, 189, 22))
-	end
 	if not myHero.dead then
 		if not PanthMenu.drawing.mDraw then
 			if PanthMenu.drawing.qDraw and SpellQ.ready then
@@ -638,7 +639,7 @@ function TickChecks()
 	SpellI.ready = (SpellI.variable ~= nil and myHero:CanUseSpell(SpellI.variable) == READY)
 
 	Target = GetCustomTarget()
-	pSOW:ForceTarget(Target)
+	SxOrb:ForceTarget(Target)
 
 	DmgCalc()
 
@@ -661,7 +662,7 @@ function GetCustomTarget()
 end
 
 function UseItems(unit)
-	if pSOW.Move then
+	if SxOrb:CanMove() then
 		for i, Item in pairs(Items) do
 			local Item = Items[i]
 			if GetInventoryItemIsCastable(Item.id) and GetDistanceSqr(unit) <= Item.range*Item.range then
@@ -705,9 +706,9 @@ function Farm()
 	enemyMinions:update()
 	for i, minion in pairs(enemyMinions.objects) do
 		if ValidTarget(minion) and minion ~= nil then
-			if minion.health <= SpellQ.dmg and (GetDistanceSqr(minion) > myHero.range*myHero.range or not pSOW:CanAttack()) and PanthMenu.farming.qFarm and not isLow('Mana', myHero, PanthMenu.farming.FarmMana) then
+			if minion.health <= SpellQ.dmg and (GetDistanceSqr(minion) > myHero.range * myHero.range or not SxOrb:CanAttack()) and PanthMenu.farming.qFarm and not isLow('Mana', myHero, PanthMenu.farming.FarmMana) then
 				CastQ(minion)
-			elseif minion.health <= SpellW.dmg and (GetDistanceSqr(minion) > myHero.range * myHero.range or not pSOW:CanAttack()) and PanthMenu.farming.wFarm and not isLow('Mana', myHero, PanthMenu.farming.FarmMana) then
+			elseif minion.health <= SpellW.dmg and (GetDistanceSqr(minion) > myHero.range * myHero.range or not SxOrb:CanAttack()) and PanthMenu.farming.wFarm and not isLow('Mana', myHero, PanthMenu.farming.FarmMana) then
 				CastW(minion)
 			end
 		end		 
