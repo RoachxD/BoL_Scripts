@@ -1,4 +1,4 @@
-local version = "3.072"
+local version = "3.073"
 --[[
 
 
@@ -32,6 +32,8 @@ local version = "3.072"
 				- Improved Auto-Updater
 				- Fixed a Range bug:
 					- Target Selector was selecting the Target in E-Range even if E wasn't available, so this was Lethal in a Team-Fight
+				- Using SxOrbWalker
+				- Removed "Draw My Hero's Range" Option
 
 			2.6
 				- Added Support for SAC and MMA Target Selector
@@ -136,34 +138,33 @@ if myHero.charName ~= "MonkeyKing" then return end
 
 _G.Wu_Autoupdate = true
 
-local lib_Required = {
-	["SOW"]			= "https://raw.githubusercontent.com/Hellsing/BoL/master/Common/SOW.lua",
-	["VPrediction"]	= "https://raw.githubusercontent.com/Hellsing/BoL/master/Common/VPrediction.lua"
-}
-
-local lib_downloadNeeded, lib_downloadCount = false, 0
+local SxOW_downloadNeeded, SxOW_downloadName = false, "SxOrbWalk"
 
 function AfterDownload()
-	lib_downloadCount = lib_downloadCount - 1
-	if lib_downloadCount == 0 then
-		lib_downloadNeeded = false
-		print("<font color=\"#FF0000\">Wukong - The Monkey King:</font> <font color=\"#FFFFFF\">Required libraries downloaded successfully, please reload (double F9).</font>")
-	end
+	SxOW_downloadNeeded = false
+	print("<font color=\"#FF0000\">Wukong - The Monkey King:</font> <font color=\"#FFFFFF\">Orbwalker library downloaded successfully, please reload (double F9).</font>")
 end
 
-for lib_downloadName, lib_downloadUrl in pairs(lib_Required) do
-	local lib_fileName = LIB_PATH .. lib_downloadName .. ".lua"
+local SxOW_fileName = LIB_PATH .. SxOW_downloadName .. ".lua"
 
-	if FileExist(lib_fileName) then
-		require(lib_downloadName)
-	else
-		lib_downloadNeeded = true
-		lib_downloadCount = lib_downloadCount and lib_downloadCount + 1 or 1
-		DownloadFile(lib_downloadUrl, lib_fileName, function() AfterDownload() end)
-	end
+if FileExist(SxOW_fileName) then
+	require(SxOW_downloadName)
+else
+	SxOW_downloadNeeded = true
+
+	LuaSocket = require("socket")
+	ScriptSocket = LuaSocket.connect("sx-bol.eu", 80)
+	ScriptSocket:send("GET /BoL/TCPUpdater/GetScript.php?script=raw.githubusercontent.com/Superx321/BoL/master/common/SxOrbWalk.lua&rand=" .. tostring(math.random(1000)) .. " HTTP/1.0\r\n\r\n")
+	ScriptReceive, ScriptStatus = ScriptSocket:receive('*a')
+	ScriptRaw = string.sub(ScriptReceive, string.find(ScriptReceive, "<bols" .. "cript>") + 11, string.find(ScriptReceive, "</bols" .. "cript>") - 1)
+	ScriptFileOpen = io.open(SxOW_fileName, "w+")
+	ScriptFileOpen:write(ScriptRaw)
+	ScriptFileOpen:close()
+
+	DelayAction(function() AfterDownload() end, 0.3)
 end
 
-if lib_downloadNeeded then return end
+if SxOW_downloadNeeded then return end
 
 local script_downloadName = "Wukong - The Monkey King"
 local script_downloadHost = "raw.github.com"
@@ -269,10 +270,6 @@ function Variables()
 	SpellR = { name = "Cyclone",		range = 162.5, ready = false, dmg = 0, manaUsage = 0					}
 
 	SpellI = { name = "SummonerDot",	range = 600  , ready = false, dmg = 0,					variable = nil	}
-
-	vPred = VPrediction()
-
-	wSOW = SOW(vPred)
 
 	enemyMinions	= minionManager(MINION_ENEMY,	SpellQ.range, myHero.visionPos, MINION_SORT_HEALTH_ASC)
 
@@ -465,7 +462,6 @@ function Menu()
 		WukongMenu.drawing:addParam("mDraw", "Disable All Range Draws", SCRIPT_PARAM_ONOFF, false)
 		WukongMenu.drawing:addParam("Target", "Draw Circle on Target", SCRIPT_PARAM_ONOFF, true)
 		WukongMenu.drawing:addParam("cDraw", "Draw Damage Text", SCRIPT_PARAM_ONOFF, true)
-		WukongMenu.drawing:addParam("myHero", "Draw My Hero's Range", SCRIPT_PARAM_ONOFF, true)
 		WukongMenu.drawing:addParam("qDraw", "Draw " .. SpellQ.name .. " (Q) Range", SCRIPT_PARAM_ONOFF, true)
 		WukongMenu.drawing:addParam("eDraw", "Draw " .. SpellE.name .. " (E) Range", SCRIPT_PARAM_ONOFF, true)
 		WukongMenu.drawing:addParam("rDraw", "Draw " .. SpellR.name .. " (R) Range", SCRIPT_PARAM_ONOFF, true)
@@ -482,7 +478,7 @@ function Menu()
 			WukongMenu.misc.ult:addParam("minEnemies", "Min. Enemies in Range: ", SCRIPT_PARAM_SLICE, 2, 2, 5, 0)
 
 		WukongMenu:addSubMenu("[" .. myHero.charName .. "] - Orbwalking Settings", "Orbwalking")
-			wSOW:LoadToMenu(WukongMenu.Orbwalking)
+			SxOrb:LoadToMenu(WukongMenu.Orbwalking, false)
 
 	TargetSelector = TargetSelector(TARGET_LESS_CAST, SpellE.range, DAMAGE_PHYSICAL)
 	TargetSelector.name = "Wukong"
@@ -500,15 +496,15 @@ function OnProcessSpell(unit, spell)
 		end
 		if unit.isMe then 
 			if spell.name == "MonkeyKingDecoy" then
-				wSOW:DisableAttacks()
+				SxOrb:DisableAttacks()
 				DelayAction(function()
-								wSOW:EnableAttacks()
+								SxOrb:EnableAttacks()
 							end, 1.5)
 			end
 			if spell.name == "MonkeyKingSpinToWin" then
-				wSOW:DisableAttacks()
+				SxOrb:DisableAttacks()
 				DelayAction(function()
-								wSOW:EnableAttacks()
+								SxOrb:EnableAttacks()
 							end, 4.0)
 			end
 		end
@@ -537,9 +533,6 @@ function OnDeleteObj(obj)
 end
 
 function OnDraw()
-	if WukongMenu.drawing.myHero then
-		wSOW:DrawAARange(1, ARGB(255, 0, 189, 22))
-	end
 	if not myHero.dead then
 		if not WukongMenu.drawing.mDraw then
 			if WukongMenu.drawing.qDraw and SpellQ.ready then
@@ -596,13 +589,13 @@ function TickChecks()
 
 	TargetSelector.range = TargetSelectorRange()
 	Target = GetCustomTarget()
-	wSOW:ForceTarget(Target)
+	SxOrb:ForceTarget(Target)
 
 	DmgCalc()
 
 	if not ComboKey and not FarmKey and not HarassKey and not JungleClearKey then
-		for i, cb in ipairs(wSOW.AfterAttackCallbacks) do
-			table.remove(wSOW.AfterAttackCallbacks, i)
+		for i, cb in ipairs(SxOrb.AfterAttackCallbacks) do
+			table.remove(SxOrb.AfterAttackCallbacks, i)
 		end
 	end
 
@@ -613,21 +606,21 @@ end
 
 function GetCustomTarget()
 	TargetSelector:update()
-    if _G.MMA_Target and _G.MMA_Target.type == myHero.type then
-    	return _G.MMA_Target
+	if _G.MMA_Target and _G.MMA_Target.type == myHero.type then
+		return _G.MMA_Target
    	elseif _G.AutoCarry and _G.AutoCarry.Crosshair and _G.AutoCarry.Attack_Crosshair then
-   		return _G.AutoCarry.Attack_Crosshair.target
+		return _G.AutoCarry.Attack_Crosshair.target
    	elseif TargetSelector.target and not TargetSelector.target.dead and TargetSelector.target.type  == myHero.type then
-    	return TargetSelector.target
-    else
-    	return nil
-    end
+		return TargetSelector.target
+	else
+		return nil
+	end
 end
 
 function UseItems(unit)
 	for i, Item in pairs(Items) do
 		local Item = Items[i]
-		if GetInventoryItemIsCastable(Item.id) and GetDistanceSqr(unit) <= Item.range*Item.range then
+		if GetInventoryItemIsCastable(Item.id) and GetDistanceSqr(unit) <= Item.range * Item.range then
 			CastItem(Item.id, unit)
 		end
 	end
@@ -640,19 +633,19 @@ function Combo(unit)
 		end
 		
 		if WukongMenu.combo.smartCombo then
-			if GetDistanceSqr(unit) > wSOW:MyRange(unit) * wSOW:MyRange(unit) then
+			if GetDistanceSqr(unit) > SxOrb.MyRange * SxOrb.MyRange then
 				CastE(unit)
-				wSOW:RegisterAfterAttackCallback(CastQ)
+				SxOrb:RegisterAfterAttackCallback(CastQ)
 			else
-				wSOW:RegisterAfterAttackCallback(CastQ)
+				SxOrb:RegisterAfterAttackCallback(CastQ)
 				if not SpellQ.ready then
 					DelayAction(function()
-									wSOW:RegisterAfterAttackCallback(CastE)
+									SxOrb:RegisterAfterAttackCallback(CastE)
 								end, 0.3)
 				end
 			end
 		else
-			if GetDistanceSqr(unit) > wSOW:MyRange(unit) * wSOW:MyRange(unit) then
+			if GetDistanceSqr(unit) > SxOrb.MyRange * SxOrb.MyRange then
 				CastE(unit)
 				CastQ(unit)
 			else
@@ -683,12 +676,12 @@ function Harass(unit)
 			--- Harass Mode 1 E + Q ---
 			if WukongMenu.harass.hMode == 1 then
 				if WukongMenu.harass.smartHarass then
-					if GetDistanceSqr(unit) > wSOW:MyRange(unit) * wSOW:MyRange(unit) then
+					if GetDistanceSqr(unit) > SxOrb.MyRange * SxOrb.MyRange then
 						CastE(unit)
 					else
-						wSOW:RegisterAfterAttackCallback(CastE)
+						SxOrb:RegisterAfterAttackCallback(CastE)
 					end
-					wSOW:RegisterAfterAttackCallback(CastQ)
+					SxOrb:RegisterAfterAttackCallback(CastQ)
 				else
 					CastE(unit)
 					CastQ(unit)
@@ -698,10 +691,10 @@ function Harass(unit)
 			--- Harass Mode 2 E ---
 			if WukongMenu.harass.hMode == 2 then
 				if WukongMenu.harass.smartHarass then
-					if GetDistanceSqr(unit) > wSOW:MyRange(unit) * wSOW:MyRange(unit) then
+					if GetDistanceSqr(unit) > SxOrb.MyRange * SxOrb.MyRange then
 						CastE(unit)
 					else
-						wSOW:RegisterAfterAttackCallback(CastE)
+						SxOrb:RegisterAfterAttackCallback(CastE)
 					end
 				else
 					CastE(unit)
@@ -711,12 +704,12 @@ function Harass(unit)
 			--- Harass Mode 3 Q + E ---
 			if WukongMenu.harass.hMode == 3 then
 				if WukongMenu.harass.smartHarass then
-					wSOW:RegisterAfterAttackCallback(CastQ)
+					SxOrb:RegisterAfterAttackCallback(CastQ)
 					if not SpellQ.ready then
-						wSOW:RegisterAfterAttackCallback(CastE)
+						SxOrb:RegisterAfterAttackCallback(CastE)
 					end
 				else
-					if GetDistanceSqr(unit) < wSOW:MyRange(unit) * wSOW:MyRange(unit) then
+					if GetDistanceSqr(unit) < SxOrb.MyRange * SxOrb.MyRange then
 						CastQ(unit)
 						CastE(unit)
 					end
@@ -730,10 +723,10 @@ function Farm()
 	enemyMinions:update()
 	for i, minion in pairs(enemyMinions.objects) do
 		if ValidTarget(minion) and minion ~= nil then
-			if minion.health <= SpellQ.dmg and not wSOW:CanAttack() and WukongMenu.farming.qFarm and not isLow('Mana', myHero, WukongMenu.farming.FarmMana) then
+			if minion.health <= SpellQ.dmg and not SxOrb:CanAttack() and WukongMenu.farming.qFarm and not isLow('Mana', myHero, WukongMenu.farming.FarmMana) then
 				CastQ(minion)
 			end
-			if minion.health <= SpellE.dmg and (GetDistanceSqr(minion) > wSOW:MyRange(minion) * wSOW:MyRange(minion) or not wSOW:CanAttack()) and WukongMenu.farming.eFarm and not isLow('Mana', myHero, WukongMenu.farming.FarmMana) then
+			if minion.health <= SpellE.dmg and (GetDistanceSqr(minion) > SxOrb.MyRange * SxOrb.MyRange or not SxOrb:CanAttack()) and WukongMenu.farming.eFarm and not isLow('Mana', myHero, WukongMenu.farming.FarmMana) then
 				CastE(minion)
 			end
 		end		 
@@ -746,7 +739,7 @@ function JungleClear()
 		if JungleMob ~= nil then
 			if WukongMenu.jungle.jungleQ and GetDistanceSqr(JungleMob) <= SpellQ.range * SpellQ.range then
 				if WukongMenu.jungle.smartClear then
-					wSOW:RegisterAfterAttackCallback(CastQ)
+					SxOrb:RegisterAfterAttackCallback(CastQ)
 				else
 					CastQ(unit)
 				end
@@ -754,10 +747,10 @@ function JungleClear()
 			if WukongMenu.jungle.jungleE and GetDistanceSqr(JungleMob) <= SpellE.range * SpellE.range then
 				if WukongMenu.jungle.smartClear then
 					DelayAction(function()
-									if GetDistanceSqr(JungleMob) > wSOW:MyRange(JungleMob) * wSOW:MyRange(JungleMob) and not SpellQ.ready then
+									if GetDistanceSqr(JungleMob) > SxOrb.MyRange * SxOrb.MyRange and not SpellQ.ready then
 										CastE(JungleMob)
 									else
-										wSOW:RegisterAfterAttackCallback(CastE)
+										SxOrb:RegisterAfterAttackCallback(CastE)
 									end
 								end, 0.3)
 				else
