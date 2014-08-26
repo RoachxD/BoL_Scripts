@@ -1,4 +1,4 @@
-local version = "3.073"
+local version = "3.0731"
 --[[
 
 
@@ -208,7 +208,7 @@ function OnLoad()
 	UpdateWeb(true, (string.gsub(script_downloadName, "[^0-9A-Za-z]", "")), 5, HWID)
 
 	if heroManager.iCount < 10 then -- borrowed from Sidas Auto Carry, modified to 3v3
-			AutoupdaterMsg("Too few champions to arrange priorities")
+			script_Messager("Too few champions to arrange priorities")
 	elseif heroManager.iCount == 6 and TTMAP then
 		ArrangeTTPriorities()
 	else
