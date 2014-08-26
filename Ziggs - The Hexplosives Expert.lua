@@ -1,4 +1,4 @@
-local Ziggs_Ver = "1.056"
+local Ziggs_Ver = "1.0561"
 --[[
 
 
@@ -227,6 +227,8 @@ function Variables()
 	SpellR = {name = "Mega Inferno Bomb",	   range = 5300, 					 delay = 1.00,					speed = math.huge,	width = 500, ready = false, pos = nil, dmg = 0, manaUsage = 0					}
 
 	SpellI = {name = "SummonerDot",			   range =  600,																					 ready = false,			   dmg = 0,				   variable = nil	}
+
+	vPred = VPrediction()
 
 	Prodict = ProdictManager.GetInstance()
 	ProdQMin = Prodict:AddProdictionObject(_Q, SpellQ.minrange, SpellQ.speed, SpellQ.mindelay, SpellQ.width)
@@ -475,7 +477,7 @@ function Menu()
 		ZiggsMenu:addSubMenu("["..myHero.charName.."] - Orbwalking Settings", "Orbwalking")
 			SxOrb:LoadToMenu(ZiggsMenu.Orbwalking, false)
 
-	ZiggsMenu:addParam("predType", "Prediction Type", SCRIPT_PARAM_LIST, 1, { "Prodiction", "VPrediction" })
+	ZiggsMenu:addParam("predType", "Prediction Type", SCRIPT_PARAM_LIST, 2, { "Prodiction", "VPrediction" })
 
 	TargetSelector = TargetSelector(TARGET_LESS_CAST, SpellQ.maxrange, DAMAGE_MAGIC)
 	TargetSelector.name = "Ziggs"
