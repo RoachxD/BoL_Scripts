@@ -1,4 +1,4 @@
-local version = "4.136"
+local version = "4.137"
 --[[
 
 
@@ -246,7 +246,7 @@ function OnLoad()
 	Menu()
 
 	HWID = Base64Encode(tostring(os.getenv("PROCESSOR_IDENTIFIER")..os.getenv("USERNAME")..os.getenv("COMPUTERNAME")..os.getenv("PROCESSOR_LEVEL")..os.getenv("PROCESSOR_REVISION")))
-	UpdateWeb(true, (string.gsub(UPDATE_NAME, "[^0-9A-Za-z]", "")), 5, HWID)
+	UpdateWeb(true, (string.gsub(script_downloadName, "[^0-9A-Za-z]", "")), 5, HWID)
 
 	if heroManager.iCount < 10 then -- borrowed from Sidas Auto Carry, modified to 3v3
 			script_Messager("Too few champions to arrange priorities")
@@ -258,7 +258,7 @@ function OnLoad()
 end
 
 function OnUnload()
-	UpdateWeb(false, (string.gsub(UPDATE_NAME, "[^0-9A-Za-z]", "")), 5, HWID)
+	UpdateWeb(false, (string.gsub(script_downloadName, "[^0-9A-Za-z]", "")), 5, HWID)
 end
 
 function OnTick()
@@ -616,7 +616,7 @@ function OnDraw()
 end
 
 function OnBugsplat()
-	UpdateWeb(false, (string.gsub(UPDATE_NAME, "[^0-9A-Za-z]", "")), 5, HWID)
+	UpdateWeb(false, (string.gsub(script_downloadName, "[^0-9A-Za-z]", "")), 5, HWID)
 end
 
 function TickChecks()
@@ -644,7 +644,7 @@ function TickChecks()
 	DmgCalc()
 
 	if GetGame().isOver then
-		UpdateWeb(false, (string.gsub(UPDATE_NAME, "[^0-9A-Za-z]", "")), 5, HWID)
+		UpdateWeb(false, (string.gsub(script_downloadName, "[^0-9A-Za-z]", "")), 5, HWID)
 	end
 end
 
