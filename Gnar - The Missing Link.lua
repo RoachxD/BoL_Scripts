@@ -1,4 +1,4 @@
-_G.Gnar_Version = 1.025
+_G.Gnar_Version = 1.026
 --[[
 
 
@@ -42,7 +42,7 @@ _G.Gnar_Autoupdate = true
 
 local lib_Required = {
 	["Prodiction"]	= "https://bitbucket.org/Klokje/public-klokjes-bol-scripts/raw/ec830facccefb3b52212dba5696c08697c3c2854/Test/Prodiction/Prodiction.lua",
-	["SOW"]			= "https://raw.githubusercontent.com/Hellsing/BoL/master/Common/SOW.lua",
+	["SxOrbWalk"]	= "https://raw.githubusercontent.com/Superx321/BoL/master/common/SxOrbWalk.lua",
 	["VPrediction"]	= "https://raw.githubusercontent.com/Hellsing/BoL/master/Common/VPrediction.lua"
 }
 
@@ -200,8 +200,6 @@ function Variables()
 
 	vPred = VPrediction()
 
-	gSOW = SOW(vPred)
-
 	priorityTable = {
 			AP = {
 				"Annie", "Ahri", "Akali", "Anivia", "Annie", "Brand", "Cassiopeia", "Diana", "Evelynn", "FiddleSticks", "Fizz", "Gragas", "Heimerdinger", "Karthus",
@@ -321,7 +319,6 @@ function Menu()
 		GnarMenu.drawing:addParam("mDraw", "Disable All Range Draws", SCRIPT_PARAM_ONOFF, false) -- Done
 		GnarMenu.drawing:addParam("Target", "Draw Circle on Target", SCRIPT_PARAM_ONOFF, true) -- Done
 		GnarMenu.drawing:addParam("cDraw", "Draw Damage Text", SCRIPT_PARAM_ONOFF, true) -- Done
-		GnarMenu.drawing:addParam("myHero", "Draw My Hero's Range", SCRIPT_PARAM_ONOFF, true) -- Done
 		GnarMenu.drawing:addParam("catcher", "Draw Q-Catch Helper", SCRIPT_PARAM_ONOFF, true) -- Done
 		GnarMenu.drawing:addParam("qDraw", "Draw " .. SpellQ.mini.name .. ' / ' .. SpellQ.mega.name .. " (Q) Range", SCRIPT_PARAM_ONOFF, true) -- Done
 		GnarMenu.drawing:addParam("wDraw", "Draw " .. SpellW.mega.name .. " (W) Range", SCRIPT_PARAM_ONOFF, false) -- Done
@@ -357,7 +354,7 @@ function Menu()
 			GnarMenu.misc.cast:addParam("usePackets", "Use Packets to Cast Spells", SCRIPT_PARAM_ONOFF, false) -- Done
 
 		GnarMenu:addSubMenu("["..myHero.charName.."] - Orbwalking Settings", "Orbwalking") -- Done
-			gSOW:LoadToMenu(GnarMenu.Orbwalking) -- Done
+			SxOrb:LoadToMenu(GnarMenu.Orbwalking, false) -- Done
 
 	GnarMenu:addParam("predType", "Prediction Type", SCRIPT_PARAM_LIST, 2, { "Prodiction", "VPrediction" }) -- Done
 
@@ -419,9 +416,6 @@ function OnGainBuff(unit, buff)
 end
 
 function OnDraw()
-	if GnarMenu.drawing.myHero then
-		gSOW:DrawAARange(1, ARGB(255, 0, 189, 22))
-	end
 	if GnarMenu.drawing.catcher then
 		if (qObject.variable ~= nil and qObject.variable.valid) and (qObject.endVariable ~= nil and qObject.endVariable.valid) then
 			DrawLineBorder3D(qObject.variable.x, qObject.variable.y, qObject.variable.z, qObject.endVariable.x, qObject.endVariable.y, qObject.endVariable.z, 125, GetHeroQRectangle(myHero, qObject.variable.x, qObject.variable.z, qObject.endVariable.x, qObject.endVariable.z) and ARGB(255, 255, 255, 255) or ARGB(255, 150, 3, 3), 1)
@@ -505,8 +499,20 @@ function TickChecks()
 
 	Target = GetCustomTarget()
 
+	if not VIP_USER and GnarMenu.misc.cast.usePackets then
+		GnarMenu.misc.cast.usePackets = false
+
+		script_Messager("You can't activate Packet Cast as long as you are not a Vip User.")
+	end
+
+	if not VIP_USER and GnarMenu.predType == 1 then
+		GnarMenu.predType = 2
+
+		script_Messager("You can't use Prodiction as long as you are not a Vip User.")
+	end
+
 	TargetSelector.range = TargetSelectorRange()
-	gSOW:ForceTarget(Target)
+	SxOrb:ForceTarget(Target)
 
 	DmgCalc()
 end
@@ -609,21 +615,22 @@ end
 function JungleClear()
 	jungleMinions:update()
 	if GnarMenu.jungle.jungleKey then
-		local JungleMob = jungleMinions[gSOW:GetTarget(false)] and gSOW:GetTarget(false) or nil
-		if JungleMob ~= nil then
-			if SpellP.enabled then
-				if GnarMenu.jungle.qmegaJungle and GetDistanceSqr(JungleMob) <= SpellQ.mega.range * SpellQ.mega.range then
-					CastSpell(_Q, JungleMob.x, JungleMob.z)
-				end
-				if GnarMenu.jungle.wmegaJungle and GetDistanceSqr(JungleMob) <= SpellW.mega.range * SpellW.mega.range then
-					CastSpell(_W, JungleMob.x, JungleMob.z)
-				end
-				if GnarMenu.jungle.emegaJungle and GetDistanceSqr(JungleMob) <= SpellE.mega.range * SpellE.mega.range then
-					CastSpell(_E, JungleMob.x, JungleMob.z)
-				end
-			else
-				if GnarMenu.jungle.qminiJungle and GetDistanceSqr(JungleMob) <= SpellQ.mini.range * SpellQ.mini.range then
-					CastSpell(_Q, JungleMob.x, JungleMob.z)
+		for index, minion in pairs(jungleMinions.objects) do
+			if minion ~= nil then
+				if SpellP.enabled then
+					if GnarMenu.jungle.qmegaJungle and GetDistanceSqr(minion) <= SpellQ.mega.range * SpellQ.mega.range then
+						CastSpell(_Q, minion.x, minion.z)
+					end
+					if GnarMenu.jungle.wmegaJungle and GetDistanceSqr(minion) <= SpellW.mega.range * SpellW.mega.range then
+						CastSpell(_W, minion.x, minion.z)
+					end
+					if GnarMenu.jungle.emegaJungle and GetDistanceSqr(minion) <= SpellE.mega.range * SpellE.mega.range then
+						CastSpell(_E, minion.x, minion.z)
+					end
+				else
+					if GnarMenu.jungle.qminiJungle and GetDistanceSqr(minion) <= SpellQ.mini.range * SpellQ.mini.range then
+						CastSpell(_Q, minion.x, minion.z)
+					end
 				end
 			end
 		end
@@ -701,7 +708,7 @@ function CastQ(unit)
 		if GnarMenu.predType == 1 then
 			local endPos, Info = Prodiction.GetPrediction(unit, SpellQ.mini.range, SpellQ.mini.speed, SpellQ.mini.delay, SpellQ.mini.width, myHero)
 			if endPos ~= nil then
-				if GnarMenu.misc.cast.usePackets then
+				if GnarMenu.misc.cast.usePackets and VIP_USER then
 					Packet("S_CAST", { spellId = _Q, toX = endPos.x, toY = endPos.z, fromX = endPos.x, fromY = endPos.z }):send()
 				else
 					CastSpell(_Q, endPos.x, endPos.z)
@@ -712,7 +719,7 @@ function CastQ(unit)
 			local CastPos, HitChance, Position = vPred:GetLineCastPosition(unit, SpellQ.mini.delay, SpellQ.mini.width, SpellQ.mini.range, SpellQ.mini.speed, myHero, false)
 
 			if HitChance >= 2 then
-				if GnarMenu.misc.cast.usePackets then
+				if GnarMenu.misc.cast.usePackets and VIP_USER then
 					Packet("S_CAST", { spellId = _Q, toX = CastPos.x, toY = CastPos.z, fromX = CastPos.x, fromY = CastPos.z }):send()
 				else
 					CastSpell(_Q, CastPos.x, CastPos.z)
@@ -721,11 +728,11 @@ function CastQ(unit)
 			end
 		end
 	elseif SpellP.enabled and GetDistanceSqr(unit, myHero) <= SpellQ.mega.range * SpellQ.mega.range then
-		if GnarMenu.misc.megaQ.howTo == 1 and GetDistanceSqr(unit, myHero) > gSOW:MyRange() * gSOW:MyRange() or GnarMenu.misc.megaQ.howTo == 2 then
+		if GnarMenu.misc.megaQ.howTo == 1 and GetDistanceSqr(unit, myHero) > SxOrb.MyRange * SxOrb.MyRange or GnarMenu.misc.megaQ.howTo == 2 then
 			if GnarMenu.predType == 1 then
 				local endPos, Info = Prodiction.GetPrediction(unit, SpellQ.mega.range, SpellQ.mega.speed, SpellQ.mega.delay, SpellQ.mega.width, myHero)
 				if endPos ~= nil then
-					if GnarMenu.misc.cast.usePackets then
+					if GnarMenu.misc.cast.usePackets and VIP_USER then
 						Packet("S_CAST", { spellId = _Q, toX = endPos.x, toY = endPos.z, fromX = endPos.x, fromY = endPos.z }):send()
 					else
 						CastSpell(_Q, endPos.x, endPos.z)
@@ -735,7 +742,7 @@ function CastQ(unit)
 			else
 				local CastPos, HitChance, Position = vPred:GetCircularCastPosition(unit, SpellQ.mega.delay, SpellQ.mega.width, SpellQ.mega.range, SpellQ.mega.speed, myHero, true)
 				if HitChance >= 2 then
-					if GnarMenu.misc.cast.usePackets then
+					if GnarMenu.misc.cast.usePackets and VIP_USER then
 						Packet("S_CAST", { spellId = _Q, toX = CastPos.x, toY = CastPos.z, fromX = CastPos.x, fromY = CastPos.z }):send()
 					else
 						CastSpell(_Q, CastPos.x, CastPos.z)
@@ -755,7 +762,7 @@ function CastW(unit)
 	if GnarMenu.predType == 1 then
 		local endPos, Info = Prodiction.GetPrediction(unit, SpellW.mega.range, SpellW.mega.speed, SpellW.mega.delay, SpellW.mega.width, myHero)
 		if endPos ~= nil then
-			if GnarMenu.misc.cast.usePackets then
+			if GnarMenu.misc.cast.usePackets and VIP_USER then
 				Packet("S_CAST", { spellId = _W, toX = endPos.x, toY = endPos.z, fromX = endPos.x, fromY = endPos.z }):send()
 			else
 				CastSpell(_W, endPos.x, endPos.z)
@@ -765,7 +772,7 @@ function CastW(unit)
 	else
 		local CastPos, HitChance, Position = vPred:GetLineCastPosition(unit, SpellW.mega.delay, SpellW.mega.width, SpellW.mega.range, SpellW.mega.speed, myHero, false)
 		if HitChance >= 2 then
-			if GnarMenu.misc.cast.usePackets then
+			if GnarMenu.misc.cast.usePackets and VIP_USER then
 				Packet("S_CAST", { spellId = _W, toX = CastPos.x, toY = CastPos.z, fromX = CastPos.x, fromY = CastPos.z }):send()
 			else
 				CastSpell(_W, CastPos.x, CastPos.z)
@@ -781,11 +788,11 @@ function CastE(unit)
 	end
 
 	if GetDistanceSqr(unit, myHero) <= SpellE.mega.range * SpellE.mega.range then
-		if GnarMenu.misc.megaE.howTo == 1 and GetDistanceSqr(unit, myHero) > gSOW:MyRange() * gSOW:MyRange() or GnarMenu.misc.megaE.howTo == 2 then
+		if GnarMenu.misc.megaE.howTo == 1 and GetDistanceSqr(unit, myHero) > SxOrb.MyRange * SxOrb.MyRange or GnarMenu.misc.megaE.howTo == 2 then
 			if GnarMenu.predType == 1 then
 				local endPos, Info = Prodiction.GetPrediction(unit, SpellE.mega.range, SpellE.mega.speed, SpellE.mega.delay, SpellE.mega.width, myHero)
 				if endPos ~= nil then
-					if GnarMenu.misc.cast.usePackets then
+					if GnarMenu.misc.cast.usePackets and VIP_USER then
 						Packet("S_CAST", { spellId = _E, toX = endPos.x, toY = endPos.z, fromX = endPos.x, fromY = endPos.z }):send()
 					else
 						CastSpell(_E, endPos.x, endPos.z)
@@ -795,7 +802,7 @@ function CastE(unit)
 			else
 				local CastPos, HitChance, Position = vPred:GetCircularCastPosition(unit, SpellE.mega.delay, SpellE.mega.width, SpellE.mega.range, SpellE.mega.speed, myHero, false)
 				if HitChance >= 2 then
-					if GnarMenu.misc.cast.usePackets then
+					if GnarMenu.misc.cast.usePackets and VIP_USER then
 						Packet("S_CAST", { spellId = _E, toX = CastPos.x, toY = CastPos.z, fromX = CastPos.x, fromY = CastPos.z }):send()
 					else
 						CastSpell(_E, CastPos.x, CastPos.z)
@@ -821,14 +828,14 @@ function CastR(count, accuracy, unit)
 			local pushLocation = NearestWall(myHero.x, myHero.y, myHero.z, SpellR.mega.range + (SpellR.mega.range *.2), accuracy)
 
 			if pushLocation ~= nil then
-				if GnarMenu.misc.cast.usePackets then
+				if GnarMenu.misc.cast.usePackets and VIP_USER then
 					Packet("S_CAST", { spellId = _R, toX = pushLocation.x, toY = pushLocation.y, fromX = pushLocation.x, fromY = pushLocation.y }):send()
 				else
 					CastSpell(_R, pushLocation.x, pushLocation.y)
 				end
 			end
 		else
-			if GnarMenu.misc.cast.usePackets then
+			if GnarMenu.misc.cast.usePackets and VIP_USER then
 				Packet("S_CAST", { spellId = _R, toX = mousePos.x, toY = mousePos.z, fromX = mousePos.x, fromY = mousePos.z }):send()
 			else
 				CastSpell(_R, mousePos.x, mousePos.z)
