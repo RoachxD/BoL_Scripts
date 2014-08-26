@@ -1,4 +1,4 @@
-local Ziggs_Ver = "1.0561"
+local Ziggs_Ver = "1.0562"
 --[[
 
 
@@ -404,15 +404,15 @@ function Menu()
 	
 	ZiggsMenu:addSubMenu("["..myHero.charName.."] - Combo Settings", "combo")
 		ZiggsMenu.combo:addParam("comboKey", "Full Combo Key (SBTW)", SCRIPT_PARAM_ONKEYDOWN, false, 32)
-		ZiggsMenu.combo:addParam("useW", "Use "..SpellW.name.." (W) with Combo", SCRIPT_PARAM_ONOFF, false)
-		ZiggsMenu.combo:addParam("useR", "Use "..SpellR.name.." (R): ", SCRIPT_PARAM_LIST, 3, { "If Target Killable", "With Burst", "No" })
+		ZiggsMenu.combo:addParam("useW", "Use " .. SpellW.name .. " (W) with Combo", SCRIPT_PARAM_ONOFF, false)
+		ZiggsMenu.combo:addParam("useR", "Use " .. SpellR.name .. " (R): ", SCRIPT_PARAM_LIST, 3, { "If Target Killable", "With Burst", "No" })
 		ZiggsMenu.combo:addParam("comboItems", "Use Items with Burst", SCRIPT_PARAM_ONOFF, true)
 		ZiggsMenu.combo:permaShow("comboKey")
 	
 	ZiggsMenu:addSubMenu("["..myHero.charName.."] - Harass Settings", "harass")
 		ZiggsMenu.harass:addParam("harassKey", "Harass key (C)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("C"))
-		ZiggsMenu.harass:addParam("qHarass", "Use "..SpellQ.name.." (Q) to Harass", SCRIPT_PARAM_ONOFF, true)
-		ZiggsMenu.harass:addParam("eHarass", "Use "..SpellE.name.." (E) to Harass", SCRIPT_PARAM_ONOFF, false)
+		ZiggsMenu.harass:addParam("qHarass", "Use " .. SpellQ.name .. " (Q) to Harass", SCRIPT_PARAM_ONOFF, true)
+		ZiggsMenu.harass:addParam("eHarass", "Use " .. SpellE.name .. " (E) to Harass", SCRIPT_PARAM_ONOFF, false)
 		ZiggsMenu.harass:addParam("harassMana", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
 		ZiggsMenu.harass:permaShow("harassKey")
 		
@@ -431,7 +431,8 @@ function Menu()
 		
 	ZiggsMenu:addSubMenu("["..myHero.charName.."] - KillSteal Settings", "ks")
 		ZiggsMenu.ks:addParam("killSteal", "Use Smart Kill Steal", SCRIPT_PARAM_ONOFF, true)
-		ZiggsMenu.ks:addParam("useW", "Use "..SpellW.name.." (W) to KS", SCRIPT_PARAM_ONOFF, false)
+		ZiggsMenu.ks:addParam("useW", "Use " .. SpellW.name .. " (W) to KS", SCRIPT_PARAM_ONOFF, false)
+		ZiggsMenu.ks:addParam("useR", "Use " .. SpellR.name .. " (R) to KS", SCRIPT_PARAM_ONOFF, false)
 		ZiggsMenu.ks:addParam("autoIgnite", "Auto Ignite", SCRIPT_PARAM_ONOFF, true)
 		ZiggsMenu.ks:permaShow("killSteal")
 			
@@ -439,10 +440,10 @@ function Menu()
 		ZiggsMenu.drawing:addParam("mDraw", "Disable All Range Draws", SCRIPT_PARAM_ONOFF, false)
 		ZiggsMenu.drawing:addParam("Target", "Draw Circle on Target", SCRIPT_PARAM_ONOFF, true)
 		ZiggsMenu.drawing:addParam("cDraw", "Draw Damage Text", SCRIPT_PARAM_ONOFF, true)
-		ZiggsMenu.drawing:addParam("qDraw", "Draw "..SpellQ.name.." (Q) Range", SCRIPT_PARAM_ONOFF, true)
-		ZiggsMenu.drawing:addParam("wDraw", "Draw "..SpellW.name.." (W) Range", SCRIPT_PARAM_ONOFF, false)
-		ZiggsMenu.drawing:addParam("eDraw", "Draw "..SpellE.name.." (E) Range", SCRIPT_PARAM_ONOFF, true)
-		ZiggsMenu.drawing:addParam("rDraw", "Draw "..SpellR.name.." (R) Range on the Minimap", SCRIPT_PARAM_ONOFF, true)
+		ZiggsMenu.drawing:addParam("qDraw", "Draw " .. SpellQ.name .. " (Q) Range", SCRIPT_PARAM_ONOFF, true)
+		ZiggsMenu.drawing:addParam("wDraw", "Draw " .. SpellW.name .. " (W) Range", SCRIPT_PARAM_ONOFF, false)
+		ZiggsMenu.drawing:addParam("eDraw", "Draw " .. SpellE.name .. " (E) Range", SCRIPT_PARAM_ONOFF, true)
+		ZiggsMenu.drawing:addParam("rDraw", "Draw " .. SpellR.name .. " (R) Range on the Minimap", SCRIPT_PARAM_ONOFF, true)
 	
 	ZiggsMenu:addSubMenu("["..myHero.charName.."] - Misc Settings", "misc")
 		ZiggsMenu.misc:addSubMenu("Spells - Misc Settings", "smisc")
@@ -1049,7 +1050,7 @@ function KillSteal()
 		if ValidTarget(enemy) and enemy.visible then
 			if enemy.health < SpellR.dmg then
 				CastR(enemy, 1)
-			elseif enemy.health < SpellQ.dmg then
+			elseif enemy.health < SpellQ.dmg and ZiggsMenu.ks.useR then
 				CastQ(enemy)
 			elseif enemy.health < SpellW.dmg and ZiggsMenu.ks.useW then
 				CastW(enemy)
