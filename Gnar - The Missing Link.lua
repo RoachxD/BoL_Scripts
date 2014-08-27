@@ -1,4 +1,4 @@
-_G.Gnar_Version = 1.026
+_G.Gnar_Version = 1.027
 --[[
 
 
@@ -33,6 +33,10 @@ _G.Gnar_Version = 1.026
 			- Added Q-Catcher Helper (Drawing)
 			- Fixed Unit-Hop and added a Cool feature to jump on Pets
 			- Re-wrote Ult Function and Tested it, works like a charm
+
+		SHIT
+			- Added more valuable VIP Checks so the Script will work much better for Free Users
+			- The script is no more using SOW but SxOrbWalker
 
 ]]--
 
@@ -254,10 +258,10 @@ function Variables()
 		["YGB"]			= { id = 3142, range = 350 }
 	}
 
-	allyMinions = minionManager(MINION_ALLY, SpellQ.mini.range, myHero.visionPos)
-	enemyMinions = minionManager(MINION_ENEMY, SpellQ.mini.range, myHero.visionPos)
-	jungleMinions = minionManager(MINION_JUNGLE, SpellQ.mini.range, myHero.visionPos)
-	petMinions = minionManager(MINION_OTHER, SpellQ.mini.range, myHero.visionPos)
+	allyMinions = minionManager(MINION_ALLY, SpellQ.mini.range, myHero)
+	enemyMinions = minionManager(MINION_ENEMY, SpellQ.mini.range, myHero)
+	jungleMinions = minionManager(MINION_JUNGLE, SpellQ.mini.range, myHero)
+	petMinions = minionManager(MINION_OTHER, SpellQ.mini.range, myHero)
 
 	petNames = { "annietibbers", "shacobox", "malzaharvoidling", "heimertyellow", "heimertblue", "yorickdecayedghoul" }
 
@@ -370,7 +374,7 @@ function OnProcessSpell(unit, spell)
 		if (GnarMenu.misc.megaW.interrupt and SpellW.mega.ready) or SpellR.mega.ready then
 			if GetDistanceSqr(unit) <= ((GnarMenu.misc.megaW.interrupt and (SpellW.mega.range * SpellW.mega.range)) or SpellR.mega.range * SpellR.mega.range) then
 				if InterruptingSpells[spell.name] and unit.team ~= myHero.team then
-					CastSpell(GnarMenu.misc.megaW.interrupt and _W or _R, unit.visionPos.x, unit.visionPos.z)
+					CastSpell(GnarMenu.misc.megaW.interrupt and _W or _R, unit.x, unit.z)
 				end
 			end
 		end
