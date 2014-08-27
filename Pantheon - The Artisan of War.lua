@@ -1,4 +1,4 @@
-local version = "4.137"
+local version = "4.138"
 --[[
 
 
@@ -552,7 +552,7 @@ function OnAnimation(unit, animationName)
 			SxOrb:DisableMove()
 		else
 			SxOrb:EnableAttacks()
-			SxOrb.EnableMove()
+			SxOrb:EnableMove()
 		end
 	end
 end
