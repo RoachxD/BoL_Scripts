@@ -1,4 +1,4 @@
-_G.Gnar_Version = 1.027
+_G.Gnar_Version = 1.028
 --[[
 
 
@@ -33,11 +33,6 @@ _G.Gnar_Version = 1.027
 			- Added Q-Catcher Helper (Drawing)
 			- Fixed Unit-Hop and added a Cool feature to jump on Pets
 			- Re-wrote Ult Function and Tested it, works like a charm
-
-		SHIT
-			- Added more valuable VIP Checks so the Script will work much better for Free Users
-			- The script is no more using SOW but SxOrbWalker
-
 ]]--
 
 if myHero.charName ~= "Gnar" then return end
@@ -60,9 +55,11 @@ function AfterDownload()
 	end
 end
 
-for lib_downloadName, lib_downloadUrl in pairs(lib_Required) do
-	if lib_downloadName == "Prodiction" and not VIP_USER then return end
+if not VIP_USER then
+	lib_Required["Prodiction"] = nil
+end
 
+for lib_downloadName, lib_downloadUrl in pairs(lib_Required) do
 	local lib_fileName = LIB_PATH .. lib_downloadName .. ".lua"
 
 	if FileExist(lib_fileName) then
