@@ -1,7 +1,7 @@
 Champion Scripts:
 ------------
 *   \[VIP\] Free Miss Fortune | [BoL Thread](http://botoflegends.com/forum/topic/16619-scriptfree-adc-series-miss-fortune/)
-*   \[FREE\] Gnar - The Missing Link | BoL Thread
+*   \[FREE\] Gnar - The Missing Link | [BoL Thread](http://botoflegends.com/forum/topic/31007-script-gnar-the-missing-link/)
 *   \[FREE\] Jax - The Grandmaster at Arms | [BoL Thread](http://botoflegends.com/forum/topic/21556-script-jax-the-grandmaster-at-arms/)
 *   \[FREE\] Pantheon - The Artisan of War | [BoL Thread](http://botoflegends.com/forum/topic/7417-script-pantheon-the-artisan-of-war/)
 *   \[FREE\] Wukong - The Monkey King | [BoL Thread](http://botoflegends.com/forum/topic/9698-script-wukong-the-monkey-king/)
