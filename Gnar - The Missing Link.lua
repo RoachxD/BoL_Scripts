@@ -1,4 +1,4 @@
-_G.Gnar_Version = 1.03
+_G.Gnar_Version = 1.031
 --[[
 
 
@@ -44,6 +44,7 @@ _G.Gnar_Version = 1.03
 			- Removed Damage Calculations (Will write other function in a future version)
 			- Changed Farm Menu
 			- Improved Q Collision
+			- Updated Prodiction's Download Link
 			- Fixed every other Bug
 ]]--
 
@@ -60,7 +61,7 @@ _G.Gnar_Autoupdate = true
 
 local lib_Required =
 {
-	["Prodiction"]	= "https://bitbucket.org/Klokje/public-klokjes-bol-scripts/raw/ec830facccefb3b52212dba5696c08697c3c2854/Test/Prodiction/Prodiction.lua",
+	["Prodiction"]	= "https://bitbucket.org/Klokje/public-klokjes-bol-scripts/raw/master/Test/Prodiction/Prodiction.lua",
 	["SxOrbWalk"]	= "https://raw.githubusercontent.com/Superx321/BoL/master/common/SxOrbWalk.lua",
 	["VPrediction"]	= "https://raw.githubusercontent.com/Hellsing/BoL/master/Common/VPrediction.lua"
 }
