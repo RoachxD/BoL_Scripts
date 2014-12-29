@@ -1,4 +1,4 @@
-local version = "4.138"
+local version = "4.140"
 --[[
 
 
@@ -21,6 +21,8 @@ local version = "4.138"
 				- Improved Performance
 				- Fixed Jungle Clear
 				- Using SxOrbWalker
+				- Overall Improvements (Fixed JungleClear)
+				- Added usage of Smite in Combo
 
 			4.0
 				- Re-wrote the whole Script
@@ -175,7 +177,9 @@ local version = "4.138"
 			
 --]]
 
-if myHero.charName ~= "Pantheon" then return end
+if myHero.charName ~= "Pantheon" then
+	return 
+end
 
 _G.Panth_Autoupdate = true
 
@@ -205,7 +209,9 @@ else
 	DelayAction(function() AfterDownload() end, 0.3)
 end
 
-if SxOW_downloadNeeded then return end
+if SxOW_downloadNeeded then
+	return
+end
 
 local script_downloadName = "Pantheon - The Artisan of War"
 local script_downloadHost = "raw.github.com"
@@ -245,9 +251,6 @@ function OnLoad()
 	Variables()
 	Menu()
 
-	HWID = Base64Encode(tostring(os.getenv("PROCESSOR_IDENTIFIER")..os.getenv("USERNAME")..os.getenv("COMPUTERNAME")..os.getenv("PROCESSOR_LEVEL")..os.getenv("PROCESSOR_REVISION")))
-	UpdateWeb(true, (string.gsub(script_downloadName, "[^0-9A-Za-z]", "")), 5, HWID)
-
 	if heroManager.iCount < 10 then -- borrowed from Sidas Auto Carry, modified to 3v3
 			script_Messager("Too few champions to arrange priorities")
 	elseif heroManager.iCount == 6 and TTMAP then
@@ -255,10 +258,6 @@ function OnLoad()
 	else
 		ArrangePriorities()
 	end
-end
-
-function OnUnload()
-	UpdateWeb(false, (string.gsub(script_downloadName, "[^0-9A-Za-z]", "")), 5, HWID)
 end
 
 function OnTick()
@@ -309,12 +308,11 @@ function Variables()
 	SpellE = {name = "Heartseeker Strike",	range =  700, ready = false, dmg = 0, manaUsage = 0				   }
 	SpellR = {name = "Grand Skyfall",		range = 5500, ready = false, dmg = 0, manaUsage = 0				   }
 
-	SpellI = {name = "SummonerDot",			range =  600, ready = false, dmg = 0,				variable = nil }
+	SpellI = {name = "summonerdot",			range =  600, ready = false, dmg = 0,				variable = nil }
+
+	SmiteSlot = nil;
 
 	enemyMinions	= minionManager(MINION_ENEMY,	SpellQ.range, myHero.visionPos, MINION_SORT_HEALTH_ASC)
-
-	JungleMobs = {}
-	JungleFocusMobs = {}
 
 	priorityTable = {
 			AP = {
@@ -326,12 +324,13 @@ function Variables()
 				"Alistar", "Blitzcrank", "Janna", "Karma", "Leona", "Lulu", "Nami", "Nunu", "Sona", "Soraka", "Taric", "Thresh", "Zilean"
 			},
 			Tank = {
-				"Amumu", "Chogath", "DrMundo", "Galio", "Hecarim", "Malphite", "Maokai", "Nasus", "Rammus", "Sejuani", "Nautilus", "Shen", "Singed", "Skarner", "Volibear",
-				"Warwick", "Yorick", "Zac"
+				"Amumu", "Chogath", "DrMundo", "Galio", "Hecarim", "Malphite", "Maokai","Nasus", "Rammus",
+				"Sejuani", "Nautilus", "Shen", "Singed", "Skarner", "Volibear", "Warwick", "Yorick", "Zac"
 			},
 			AD_Carry = {
-				"Ashe", "Caitlyn", "Corki", "Draven", "Ezreal", "Graves", "Jayce", "Jinx", "KogMaw", "Lucian", "MasterYi", "MissFortune", "Pantheon", "Quinn", "Shaco", "Sivir",
-				"Talon","Tryndamere", "Tristana", "Twitch", "Urgot", "Varus", "Vayne", "Yasuo","Zed"
+				"Ashe", "Caitlyn", "Corki", "Draven", "Ezreal", "Graves", "Jayce", "Jinx", "KogMaw",
+				"Kalista", "Lucian", "MasterYi", "MissFortune", "Pantheon", "Quinn", "Shaco", "Sivir",
+				"Talon","Tryndamere", "Tristana", "Twitch", "Urgot", "Varus", "Vayne", "Yasuo", "Zed"
 			},
 			Bruiser = {
 				"Aatrox", "Darius", "Elise", "Fiora", "Gangplank", "Garen", "Irelia", "JarvanIV", "Jax", "Khazix", "LeeSin", "Nocturne", "Olaf", "Poppy",
@@ -378,68 +377,7 @@ function Variables()
 		["YGB"]			= { id = 3142, range = 350 }
 	}
 
-	if TTMAP then --
-		FocusJungleNames = {
-			["TT_NWraith1.1.1"]		= true,
-			["TT_NGolem2.1.1"]		= true,
-			["TT_NWolf3.1.1"]		= true,
-			["TT_NWraith4.1.1"]		= true,
-			["TT_NGolem5.1.1"]		= true,
-			["TT_NWolf6.1.1"]		= true,
-			["TT_Spiderboss8.1.1"]	= true
-		}		
-		JungleMobNames = {
-			["TT_NWraith21.1.2"]	= true,
-			["TT_NWraith21.1.3"]	= true,
-			["TT_NGolem22.1.2"]		= true,
-			["TT_NWolf23.1.2"]		= true,
-			["TT_NWolf23.1.3"]		= true,
-			["TT_NWraith24.1.2"]	= true,
-			["TT_NWraith24.1.3"]	= true,
-			["TT_NGolem25.1.1"]		= true,
-			["TT_NWolf26.1.2"]		= true,
-			["TT_NWolf26.1.3"]		= true
-		}
-	else 
-		JungleMobNames = { 
-			["Wolf8.1.2"]			= true,
-			["Wolf8.1.3"]			= true,
-			["YoungLizard7.1.2"]	= true,
-			["YoungLizard7.1.3"]	= true,
-			["LesserWraith9.1.3"]	= true,
-			["LesserWraith9.1.2"]	= true,
-			["LesserWraith9.1.4"]	= true,
-			["YoungLizard10.1.2"]	= true,
-			["YoungLizard10.1.3"]	= true,
-			["SmallGolem11.1.1"]	= true,
-			["Wolf2.1.2"]			= true,
-			["Wolf2.1.3"]			= true,
-			["YoungLizard1.1.2"]	= true,
-			["YoungLizard1.1.3"]	= true,
-			["LesserWraith3.1.3"]	= true,
-			["LesserWraith3.1.2"]	= true,
-			["LesserWraith3.1.4"]	= true,
-			["YoungLizard4.1.2"]	= true,
-			["YoungLizard4.1.3"]	= true,
-			["SmallGolem5.1.1"]		= true
-		}
-		FocusJungleNames = {
-			["Dragon6.1.1"]			= true,
-			["Worm12.1.1"]			= true,
-			["GiantWolf8.1.1"]		= true,
-			["AncientGolem7.1.1"]	= true,
-			["Wraith9.1.1"]			= true,
-			["LizardElder10.1.1"]	= true,
-			["Golem11.1.2"]			= true,
-			["GiantWolf2.1.1"]		= true,
-			["AncientGolem1.1.1"]	= true,
-			["Wraith3.1.1"]			= true,
-			["LizardElder4.1.1"]	= true,
-			["Golem5.1.2"]			= true,
-			["GreatWraith13.1.1"]	= true,
-			["GreatWraith14.1.1"]	= true
-		}
-	end
+	jungleMinions = minionManager(MINION_JUNGLE, SpellQ.mini.range, myHero)
 
 	enemyCount = 0
 	enemyTable = {}
@@ -452,28 +390,18 @@ function Variables()
 			enemyTable[enemyCount] = { player = champ, indicatorText = "", damageGettingText = "", ultAlert = false, ready = true}
 		end
     end
-
-    for i = 0, objManager.maxObjects do
-		local object = objManager:getObject(i)
-		if object and object.valid and not object.dead then
-			if FocusJungleNames[object.name] then
-				JungleFocusMobs[#JungleFocusMobs+1] = object
-			elseif JungleMobNames[object.name] then
-				JungleMobs[#JungleMobs+1] = object
-			end
-		end
-	end
 end
 
 function Menu()
 	PanthMenu = scriptConfig("Pantheon - The Artisan of War", "Panth")
 	
-	PanthMenu:addSubMenu("["..myHero.charName.."] - Combo Settings", "combo")
+	PanthMenu:addSubMenu(myHero.charName .. ": Combo Settings", "combo")
 		PanthMenu.combo:addParam("comboKey", "Full Combo Key (SBTW)", SCRIPT_PARAM_ONKEYDOWN, false, 32)
 		PanthMenu.combo:addParam("comboItems", "Use Items with Burst", SCRIPT_PARAM_ONOFF, true)
+		PanthMenu.combo:addParam("autoSmite", "Use Smite on Target if QWE Available", SCRIPT_PARAM_ONOFF, true)
 		PanthMenu.combo:permaShow("comboKey")
 	
-	PanthMenu:addSubMenu("["..myHero.charName.."] - Harass Settings", "harass")
+	PanthMenu:addSubMenu(myHero.charName .. ": Harass Settings", "harass")
 		PanthMenu.harass:addParam("harassKey", "Harass key (C)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("C"))
 		PanthMenu.harass:addParam("hMode", "Harass Mode", SCRIPT_PARAM_LIST, 1, { "Q", "W+E" })
 		PanthMenu.harass:addParam("autoQ", "Auto-Q when Target in Range", SCRIPT_PARAM_ONKEYTOGGLE, false, GetKey('Z'))
@@ -482,26 +410,26 @@ function Menu()
 		PanthMenu.harass:permaShow("harassKey")
 		
 	
-	PanthMenu:addSubMenu("["..myHero.charName.."] - Farm Settings", "farming")
+	PanthMenu:addSubMenu(myHero.charName .. ": Farm Settings", "farming")
 		PanthMenu.farming:addParam("farmKey", "Farming Key (X)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey('X'))
 		PanthMenu.farming:addParam("qFarm", "Farm with "..SpellQ.name.." (Q)", SCRIPT_PARAM_ONOFF, true)
 		PanthMenu.farming:addParam("wFarm", "Farm with "..SpellW.name.." (W)", SCRIPT_PARAM_ONOFF, true)
 		PanthMenu.farming:addParam("FarmMana", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
 		PanthMenu.farming:permaShow("farmKey")
 		
-	PanthMenu:addSubMenu("["..myHero.charName.."] - Jungle Clear Settings", "jungle")
+	PanthMenu:addSubMenu(myHero.charName .. ": Jungle Clear Settings", "jungle")
 		PanthMenu.jungle:addParam("jungleKey", "Jungle Clear Key (V)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey('V'))
 		PanthMenu.jungle:addParam("jungleQ", "Clear with "..SpellQ.name.." (Q)", SCRIPT_PARAM_ONOFF, true)
 		PanthMenu.jungle:addParam("jungleW", "Clear with "..SpellW.name.." (W)", SCRIPT_PARAM_ONOFF, true)
 		PanthMenu.jungle:addParam("jungleE", "Clear with "..SpellE.name.." (E)", SCRIPT_PARAM_ONOFF, true)
 		
 		
-	PanthMenu:addSubMenu("["..myHero.charName.."] - KillSteal Settings", "ks")
+	PanthMenu:addSubMenu(myHero.charName .. ": KillSteal Settings", "ks")
 		PanthMenu.ks:addParam("killSteal", "Use Smart Kill Steal", SCRIPT_PARAM_ONOFF, true)
 		PanthMenu.ks:addParam("autoIgnite", "Auto Ignite", SCRIPT_PARAM_ONOFF, true)
 		PanthMenu.ks:permaShow("killSteal")
 			
-	PanthMenu:addSubMenu("["..myHero.charName.."] - Draw Settings", "drawing")	
+	PanthMenu:addSubMenu(myHero.charName .. ": Draw Settings", "drawing")	
 		PanthMenu.drawing:addParam("mDraw", "Disable All Range Draws", SCRIPT_PARAM_ONOFF, false)
 		PanthMenu.drawing:addParam("Target", "Draw Circle on Target", SCRIPT_PARAM_ONOFF, true)
 		PanthMenu.drawing:addParam("cDraw", "Draw Damage Text", SCRIPT_PARAM_ONOFF, true)
@@ -510,7 +438,7 @@ function Menu()
 		PanthMenu.drawing:addParam("eDraw", "Draw "..SpellE.name.." (E) Range", SCRIPT_PARAM_ONOFF, true)
 		PanthMenu.drawing:addParam("rDraw", "Draw "..SpellR.name.." (R) Range on the Minimap", SCRIPT_PARAM_ONOFF, true)
 	
-	PanthMenu:addSubMenu("["..myHero.charName.."] - Misc Settings", "misc")
+	PanthMenu:addSubMenu(myHero.charName .. ": Misc Settings", "misc")
 		PanthMenu.misc:addSubMenu("Spells - Misc Settings", "smisc")
 			PanthMenu.misc.smisc:addParam("stopChannel", "Interrupt Channeling Spells", SCRIPT_PARAM_ONOFF, true)
 		if VIP_USER then
@@ -525,7 +453,7 @@ function Menu()
 			end
 			PanthMenu.misc.ultAlert:addParam("alertInfo", "It will print a text in the middle of the screen if an Enemy is Killable", SCRIPT_PARAM_INFO, "")
 
-		PanthMenu:addSubMenu("["..myHero.charName.."] - Orbwalking Settings", "Orbwalking")
+		PanthMenu:addSubMenu(myHero.charName .. ": Orbwalking Settings", "Orbwalking")
 			SxOrb:LoadToMenu(PanthMenu.Orbwalking, false)
 
 	TargetSelector = TargetSelector(TARGET_LESS_CAST, SpellE.range, DAMAGE_PHYSICAL)
@@ -553,27 +481,6 @@ function OnAnimation(unit, animationName)
 		else
 			SxOrb:EnableAttacks()
 			SxOrb:EnableMove()
-		end
-	end
-end
-
-function OnCreateObj(obj)
-	if FocusJungleNames[obj.name] then
-		JungleFocusMobs[#JungleFocusMobs+1] = obj
-	elseif JungleMobNames[obj.name] then
-		JungleMobs[#JungleMobs+1] = obj
-	end
-end
-
-function OnDeleteObj(obj)
-	for i, Mob in pairs(JungleMobs) do
-		if obj.name == Mob.name then
-			table.remove(JungleMobs, i)
-		end
-	end
-	for i, Mob in pairs(JungleFocusMobs) do
-		if obj.name == Mob.name then
-			table.remove(JungleFocusMobs, i)
 		end
 	end
 end
@@ -615,10 +522,6 @@ function OnDraw()
 	end
 end
 
-function OnBugsplat()
-	UpdateWeb(false, (string.gsub(script_downloadName, "[^0-9A-Za-z]", "")), 5, HWID)
-end
-
 function TickChecks()
 	-- Checks if Spells Ready
 	SpellQ.ready = (myHero:CanUseSpell(_Q) == READY)
@@ -638,14 +541,12 @@ function TickChecks()
 	end
 	SpellI.ready = (SpellI.variable ~= nil and myHero:CanUseSpell(SpellI.variable) == READY)
 
+	SetSmiteSlot()
+
 	Target = GetCustomTarget()
 	SxOrb:ForceTarget(Target)
 
 	DmgCalc()
-
-	if GetGame().isOver then
-		UpdateWeb(false, (string.gsub(script_downloadName, "[^0-9A-Za-z]", "")), 5, HWID)
-	end
 end
 
 function GetCustomTarget()
@@ -677,6 +578,15 @@ function Combo(unit)
 		if PanthMenu.combo.comboItems then
 			UseItems(unit)
 		end
+
+		if PanthMenu.combo.autoSmite then
+			if SmiteSlot ~= nil and Player:CanUseSpell(SmiteSlot) == READY then
+				if SpellQ.ready and SpellW.ready and SpellE.ready then
+					CastSpell(SmiteSlot, unit)
+				end
+			end
+		end
+		
 		CastQ(unit)
 		CastW(unit)
 		if not SpellW.ready then
@@ -717,16 +627,17 @@ end
 
 function JungleClear()
 	if PanthMenu.jungle.jungleKey then
-		local JungleMob = GetJungleMob()
-		if JungleMob ~= nil then
-			if PanthMenu.jungle.jungleQ and GetDistanceSqr(JungleMob) <= SpellQ.range * SpellQ.range then
-				CastQ(JungleMob)
-			end
-			if PanthMenu.jungle.jungleW and GetDistanceSqr(JungleMob) <= SpellQ.range * SpellQ.range then
-				CastW(JungleMob)
-			end
-			if PanthMenu.jungle.jungleE and GetDistanceSqr(JungleMob) <= SpellE.range * SpellE.range then
-				CastE(JungleMob)
+		for _, JungleMob in pairs(jungleMinions.objects) do
+			if JungleMob ~= nil then
+				if PanthMenu.jungle.jungleQ and GetDistanceSqr(JungleMob) <= SpellQ.range * SpellQ.range then
+					CastQ(JungleMob)
+				end
+				if PanthMenu.jungle.jungleW and GetDistanceSqr(JungleMob) <= SpellQ.range * SpellQ.range then
+					CastW(JungleMob)
+				end
+				if PanthMenu.jungle.jungleE and GetDistanceSqr(JungleMob) <= SpellE.range * SpellE.range then
+					CastE(JungleMob)
+				end
 			end
 		end
 	end
@@ -796,15 +707,6 @@ function SetPriority(table, hero, priority)
 		end
 	end
 end
-
-function GetJungleMob()
-		for _, Mob in pairs(JungleFocusMobs) do
-			if ValidTarget(Mob, SpellQ.range) then return Mob end
-		end
-		for _, Mob in pairs(JungleMobs) do
-			if ValidTarget(Mob, SpellQ.range) then return Mob end
-		end
-	end
 
 function DmgCalc()
 	for i = 1, enemyCount do
@@ -935,8 +837,34 @@ function InEnemyTurretRange(unit)
 			end
 		end
 	end
+
 	return false
 end
 
--- UpdateWeb
-assert(load(Base64Decode("G0x1YVIAAQQEBAgAGZMNChoKAAAAAAAAAAAAAQIDAAAAJQAAAAgAAIAfAIAAAQAAAAQKAAAAVXBkYXRlV2ViAAEAAAACAAAADAAAAAQAETUAAAAGAUAAQUEAAB2BAAFGgUAAh8FAAp0BgABdgQAAjAHBAgFCAQBBggEAnUEAAhsAAAAXwAOAjMHBAgECAgBAAgABgUICAMACgAEBgwIARsNCAEcDwwaAA4AAwUMDAAGEAwBdgwACgcMDABaCAwSdQYABF4ADgIzBwQIBAgQAQAIAAYFCAgDAAoABAYMCAEbDQgBHA8MGgAOAAMFDAwABhAMAXYMAAoHDAwAWggMEnUGAAYwBxQIBQgUAnQGBAQgAgokIwAGJCICBiIyBxQKdQQABHwCAABcAAAAECAAAAHJlcXVpcmUABAcAAABzb2NrZXQABAcAAABhc3NlcnQABAQAAAB0Y3AABAgAAABjb25uZWN0AAQQAAAAYm9sLXRyYWNrZXIuY29tAAMAAAAAAABUQAQFAAAAc2VuZAAEGAAAAEdFVCAvcmVzdC9uZXdwbGF5ZXI/aWQ9AAQHAAAAJmh3aWQ9AAQNAAAAJnNjcmlwdE5hbWU9AAQHAAAAc3RyaW5nAAQFAAAAZ3N1YgAEDQAAAFteMC05QS1aYS16XQAEAQAAAAAEJQAAACBIVFRQLzEuMA0KSG9zdDogYm9sLXRyYWNrZXIuY29tDQoNCgAEGwAAAEdFVCAvcmVzdC9kZWxldGVwbGF5ZXI/aWQ9AAQCAAAAcwAEBwAAAHN0YXR1cwAECAAAAHBhcnRpYWwABAgAAAByZWNlaXZlAAQDAAAAKmEABAYAAABjbG9zZQAAAAAAAQAAAAAAEAAAAEBvYmZ1c2NhdGVkLmx1YQA1AAAAAgAAAAIAAAACAAAAAgAAAAIAAAACAAAAAgAAAAMAAAADAAAAAwAAAAMAAAAEAAAABAAAAAUAAAAFAAAABQAAAAYAAAAGAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAgAAAAHAAAABQAAAAgAAAAJAAAACQAAAAkAAAAKAAAACgAAAAsAAAALAAAACwAAAAsAAAALAAAACwAAAAsAAAAMAAAACwAAAAkAAAAMAAAADAAAAAwAAAAMAAAADAAAAAwAAAAMAAAADAAAAAwAAAAGAAAAAgAAAGEAAAAAADUAAAACAAAAYgAAAAAANQAAAAIAAABjAAAAAAA1AAAAAgAAAGQAAAAAADUAAAADAAAAX2EAAwAAADUAAAADAAAAYWEABwAAADUAAAABAAAABQAAAF9FTlYAAQAAAAEAEAAAAEBvYmZ1c2NhdGVkLmx1YQADAAAADAAAAAIAAAAMAAAAAAAAAAEAAAAFAAAAX0VOVgA="), nil, "bt", _ENV))()
+function SmiteType()
+	local Smites = 
+	{
+		3715, 3718, 3717, 3716, 3714, -- Red Smites
+		3706, 3710, 3709, 3708, 3707  -- Blue Smites
+	}
+
+	for _, Item in pairs(Smites)
+		if GetInventoryHaveItem(Item) then
+			if Item <= 3710 then
+				return "s5_summonersmiteplayerganker"
+			else
+				return "s5_summonersmiteduel"
+			end
+		end
+	end
+
+	return "summonersmite"
+end
+
+function SetSmiteSlot()
+	if myHero:GetSpellData(SUMMONER_1).name:find(SmiteType()) then
+		SmiteSlot = SUMMONER_1
+	elseif myHero:GetSpellData(SUMMONER_2).name:find(SmiteType()) then
+		SmiteSlot = SUMMONER_2
+	end
+end
