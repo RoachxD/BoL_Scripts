@@ -312,7 +312,7 @@ function Variables()
 
 	SmiteSlot = nil;
 
-	enemyMinions	= minionManager(MINION_ENEMY,	SpellQ.range, myHero.visionPos, MINION_SORT_HEALTH_ASC)
+	enemyMinions	= minionManager(MINION_ENEMY,	SpellQ.range, myHero, MINION_SORT_HEALTH_ASC)
 
 	priorityTable = {
 			AP = {
@@ -377,7 +377,7 @@ function Variables()
 		["YGB"]			= { id = 3142, range = 350 }
 	}
 
-	jungleMinions = minionManager(MINION_JUNGLE, SpellQ.range, myHero)
+	jungleMinions = minionManager(MINION_JUNGLE, SpellQ.range, myHero, MINION_SORT_MAXHEALTH_DEC)
 
 	enemyCount = 0
 	enemyTable = {}
