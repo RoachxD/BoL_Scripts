@@ -815,7 +815,7 @@ function GetKillable()
 					PrintAlert(enemy.charName.." can be Killed by Ult", PanthMenu.misc.ultAlert.alertTime, 128, 255, 0)
 
 					if PanthMenu.misc.ultAlert.Pings and VIP_USER then
-						Packet('R_PING',  { x = enemy.x, y = enemy.z, type = PING_FALLBACK }):receive()
+						--Packet('R_PING',  { x = enemy.x, y = enemy.z, type = PING_FALLBACK }):receive()
 					end
 
 					enemyTable[i].ultAlert = true
@@ -848,7 +848,7 @@ function SmiteType()
 		3706, 3710, 3709, 3708, 3707  -- Blue Smites
 	}
 
-	for _, Item in pairs(Smites)
+	for _, Item in pairs(Smites) do
 		if GetInventoryHaveItem(Item) then
 			if Item <= 3710 then
 				return "s5_summonersmiteplayerganker"
