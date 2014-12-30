@@ -377,7 +377,7 @@ function Variables()
 		["YGB"]			= { id = 3142, range = 350 }
 	}
 
-	jungleMinions = minionManager(MINION_JUNGLE, SpellQ.mini.range, myHero)
+	jungleMinions = minionManager(MINION_JUNGLE, SpellQ.range, myHero)
 
 	enemyCount = 0
 	enemyTable = {}
