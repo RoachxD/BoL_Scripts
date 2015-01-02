@@ -312,7 +312,8 @@ function Variables()
 
 	SmiteSlot = nil;
 
-	enemyMinions	= minionManager(MINION_ENEMY,	SpellQ.range, myHero, MINION_SORT_HEALTH_ASC)
+	enemyMinions = minionManager(MINION_ENEMY, 1000, myHero, MINION_SORT_MAXHEALTH_ASC)
+    jungleMinions = minionManager(MINION_JUNGLE, 1000, myHero, MINION_SORT_MAXHEALTH_DEC)
 
 	priorityTable = {
 			AP = {
@@ -376,8 +377,6 @@ function Variables()
 		["TIAMAT"]		= { id = 3077, range = 350 },
 		["YGB"]			= { id = 3142, range = 350 }
 	}
-
-	jungleMinions = minionManager(MINION_JUNGLE, SpellQ.range, myHero, MINION_SORT_MAXHEALTH_DEC)
 
 	enemyCount = 0
 	enemyTable = {}
@@ -580,7 +579,7 @@ function Combo(unit)
 		end
 
 		if PanthMenu.combo.autoSmite then
-			if SmiteSlot ~= nil and Player:CanUseSpell(SmiteSlot) == READY then
+			if SmiteSlot ~= nil and myHero:CanUseSpell(SmiteSlot) == READY then
 				if SpellQ.ready and SpellW.ready and SpellE.ready then
 					CastSpell(SmiteSlot, unit)
 				end
@@ -626,6 +625,7 @@ function Farm()
 end
 
 function JungleClear()
+	jungleMinions:update()
 	if PanthMenu.jungle.jungleKey then
 		for _, JungleMob in pairs(jungleMinions.objects) do
 			if JungleMob ~= nil then
