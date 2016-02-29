@@ -12,10 +12,32 @@
 	Item Swapper - Swap items from your inventory using the Numpad!
 
 	Changelog:
+		February 29, 2016:
+			- Added a version check so the game won't crash if the Script is used on an "Outdated" Version of the game.
+			
 		February 28, 2016:
 			- First Release.
 
 ]]--
+GameVersion = GetGameVersion():sub(1,3)
+SourceSlotDataTable =
+{
+	['6.4'] =
+	{
+		[1] = 0x9C, [2] = 0x7C, [3] = 0xA5,
+		[4] = 0xC4, [5] = 0xBF, [6] = 0x92
+	}
+}
+
+TargetSlotDataTable =
+{
+	['6.4'] =
+	{
+		[1] = 0x8B, [2] = 0xB6, [3] = 0x40,
+		[4] = 0xC7, [5] = 0x18, [6] = 0xD4
+	}
+}
+
 FirstKey = 0x60;
 Keys = { 0x64, 0x65, 0x66, 0x61, 0x62, 0x63 }
 
@@ -33,6 +55,9 @@ function OnLoad()
 	ISConfig:addParam("NumLock", "Num Lock must be Active!", SCRIPT_PARAM_INFO, "")
 	
 	print("<font color=\"#D2444A\">Item Swapper:</font> <font color=\"#FFFFFF\">Successfully loaded!</font>")
+	if SourceSlotDataTable[GameVersion] == nil or TargetSlotDataTable[GameVersion] == nil then
+		print("<font color=\"#D2444A\">Item Swapper:</font> <font color=\"#FFFFFF\">The script is outdated for this version of the game (" .. GameVersion .. ")!</font>")
+	end
 end
 
 function OnWndMsg(msg, key)
@@ -67,17 +92,9 @@ function IndexOf(table, value)
 end
 
 function SwapItem(sourceSlotId, targetSlotId)
-	local SourceSlotDataTable =
-	{
-		[1] = 0x9C, [2] = 0x7C, [3] = 0xA5,
-		[4] = 0xC4, [5] = 0xBF, [6] = 0x92
-	}
-
-	local TargetSlotDataTable =
-	{
-		[1] = 0x8B, [2] = 0xB6, [3] = 0x40,
-		[4] = 0xC7, [5] = 0x18, [6] = 0xD4
-	}
+	if SourceSlotDataTable[GameVersion] == nil or TargetSlotDataTable[GameVersion] == nil then
+		return
+	end
 	
 	local Packet = CLoLPacket(0x51)
 	Packet.vTable = 0xE52AB4
