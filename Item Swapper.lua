@@ -12,6 +12,9 @@
 	Item Swapper - Swap items from your inventory using the Numpad!
 
 	Changelog:
+		March 02, 2016:
+			- Fixed a little mistake, the script was not working anymore.
+	
 		February 29, 2016:
 			- Added a version check so the game won't crash if the Script is used on an "Outdated" Version of the game.
 			
@@ -99,7 +102,7 @@ function SwapItem(sourceSlotId, targetSlotId)
 	local Packet = CLoLPacket(0x51)
 	Packet.vTable = 0xE52AB4
 	Packet:EncodeF(myHero.networkID)
-	Packet:Encode1(SourceSlotDataTable[sourceSlotId])
-	Packet:Encode1(TargetSlotDataTable[targetSlotId])
+	Packet:Encode1(SourceSlotDataTable[GameVersion][sourceSlotId])
+	Packet:Encode1(TargetSlotDataTable[GameVersion][targetSlotId])
 	SendPacket(Packet)
 end
