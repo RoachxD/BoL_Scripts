@@ -12,6 +12,11 @@
 	Item Swapper - Swap items from your inventory using the Numpad!
 
 	Changelog:
+		March 04, 2016:
+			- Improved SwapItem Function:
+				- It won't send packets if both inventory slots are empty.
+				- It will automatically check if the first slot you choose is empty and reverse swap the items.
+				
 		March 02, 2016:
 			- Fixed a little mistake, the script was not working anymore.
 	
@@ -97,6 +102,16 @@ end
 function SwapItem(sourceSlotId, targetSlotId)
 	if SourceSlotDataTable[GameVersion] == nil or TargetSlotDataTable[GameVersion] == nil then
 		return
+	end
+	
+	if GetInventorySlotIsEmpty(sourceSlotId + 5) and GetInventorySlotIsEmpty(targetSlotId + 5) then
+		return
+	end
+	
+	if GetInventorySlotIsEmpty(sourceSlotId + 5) and not GetInventorySlotIsEmpty(targetSlotId + 5) then
+		sourceSlotId = sourceSlotId + targetSlotId
+		targetSlotId = sourceSlotId - targetSlotId
+		sourceSlotId = sourceSlotId - targetSlotId
 	end
 	
 	local Packet = CLoLPacket(0x51)
