@@ -1,17 +1,20 @@
 --[[
 
 
-		db   dD d88888b db    db d8888b.  .d88b.   .d8b.  d8888b. d8888b.       .o88b.  .d88b.  d8b   db d888888b d8888b.  .d88b.  db      db      d88888b d8888b. 
-		88 ,8P' 88'     `8b  d8' 88  `8D .8P  Y8. d8' `8b 88  `8D 88  `8D      d8P  Y8 .8P  Y8. 888o  88 `~~88~~' 88  `8D .8P  Y8. 88      88      88'     88  `8D 
-		88,8P   88ooooo  `8bd8'  88oooY' 88    88 88ooo88 88oobY' 88   88      8P      88    88 88V8o 88    88    88oobY' 88    88 88      88      88ooooo 88oobY' 
-		88`8b   88~~~~~    88    88~~~b. 88    88 88~~~88 88`8b   88   88      8b      88    88 88 V8o88    88    88`8b   88    88 88      88      88~~~~~ 88`8b   
-		88 `88. 88.        88    88   8D `8b  d8' 88   88 88 `88. 88  .8D      Y8b  d8 `8b  d8' 88  V888    88    88 `88. `8b  d8' 88booo. 88booo. 88.     88 `88. 
-		YP   YD Y88888P    YP    Y8888P'  `Y88P'  YP   YP 88   YD Y8888D'       `Y88P'  `Y88P'  VP   V8P    YP    88   YD  `Y88P'  Y88888P Y88888P Y88888P 88   YD 
+		db   dD d88888b db    db d8888b.  .d88b.   .d8b.  d8888b. d8888b.       .o88b.  .d88b.  d8b   db d888888b d8888b.  .d88b.  db      db      d88888b d8888b.
+		88 ,8P' 88'     `8b  d8' 88  `8D .8P  Y8. d8' `8b 88  `8D 88  `8D      d8P  Y8 .8P  Y8. 888o  88 `~~88~~' 88  `8D .8P  Y8. 88      88      88'     88  `8D
+		88,8P   88ooooo  `8bd8'  88oooY' 88    88 88ooo88 88oobY' 88   88      8P      88    88 88V8o 88    88    88oobY' 88    88 88      88      88ooooo 88oobY'
+		88`8b   88~~~~~    88    88~~~b. 88    88 88~~~88 88`8b   88   88      8b      88    88 88 V8o88    88    88`8b   88    88 88      88      88~~~~~ 88`8b
+		88 `88. 88.        88    88   8D `8b  d8' 88   88 88 `88. 88  .8D      Y8b  d8 `8b  d8' 88  V888    88    88 `88. `8b  d8' 88booo. 88booo. 88.     88 `88.
+		YP   YD Y88888P    YP    Y8888P'  `Y88P'  YP   YP 88   YD Y8888D'       `Y88P'  `Y88P'  VP   V8P    YP    88   YD  `Y88P'  Y88888P Y88888P Y88888P 88   YD
 
 
 	Keyboard Controller - Move your hero using the keyboard!
 
 	Changelog:
+		March 07, 2016:
+			- Now the "Disable spells" Option will support Mini-Patches as well.
+
 		March 03, 2016:
 			- First Release.
 ]]--
@@ -78,10 +81,10 @@ if not VIP_USER then
 	return
 end
 
-GameVersion = GetGameVersion():sub(1,3)
+GameVersion = GetGameVersion():sub(1,9)
 CastSpellHeader =
 {
-	["6.4"] = 0x49
+	['6.4.0.250'] = 0x49
 }
 
 function OnSendPacket(p)
