@@ -12,42 +12,55 @@
 	Item Swapper - Swap items from your inventory using the Numpad!
 
 	Changelog:
+		March 07, 2016:
+			- Re-wrote the tables to make it look better.
+			- Now it will support Mini-Patches as well.
+
 		March 04, 2016:
 			- Improved SwapItem Function:
 				- It won't send packets if both inventory slots are empty.
 				- It will automatically check if the first slot you choose is empty and reverse swap the items.
-				
+
 		March 02, 2016:
 			- Fixed a little mistake, the script was not working anymore.
-	
+
 		February 29, 2016:
 			- Added a version check so the game won't crash if the Script is used on an "Outdated" Version of the game.
-			
+
 		February 28, 2016:
 			- First Release.
 
 ]]--
-GameVersion = GetGameVersion():sub(1,3)
-SourceSlotDataTable =
+
+GameVersion = GetGameVersion():sub(1,9)
+Packet =
 {
-	['6.4'] =
+	['6.4.0.250'] =
 	{
-		[1] = 0x9C, [2] = 0x7C, [3] = 0xA5,
-		[4] = 0xC4, [5] = 0xBF, [6] = 0x92
+		Header = 0x51,
+		vTable = 0xE52AB4,
+		SourceSlotTable =
+		{
+			[1] = 0x9C, [2] = 0x7C, [3] = 0xA5,
+			[4] = 0xC4, [5] = 0xBF, [6] = 0x92
+		},
+		TargetSlotTable =
+		{
+			[1] = 0x8B, [2] = 0xB6, [3] = 0x40,
+			[4] = 0xC7, [5] = 0x18, [6] = 0xD4
+		}
 	}
 }
 
-TargetSlotDataTable =
+Keys =
 {
-	['6.4'] =
+	FirstKey = 0x60,
+	ItemKeys =
 	{
-		[1] = 0x8B, [2] = 0xB6, [3] = 0x40,
-		[4] = 0xC7, [5] = 0x18, [6] = 0xD4
+		[1] = 0x64, [2] = 0x65, [3] = 0x66,
+		[4] = 0x61, [5] = 0x62, [6] = 0x63
 	}
 }
-
-FirstKey = 0x60;
-Keys = { 0x64, 0x65, 0x66, 0x61, 0x62, 0x63 }
 
 function OnLoad()
 	ISConfig = scriptConfig("Item Swapper: Info", "IS")
@@ -63,30 +76,30 @@ function OnLoad()
 	ISConfig:addParam("NumLock", "Num Lock must be Active!", SCRIPT_PARAM_INFO, "")
 	
 	print("<font color=\"#D2444A\">Item Swapper:</font> <font color=\"#FFFFFF\">Successfully loaded!</font>")
-	if SourceSlotDataTable[GameVersion] == nil or TargetSlotDataTable[GameVersion] == nil then
+	if Packet[GameVersion] == nil then
 		print("<font color=\"#D2444A\">Item Swapper:</font> <font color=\"#FFFFFF\">The script is outdated for this version of the game (" .. GameVersion .. ")!</font>")
 	end
 end
 
 function OnWndMsg(msg, key)
 	if msg == 0x100 and key == 0x60 then
-		FirstKey = 0x60;
+		Keys.FirstKey = 0x60;
 	end
 	
-	if msg ~= 0x100 or IndexOf(Keys, key) == nil then
+	if msg ~= 0x100 or IndexOf(Keys.ItemKeys, key) == nil then
 		return
 	end
 	
-	if FirstKey == 0x60 then
-		FirstKey = key
+	if Keys.FirstKey == 0x60 then
+		Keys.FirstKey = key
 	end
 
-	if FirstKey == key then
+	if Keys.FirstKey == key then
 		return
 	end
 	
-	SwapItem(IndexOf(Keys, FirstKey), IndexOf(Keys, key))
-	FirstKey = 0x60
+	SwapItem(IndexOf(Keys.ItemKeys, Keys.FirstKey), IndexOf(Keys.ItemKeys, key))
+	Keys.FirstKey = 0x60
 end
 
 function IndexOf(table, value)
@@ -100,7 +113,7 @@ function IndexOf(table, value)
 end
 
 function SwapItem(sourceSlotId, targetSlotId)
-	if SourceSlotDataTable[GameVersion] == nil or TargetSlotDataTable[GameVersion] == nil then
+	if Packet[GameVersion].SourceSlotTable == nil or Packet[GameVersion].TargetSlotTable == nil then
 		return
 	end
 	
@@ -114,10 +127,10 @@ function SwapItem(sourceSlotId, targetSlotId)
 		sourceSlotId = sourceSlotId - targetSlotId
 	end
 	
-	local Packet = CLoLPacket(0x51)
-	Packet.vTable = 0xE52AB4
-	Packet:EncodeF(myHero.networkID)
-	Packet:Encode1(SourceSlotDataTable[GameVersion][sourceSlotId])
-	Packet:Encode1(TargetSlotDataTable[GameVersion][targetSlotId])
-	SendPacket(Packet)
+	local CustomPacket = CLoLPacket(Packet[GameVersion].Header)
+	CustomPacket.vTable = Packet[GameVersion].vTable
+	CustomPacket:EncodeF(myHero.networkID)
+	CustomPacket:Encode1(Packet[GameVersion].SourceSlotTable[sourceSlotId])
+	CustomPacket:Encode1(Packet[GameVersion].TargetSlotTable[targetSlotId])
+	SendPacket(CustomPacket)
 end
