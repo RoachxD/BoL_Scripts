@@ -12,6 +12,9 @@
 	Item Swapper - Swap items from your inventory using the Numpad!
 
 	Changelog:
+		March 09, 2016:
+			- Updated for 6.5.
+
 		March 07, 2016:
 			- Re-wrote the tables to make it look better.
 			- Now it will support Mini-Patches as well.
@@ -49,13 +52,28 @@ Packet =
 			[1] = 0x8B, [2] = 0xB6, [3] = 0x40,
 			[4] = 0xC7, [5] = 0x18, [6] = 0xD4
 		}
+	},
+	['6.5.0.277'] =
+	{
+		Header = 0x121,
+		vTable = 0xEF4D68,
+		SourceSlotTable =
+		{
+			[1] = 0x56, [2] = 0x17, [3] = 0x42,
+			[4] = 0x6D, [5] = 0x74, [6] = 0xC5
+		},
+		TargetSlotTable =
+		{
+			[1] = 0x48, [2] = 0x80, [3] = 0x81,
+			[4] = 0x2C, [5] = 0xD4, [6] = 0x84
+		}
 	}
 }
 
 Keys =
 {
 	FirstKey = 0x60,
-	ItemKeys =
+	SlotKeys =
 	{
 		[1] = 0x64, [2] = 0x65, [3] = 0x66,
 		[4] = 0x61, [5] = 0x62, [6] = 0x63
@@ -86,7 +104,7 @@ function OnWndMsg(msg, key)
 		Keys.FirstKey = 0x60;
 	end
 	
-	if msg ~= 0x100 or IndexOf(Keys.ItemKeys, key) == nil then
+	if msg ~= 0x100 or IndexOf(Keys.SlotKeys, key) == nil then
 		return
 	end
 	
@@ -98,7 +116,7 @@ function OnWndMsg(msg, key)
 		return
 	end
 	
-	SwapItem(IndexOf(Keys.ItemKeys, Keys.FirstKey), IndexOf(Keys.ItemKeys, key))
+	SwapItem(IndexOf(Keys.SlotKeys, Keys.FirstKey), IndexOf(Keys.SlotKeys, key))
 	Keys.FirstKey = 0x60
 end
 
