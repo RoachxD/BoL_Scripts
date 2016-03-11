@@ -12,6 +12,9 @@
 	Keyboard Controller - Move your hero using the keyboard!
 
 	Changelog:
+		March 11, 2016:
+			- Updated for 6.5HF.
+
 		March 09, 2016:
 			- Updated for 6.5.
 
@@ -87,8 +90,9 @@ end
 GameVersion = GetGameVersion():sub(1,9)
 CastSpellHeader =
 {
-	['6.4.0.250'] = 0x49,
-	['6.5.0.277'] = 0x10E
+	['6.5.0.280'] = 0x10E,
+	['6.5.0.277'] = 0x10E,
+	['6.4.0.250'] = 0x49
 }
 
 function OnSendPacket(p)
