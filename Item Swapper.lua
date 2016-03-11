@@ -12,6 +12,9 @@
 	Item Swapper - Swap items from your inventory using the Numpad!
 
 	Changelog:
+		March 11, 2016:
+			- Updated for 6.5HF.
+
 		March 09, 2016:
 			- Updated for 6.5.
 
@@ -38,19 +41,19 @@
 GameVersion = GetGameVersion():sub(1,9)
 Packet =
 {
-	['6.4.0.250'] =
+	['6.5.0.280'] =
 	{
-		Header = 0x51,
-		vTable = 0xE52AB4,
+		Header = 0x121,
+		vTable = 0xED67EC,
 		SourceSlotTable =
 		{
-			[1] = 0x9C, [2] = 0x7C, [3] = 0xA5,
-			[4] = 0xC4, [5] = 0xBF, [6] = 0x92
+			[1] = 0x56, [2] = 0x17, [3] = 0x42,
+			[4] = 0x6D, [5] = 0x74, [6] = 0xC5
 		},
 		TargetSlotTable =
 		{
-			[1] = 0x8B, [2] = 0xB6, [3] = 0x40,
-			[4] = 0xC7, [5] = 0x18, [6] = 0xD4
+			[1] = 0x48, [2] = 0x80, [3] = 0x81,
+			[4] = 0x2C, [5] = 0xD4, [6] = 0x84
 		}
 	},
 	['6.5.0.277'] =
@@ -66,6 +69,21 @@ Packet =
 		{
 			[1] = 0x48, [2] = 0x80, [3] = 0x81,
 			[4] = 0x2C, [5] = 0xD4, [6] = 0x84
+		}
+	},
+	['6.4.0.250'] =
+	{
+		Header = 0x51,
+		vTable = 0xE52AB4,
+		SourceSlotTable =
+		{
+			[1] = 0x9C, [2] = 0x7C, [3] = 0xA5,
+			[4] = 0xC4, [5] = 0xBF, [6] = 0x92
+		},
+		TargetSlotTable =
+		{
+			[1] = 0x8B, [2] = 0xB6, [3] = 0x40,
+			[4] = 0xC7, [5] = 0x18, [6] = 0xD4
 		}
 	}
 }
