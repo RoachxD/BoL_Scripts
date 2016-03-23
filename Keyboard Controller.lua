@@ -12,6 +12,9 @@
 	Keyboard Controller - Move your hero using the keyboard!
 
 	Changelog:
+		March 23, 2016:
+			- Updated for 6.6.
+
 		March 14, 2016:
 			- Re-wrote the Script as a Class (For my upcoming Auto-Updater).
 			- Improved the VIP Check, it will let you know what you can do.
@@ -57,6 +60,7 @@ function KeyboardController:__init()
 	self.GameVersion = GetGameVersion():sub(1,9)
 	self.CastSpellHeader =
 	{
+		['6.6.137.4'] = 0x15A,
 		['6.5.0.280'] = 0x10E,
 		['6.5.0.277'] = 0x10E,
 		['6.4.0.250'] = 0x49
