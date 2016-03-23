@@ -12,6 +12,9 @@
 	Item Swapper - Swap items from your inventory using the Numpad!
 
 	Changelog:
+		March 23, 2016:
+			- Updated for 6.6.
+
 		March 14, 2016:
 			- Re-wrote the Script as a Class (For my upcoming Auto-Updater).
 			- Added Bol-Tools Tracker.
@@ -56,6 +59,21 @@ function ItemSwapper:__init()
 	self.GameVersion = GetGameVersion():sub(1,9)
 	self.Packet =
 	{
+		['6.6.137.4'] =
+		{
+			Header = 0x139,
+			vTable = 0xEC1164,
+			SourceSlotTable =
+			{
+				[1] = 0xF8, [2] = 0x4F, [3] = 0x14,
+				[4] = 0x9E, [5] = 0x24, [6] = 0x50
+			},
+			TargetSlotTable =
+			{
+				[1] = 0x2C, [2] = 0xD9, [3] = 0x7F,
+				[4] = 0xF4, [5] = 0xF1, [6] = 0x8D
+			}
+		},
 		['6.5.0.280'] =
 		{
 			Header = 0x121,
@@ -135,7 +153,7 @@ function ItemSwapper:OnLoad()
 	
 	Print("Successfully loaded!")
 	if self.Packet[self.GameVersion] == nil then
-		Print("The script is outdated for this version of the game (" .. GameVersion .. ")!")
+		Print("The script is outdated for this version of the game (" .. self.GameVersion .. ")!")
 	end
 	
 	AddMsgCallback(function(msg, key)
@@ -184,9 +202,7 @@ function ItemSwapper:SwapItem(sourceSlotId, targetSlotId)
 	end
 	
 	if GetInventorySlotIsEmpty(sourceSlotId + 5) and not GetInventorySlotIsEmpty(targetSlotId + 5) then
-		sourceSlotId = sourceSlotId + targetSlotId
-		targetSlotId = sourceSlotId - targetSlotId
-		sourceSlotId = sourceSlotId - targetSlotId
+		sourceSlotId, targetSlotId = targetSlotId, sourceSlotId
 	end
 	
 	local CustomPacket = CLoLPacket(self.Packet[self.GameVersion].Header)
