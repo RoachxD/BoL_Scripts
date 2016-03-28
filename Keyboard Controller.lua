@@ -46,8 +46,8 @@ function Print(string)
 	print("<font color=\"#EB9F0F\">" .. Script.Name .. ":</font> <font color=\"#C34177\">" .. string .. "</font>")
 end
 
-class "Updater"
-function Updater:__init(LocalVersion, Host, Path, LocalPath, CallbackUpdate, CallbackNoUpdate, CallbackNewVersion, CallbackError)
+class "KCUpdater"
+function KCUpdater:__init(LocalVersion, Host, Path, LocalPath, CallbackUpdate, CallbackNoUpdate, CallbackNewVersion, CallbackError)
 	self.LocalVersion = LocalVersion
 	self.Host = Host
 	self.VersionPath = '/BoL/TCPUpdater/GetScript5.php?script=' .. self:Base64Encode(self.Host .. Path .. '.ver') .. '&rand=' .. math.random(99999999)
@@ -73,7 +73,7 @@ function Updater:__init(LocalVersion, Host, Path, LocalPath, CallbackUpdate, Cal
 	end)
 end
 
-function Updater:OnDraw()
+function KCUpdater:OnDraw()
 	if (self.DownloadStatus == 'Downloading Script:' or self.DownloadStatus == 'Downloading Version:') and self.Progress == 100 then
 		return
 	end
@@ -102,7 +102,7 @@ function Updater:OnDraw()
 	DrawText(self.Progress .. '%', LoadingBar.ProgressFontSize, LoadingBar.X - 2 * LoadingBar.Border, LoadingBar.Y + LoadingBar.Border, self.Progress < 50 and LoadingBar.ForegroundColor or LoadingBar.BackgroundColor)
 end
 
-function Updater:CreateSocket(url)
+function KCUpdater:CreateSocket(url)
 	if not self.LuaSocket then
 		self.LuaSocket = require("socket")
 	else
@@ -123,7 +123,7 @@ function Updater:CreateSocket(url)
 	self.File = ""
 end
 
-function Updater:Base64Encode(data)
+function KCUpdater:Base64Encode(data)
 	local b = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
 	return ((data:gsub('.', function(x)
 		local r, b = '', x:byte()
@@ -146,7 +146,7 @@ function Updater:Base64Encode(data)
 	end) .. ({ '', '==', '=' })[#data % 3 + 1])
 end
 
-function Updater:GetOnlineVersion()
+function KCUpdater:GetOnlineVersion()
 	if self.GotScriptVersion then
 		return
 	end
@@ -222,7 +222,7 @@ function Updater:GetOnlineVersion()
 	end
 end
 
-function Updater:DownloadUpdate()
+function KCUpdater:DownloadUpdate()
 	if self.GotScriptUpdate then
 		return
 	end
@@ -315,7 +315,7 @@ AddLoadCallback(function()
 		end,
 		CallbackNoUpdate = function(version)
 			Print("No updates found!")
-			ItemSwapper()
+			KeyboardController()
 		end,
 		CallbackNewVersion = function(version)
 			Print("New release found (r" .. string.format("%.1f", version) .. "), please wait until it's downloaded!")
@@ -323,11 +323,11 @@ AddLoadCallback(function()
 		CallbackError = function(version)
 			Print("Download failed, please try again!")
 			Print("If the problem persists please contact script's author!")
-			ItemSwapper()
+			KeyboardController()
 		end
 	}
 	
-	Updater(UpdaterInfo.Version, UpdaterInfo.Host, UpdaterInfo.Path, UpdaterInfo.LocalPath, UpdaterInfo.CallbackUpdate, UpdaterInfo.CallbackNoUpdate, UpdaterInfo.CallbackNewVersion, UpdaterInfo.CallbackError)
+	KCUpdater(UpdaterInfo.Version, UpdaterInfo.Host, UpdaterInfo.Path, UpdaterInfo.LocalPath, UpdaterInfo.CallbackUpdate, UpdaterInfo.CallbackNoUpdate, UpdaterInfo.CallbackNewVersion, UpdaterInfo.CallbackError)
 end)
 
 class "KeyboardController"

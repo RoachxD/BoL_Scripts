@@ -67,8 +67,8 @@ if not VIP_USER then
 	return
 end
 
-class "Updater"
-function Updater:__init(LocalVersion, Host, Path, LocalPath, CallbackUpdate, CallbackNoUpdate, CallbackNewVersion, CallbackError)
+class "ISUpdater"
+function ISUpdater:__init(LocalVersion, Host, Path, LocalPath, CallbackUpdate, CallbackNoUpdate, CallbackNewVersion, CallbackError)
 	self.LocalVersion = LocalVersion
 	self.Host = Host
 	self.VersionPath = '/BoL/TCPUpdater/GetScript5.php?script=' .. self:Base64Encode(self.Host .. Path .. '.ver') .. '&rand=' .. math.random(99999999)
@@ -94,7 +94,7 @@ function Updater:__init(LocalVersion, Host, Path, LocalPath, CallbackUpdate, Cal
 	end)
 end
 
-function Updater:OnDraw()
+function ISUpdater:OnDraw()
 	if (self.DownloadStatus == 'Downloading Script:' or self.DownloadStatus == 'Downloading Version:') and self.Progress == 100 then
 		return
 	end
@@ -123,7 +123,7 @@ function Updater:OnDraw()
 	DrawText(self.Progress .. '%', LoadingBar.ProgressFontSize, LoadingBar.X - 2 * LoadingBar.Border, LoadingBar.Y + LoadingBar.Border, self.Progress < 50 and LoadingBar.ForegroundColor or LoadingBar.BackgroundColor)
 end
 
-function Updater:CreateSocket(url)
+function ISUpdater:CreateSocket(url)
 	if not self.LuaSocket then
 		self.LuaSocket = require("socket")
 	else
@@ -144,7 +144,7 @@ function Updater:CreateSocket(url)
 	self.File = ""
 end
 
-function Updater:Base64Encode(data)
+function ISUpdater:Base64Encode(data)
 	local b = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
 	return ((data:gsub('.', function(x)
 		local r, b = '', x:byte()
@@ -167,7 +167,7 @@ function Updater:Base64Encode(data)
 	end) .. ({ '', '==', '=' })[#data % 3 + 1])
 end
 
-function Updater:GetOnlineVersion()
+function ISUpdater:GetOnlineVersion()
 	if self.GotScriptVersion then
 		return
 	end
@@ -243,7 +243,7 @@ function Updater:GetOnlineVersion()
 	end
 end
 
-function Updater:DownloadUpdate()
+function ISUpdater:DownloadUpdate()
 	if self.GotScriptUpdate then
 		return
 	end
@@ -348,7 +348,7 @@ AddLoadCallback(function()
 		end
 	}
 	
-	Updater(UpdaterInfo.Version, UpdaterInfo.Host, UpdaterInfo.Path, UpdaterInfo.LocalPath, UpdaterInfo.CallbackUpdate, UpdaterInfo.CallbackNoUpdate, UpdaterInfo.CallbackNewVersion, UpdaterInfo.CallbackError)
+	ISUpdater(UpdaterInfo.Version, UpdaterInfo.Host, UpdaterInfo.Path, UpdaterInfo.LocalPath, UpdaterInfo.CallbackUpdate, UpdaterInfo.CallbackNoUpdate, UpdaterInfo.CallbackNewVersion, UpdaterInfo.CallbackError)
 end)
 
 class "ItemSwapper"
