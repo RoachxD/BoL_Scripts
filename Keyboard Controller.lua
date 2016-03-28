@@ -87,8 +87,8 @@ function Updater:OnDraw()
 		Border = 1,
 		HeaderFontSize = math.round(0.01666666666 * WINDOW_H),
 		ProgressFontSize = math.round(0.01125 * WINDOW_H),
-		BackgroundColor = 0xFF3A99D9,
-		ForegroundColor = 0xFF35445A
+		BackgroundColor = 0xFFEB9F0F,
+		ForegroundColor = 0xFFC34177
 	}
 	
 	DrawText(self.DownloadStatus, LoadingBar.HeaderFontSize, LoadingBar.X - 0.5 * LoadingBar.Width, LoadingBar.Y - LoadingBar.Height - LoadingBar.Border, LoadingBar.BackgroundColor)
