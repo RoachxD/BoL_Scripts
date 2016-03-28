@@ -12,6 +12,9 @@
 	Auto Lantern - Grab the lantern with ease!
 
 	Changelog:
+		March 28, 2016 [r1.2]:
+			- Removed OnDeleteObj Callback as it was useless.
+
 		March 28, 2016 [r1.1]:
 			- Added a check to see if Thresh is part of your team, so the script won't load if he isn't.
 			- Improved a bit the menu.
@@ -24,7 +27,7 @@
 local Script =
 {
 	Name = "Auto Lantern",
-	Version = 1.1
+	Version = 1.2
 }
 
 local function Print(string)
@@ -443,10 +446,6 @@ function AutoLantern:OnLoad()
 			self:OnCreateObj(object)
 		end)
 		
-		AddDeleteObjCallback(function(object)
-			self:OnDeleteObj(object)
-		end)
-		
 		AddTickCallback(function()
 			self:OnTick()
 		end)
@@ -476,14 +475,6 @@ function AutoLantern:OnCreateObj(object)
 	end
 	
 	self.LanternObject = object
-end
-
-function AutoLantern:OnDeleteObj(object)
-	if object.name ~= "ThreshLantern" or object.team ~= myHero.team then
-		return
-	end
-	
-	self.LanternObject = nil
 end
 
 function AutoLantern:OnTick()
