@@ -12,6 +12,9 @@
 	Auto Lantern - Grab the lantern with ease!
 
 	Changelog:
+		March 28, 2016 [r1.4]:
+			- Fixed the bug, now it should work!
+	
 		March 28, 2016 [r1.3]:
 			- Added Bol-Tools Tracker.
 
@@ -30,7 +33,7 @@
 local Script =
 {
 	Name = "Auto Lantern",
-	Version = 1.3
+	Version = 1.4
 }
 
 local function Print(string)
@@ -415,8 +418,8 @@ function AutoLantern:__init()
 	
 	self.LanternObject = nil
 	self.LanternTick = 0
-		for _, Hero in pairs(GetAllyHeroes()) do
-		if Hero.name == "Thresh" then
+	for _, Hero in pairs(GetAllyHeroes()) do
+		if Hero.charName == "Thresh" then
 			self.ThreshFound = true
 			break
 		else
@@ -481,13 +484,13 @@ function AutoLantern:OnCreateObj(object)
 end
 
 function AutoLantern:OnTick()
-	local TickCalc = os.clock() - LanternTick
-	if LanternObject == nil or TickCalc < 5 then
+	local TickCalc = os.clock() - self.LanternTick
+	if self.LanternObject == nil or TickCalc < 5 then
 		return
 	end
-	
+
 	local HPPercentage = (myHero.health / myHero.maxHealth) * 100
-	if (self.Config.LowHP and self.Config.Percentage <= HPPercentage) or self.Config.OnTap then
+	if (self.Config.LowHP and self.Config.Percentage >= HPPercentage) or self.Config.OnTap then
 		self:GrabLantern(self.LanternObject)
 	end
 end
@@ -505,9 +508,27 @@ function AutoLantern:GrabLantern(object)
 	for i = 1, 4 do
 		local temp = CustomPacket:Decode1()
 		CustomPacket.pos = CustomPacket.pos - 1
-		CustomPacket:Encode1(self.Packet[self.GameVersion].DataTable[temp])
+		CustomPacket:Encode1(self.IndexOf(self.Packet[self.GameVersion].DataTable, temp))
 		CustomPacket.pos = CustomPacket.pos - 4 + i
 	end
 	
+	print("Custom Packet: " .. DumpPacketData(CustomPacket))
+	
 	SendPacket(CustomPacket)
+end
+
+function AutoLantern:IndexOf(table, value)
+	for i = 1, #table do
+		if table[i] == value then
+			return i
+		end
+	end
+	
+	return nil
+end
+
+function OnSendPacket(p)
+	if p.header == 0x1E then
+		print(DumpPacketData(p))
+	end
 end
