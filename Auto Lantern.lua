@@ -12,6 +12,10 @@
 	Auto Lantern - Grab the lantern with ease!
 
 	Changelog:
+		March 28, 2016 [r1.1]:
+			- Added a check to see if Thresh is part of your team, so the script won't load if he isn't.
+			- Improved a bit the menu.
+
 		March 28, 2016 [r1.0]:
 			- First Release.
 
@@ -20,7 +24,7 @@
 local Script =
 {
 	Name = "Auto Lantern",
-	Version = 1.0
+	Version = 1.1
 }
 
 local function Print(string)
@@ -405,6 +409,14 @@ function AutoLantern:__init()
 	
 	self.LanternObject = nil
 	self.LanternTick = 0
+		for _, Hero in pairs(GetAllyHeroes()) do
+		if Hero.name == "Thresh" then
+			self.ThreshFound = true
+			break
+		else
+			self.ThresFound = false
+		end
+	end
 	
 	self:OnLoad()
 	
@@ -414,33 +426,40 @@ function AutoLantern:__init()
 end
 
 function AutoLantern:OnLoad()
-	self.Config = scriptConfig(Script.Name, "AL")
-	self.Config:addParam("LowHPUsage", "Low HP Usage:", SCRIPT_PARAM_INFO, "")
-	self.Config:addParam("Percentage", "Percentage:", SCRIPT_PARAM_SLICE, 20, 10, 90, 0)
-	self.Config:addParam("Enabled", "Enable", SCRIPT_PARAM_ONOFF, true)
-	self.Config:addParam("Sep", "", SCRIPT_PARAM_INFO, "")
-	self.Config:addParam("OnTap", "Hotkey", SCRIPT_PARAM_ONKEYDOWN, false, GetKey('T'))
+	if self.ThreshFound then
+		self.Config = scriptConfig(Script.Name, "AL")
+		self.Config:addParam("LowHPSep", "Low HP Usage:", SCRIPT_PARAM_INFO, "")
+		self.Config:addParam("Percentage", "Percentage:", SCRIPT_PARAM_SLICE, 20, 10, 90, 0)
+		self.Config:addParam("LowHP", "Enable", SCRIPT_PARAM_ONOFF, true)
+		self.Config:addParam("Sep", "", SCRIPT_PARAM_INFO, "")
+		self.Config:addParam("OnTapSep", "On Tap Usage:", SCRIPT_PARAM_INFO, "")
+		self.Config:addParam("OnTap", "Enable", SCRIPT_PARAM_ONKEYDOWN, false, GetKey('T'))
+	
+		AddProcessSpellCallback(function(unit, spell)
+			self:OnProcessSpell(unit, spell)
+		end)
+		
+		AddCreateObjCallback(function(object)
+			self:OnCreateObj(object)
+		end)
+		
+		AddDeleteObjCallback(function(object)
+			self:OnDeleteObj(object)
+		end)
+		
+		AddTickCallback(function()
+			self:OnTick()
+		end)
+	end
 	
 	Print("Successfully loaded r" .. string.format("%.1f", Script.Version) .. ", have fun!")
+	if not self.ThreshFound then
+		Print("Thresh not found in your team, the script will unload!")
+	end
+	
 	if self.Packet[self.GameVersion] == nil then
 		Print("The script is outdated for this version of the game (" .. self.GameVersion .. ")!")
 	end
-	
-	AddProcessSpellCallback(function(unit, spell)
-		self:OnProcessSpell(unit, spell)
-	end)
-	
-	AddCreateObjCallback(function(object)
-		self:OnCreateObj(object)
-	end)
-	
-	AddDeleteObjCallback(function(object)
-		self:OnDeleteObj(object)
-	end)
-	
-	AddTickCallback(function()
-		self:OnTick()
-	end)
 end
 
 function AutoLantern:OnProcessSpell(unit, spell)
@@ -474,7 +493,7 @@ function AutoLantern:OnTick()
 	end
 	
 	local HPPercentage = (myHero.health / myHero.maxHealth) * 100
-	if (self.Config.Enabled and self.Config.Percentage <= HPPercentage) or self.Config.OnTap then
+	if (self.Config.LowHP and self.Config.Percentage <= HPPercentage) or self.Config.OnTap then
 		self:GrabLantern(self.LanternObject)
 	end
 end
