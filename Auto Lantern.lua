@@ -12,8 +12,11 @@
 	Auto Lantern - Grab the lantern with ease!
 
 	Changelog:
+		March 28, 2016 [r1.6]:
+			- Removed Debug Prints.
+
 		March 28, 2016 [r1.5]:
-			- Fixed the Data Tables, no more usage of IndexOf Function!
+			- Fixed the Data Tables, no more usage of IndexOf Function.
 
 		March 28, 2016 [r1.4]:
 			- Fixed the bug, now it should work!
@@ -36,7 +39,7 @@
 local Script =
 {
 	Name = "Auto Lantern",
-	Version = 1.5
+	Version = 1.6
 }
 
 local function Print(string)
@@ -515,13 +518,5 @@ function AutoLantern:GrabLantern(object)
 		CustomPacket.pos = CustomPacket.pos - 4 + i
 	end
 	
-	print("Custom Packet: " .. DumpPacketData(CustomPacket))
-	
 	SendPacket(CustomPacket)
-end
-
-function OnSendPacket(p)
-	if p.header == 0x1E then
-		print(DumpPacketData(p))
-	end
 end
