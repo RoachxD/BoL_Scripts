@@ -169,7 +169,7 @@ function KCUpdater:GetOnlineVersion()
 			self.Size = tonumber(self.File:sub(self.File:find('<size>') + 6, self.File:find('</size>') - 1))
 		end
 		
-		if self.File:find('<scr' .. 'ipt>') then
+		if self.File:find('<script>') then
 			local _,ScriptFind = self.File:find('<script>')
 			local ScriptEnd = self.File:find('</script>')
 			if ScriptEnd then
