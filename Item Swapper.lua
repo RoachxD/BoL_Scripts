@@ -12,6 +12,10 @@
 	Item Swapper - Swap items from your inventory using the Numpad!
 
 	Changelog:
+		March 28, 2016:
+			- Improved the Auto-Updater.
+			- Added Global Y Offset for the Auto-Updater so the Drawing won't draw in the same Spot.
+
 		March 27, 2016:
 			- Added an Auto-Updater.
 
@@ -51,7 +55,7 @@
 local Script =
 {
 	Name = "Item Swapper",
-	Version = 1.9
+	Version = 2.0
 }
 
 local function Print(string)
@@ -75,6 +79,9 @@ function Updater:__init(LocalVersion, Host, Path, LocalPath, CallbackUpdate, Cal
 	self.CallbackNewVersion = CallbackNewVersion
 	self.CallbackError = CallbackError
 	
+	self.OffsetY = _G.OffsetY and _G.OffsetY or 0
+	_G.OffsetY = _G.OffsetY + math.round(0.08333333333 * WINDOW_H)
+	
 	AddDrawCallback(function()
 		self:OnDraw()
 	end)
@@ -95,7 +102,7 @@ function Updater:OnDraw()
 	local LoadingBar =
 	{
 		X = math.round(0.91 * WINDOW_W),
-		Y = math.round(0.73 * WINDOW_H),
+		Y = math.round(0.73 * WINDOW_H) - self.OffsetY,
 		Height = math.round(0.01666666666 * WINDOW_H),
 		Width = math.round(0.171875 * WINDOW_W),
 		Border = 1,
@@ -178,14 +185,14 @@ function Updater:GetOnlineVersion()
 	end
 
 	self.File = self.File .. (self.Receive or self.Snipped)
-	if self.File:find('</s'..'ize>') then
+	if self.File:find('</size>') then
 		if not self.Size then
-			self.Size = tonumber(self.File:sub(self.File:find('<si' .. 'ze>') + 6, self.File:find('</si' .. 'ze>') - 1))
+			self.Size = tonumber(self.File:sub(self.File:find('<size>') + 6, self.File:find('</size>') - 1))
 		end
 		
 		if self.File:find('<scr' .. 'ipt>') then
-			local _,ScriptFind = self.File:find('<scr' .. 'ipt>')
-			local ScriptEnd = self.File:find('</scr' .. 'ipt>')
+			local _,ScriptFind = self.File:find('<script>')
+			local ScriptEnd = self.File:find('</script>')
 			if ScriptEnd then
 				ScriptEnd = ScriptEnd - 1
 			end
@@ -195,7 +202,7 @@ function Updater:GetOnlineVersion()
 		end
 	end
 	
-	if self.File:find('</scr' .. 'ipt>') then
+	if self.File:find('</script>') then
 		local a, b = self.File:find('\r\n\r\n')
 		self.File = self.File:sub(a, -1)
 		self.NewFile = ''
@@ -205,8 +212,8 @@ function Updater:GetOnlineVersion()
 			end
 		end
 		
-		local HeaderEnd, ContentStart = self.File:find('<scr' .. 'ipt>')
-		local ContentEnd, _ = self.File:find('</sc' .. 'ript>')
+		local HeaderEnd, ContentStart = self.File:find('<script>')
+		local ContentEnd, _ = self.File:find('</script>')
 		if not ContentStart or not ContentEnd then
 			if self.CallbackError and type(self.CallbackError) == 'function' then
 				self.CallbackError()
@@ -254,14 +261,14 @@ function Updater:DownloadUpdate()
 	end
 
 	self.File = self.File .. (self.Receive or self.Snipped)
-	if self.File:find('</si' .. 'ze>') then
+	if self.File:find('</size>') then
 		if not self.Size then
-			self.Size = tonumber(self.File:sub(self.File:find('<si' .. 'ze>') + 6, self.File:find('</si' .. 'ze>') - 1))
+			self.Size = tonumber(self.File:sub(self.File:find('<size>') + 6, self.File:find('</size>') - 1))
 		end
 		
-		if self.File:find('<scr' .. 'ipt>') then
-			local _, ScriptFind = self.File:find('<scr' .. 'ipt>')
-			local ScriptEnd = self.File:find('</scr' .. 'ipt>')
+		if self.File:find('<script>') then
+			local _, ScriptFind = self.File:find('<script>')
+			local ScriptEnd = self.File:find('</script>')
 			if ScriptEnd then
 				ScriptEnd = ScriptEnd - 1
 			end
@@ -271,7 +278,7 @@ function Updater:DownloadUpdate()
 		end
 	end
 	
-	if self.File:find('</scr' .. 'ipt>') then
+	if self.File:find('</script>') then
 		local a, b = self.File:find('\r\n\r\n')
 		self.File = self.File:sub(a,-1)
 		self.NewFile = ''
@@ -281,8 +288,8 @@ function Updater:DownloadUpdate()
 			end
 		end
 		
-		local HeaderEnd, ContentStart = self.NewFile:find('<sc' .. 'ript>')
-		local ContentEnd, _ = self.NewFile:find('</scr' .. 'ipt>')
+		local HeaderEnd, ContentStart = self.NewFile:find('<script>')
+		local ContentEnd, _ = self.NewFile:find('</script>')
 		if not ContentStart or not ContentEnd then
 			if self.CallbackError and type(self.CallbackError) == 'function' then
 				self.CallbackError()
