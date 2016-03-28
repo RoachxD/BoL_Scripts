@@ -12,42 +12,42 @@
 	Item Swapper - Swap items from your inventory using the Numpad!
 
 	Changelog:
-		March 28, 2016:
+		March 28, 2016 [r2.0]:
 			- Improved the Auto-Updater.
 			- Added Global Y Offset for the Auto-Updater so the Drawing won't draw in the same Spot.
 
-		March 27, 2016:
+		March 27, 2016 [r1.9]:
 			- Added an Auto-Updater.
 
-		March 23, 2016:
+		March 23, 2016 [r1.8]:
 			- Updated for 6.6.
 
-		March 14, 2016:
+		March 14, 2016 [r1.7]:
 			- Re-wrote the Script as a Class (For my upcoming Auto-Updater).
 			- Added Bol-Tools Tracker.
 
-		March 11, 2016:
+		March 11, 2016 [r1.6]:
 			- Updated for 6.5HF.
 
-		March 09, 2016:
+		March 09, 2016 [r1.5]:
 			- Updated for 6.5.
 
-		March 07, 2016:
+		March 07, 2016 [r1.4]:
 			- Re-wrote the tables to make it look better.
 			- Now it will support Mini-Patches as well.
 
-		March 04, 2016:
+		March 04, 2016 [r1.3]:
 			- Improved SwapItem Function:
 				- It won't send packets if both inventory slots are empty.
 				- It will automatically check if the first slot you choose is empty and reverse swap the items.
 
-		March 02, 2016:
+		March 02, 2016 [r1.2]:
 			- Fixed a little mistake, the script was not working anymore.
 
-		February 29, 2016:
+		February 29, 2016 [r1.1]:
 			- Added a version check so the game won't crash if the Script is used on an "Outdated" Version of the game.
 
-		February 28, 2016:
+		February 28, 2016 [r1.0]:
 			- First Release.
 
 ]]--
@@ -80,7 +80,7 @@ function Updater:__init(LocalVersion, Host, Path, LocalPath, CallbackUpdate, Cal
 	self.CallbackError = CallbackError
 	
 	self.OffsetY = _G.OffsetY and _G.OffsetY or 0
-	_G.OffsetY = _G.OffsetY + math.round(0.08333333333 * WINDOW_H)
+	_G.OffsetY = _G.OffsetY and _G.OffsetY + math.round(0.08333333333 * WINDOW_H) or math.round(0.08333333333 * WINDOW_H)
 	
 	AddDrawCallback(function()
 		self:OnDraw()
@@ -332,14 +332,14 @@ AddLoadCallback(function()
 		Path = '/RoachxD/BoL_Scripts/master/' .. Script.Name:gsub(' ', '%%20'),
 		LocalPath = SCRIPT_PATH .. '/' .. Script.Name .. '.lua',
 		CallbackUpdate = function(newVersion, oldVersion)
-			Print("Updated to r" .. newVersion .. ", please 2xF9 to reload!")
+			Print("Updated to r" .. string.format("%.1f", newVersion) .. ", please 2xF9 to reload!")
 		end,
 		CallbackNoUpdate = function(version)
 			Print("No updates found!")
 			ItemSwapper()
 		end,
 		CallbackNewVersion = function(version)
-			Print("New release found (r" .. version .. "), please wait until it's downloaded!")
+			Print("New release found (r" .. string.format("%.1f", version) .. "), please wait until it's downloaded!")
 		end,
 		CallbackError = function(version)
 			Print("Download failed, please try again!")
@@ -448,7 +448,7 @@ function ItemSwapper:OnLoad()
 	self.Config:addParam("Sep", "", SCRIPT_PARAM_INFO, "")
 	self.Config:addParam("NumLock", "Num Lock must be Active!", SCRIPT_PARAM_INFO, "")
 	
-	Print("Successfully loaded r" .. Script.Version .. ", have fun!")
+	Print("Successfully loaded r" .. string.format("%.1f", Script.Version) .. ", have fun!")
 	if self.Packet[self.GameVersion] == nil then
 		Print("The script is outdated for this version of the game (" .. self.GameVersion .. ")!")
 	end
