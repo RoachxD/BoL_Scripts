@@ -1,14 +1,11 @@
-Champion Scripts:
-------------
-*   \[VIP\] Free Miss Fortune | [BoL Thread](http://botoflegends.com/forum/topic/16619-scriptfree-adc-series-miss-fortune/)
-*   \[FREE\] Gnar - The Missing Link | [BoL Thread](http://botoflegends.com/forum/topic/31007-script-gnar-the-missing-link/)
-*   \[FREE\] Jax - The Grandmaster at Arms | [BoL Thread](http://botoflegends.com/forum/topic/21556-script-jax-the-grandmaster-at-arms/)
-*   \[FREE\] Pantheon - The Artisan of War | [BoL Thread](http://botoflegends.com/forum/topic/7417-script-pantheon-the-artisan-of-war/)
-*   \[FREE\] Wukong - The Monkey King | [BoL Thread](http://botoflegends.com/forum/topic/9698-script-wukong-the-monkey-king/)
-*   \[VIP\] Ziggs - The Hexplosives Expert | [BoL Thread](http://botoflegends.com/forum/topic/19325-script-ziggs-the-hexplosives-expert/)
+Bot of Legends
+--------------
+Bot of Legends (abbreviated to BoL) is a tool/third party program for League of Legends which allows the user to inject scripts into the game.
 
-Utility Scripts:
-------------
-*   \[FREE\] Advanced Turn Around | [BoL Thread](http://botoflegends.com/forum/topic/24671-utility-advanced-turnaround/)
-*   \[FREE\] Attack Tracker | [BoL Thread](http://botoflegends.com/forum/topic/23420-utility-attack-tracker/)
-*   \[FREE\] Colorful Circles | [BoL Thread](http://botoflegends.com/forum/topic/23286-rainbow-colorful-circles/)
+All scripts released here are written by Roach:
+ * [Forum Profile](http://forum.botoflegends.com/user/41728-roach/)
+ * [Bol-Tools Scripts List](http://bol-tools.com/author/Roach)
+
+Donations:
+----------
+Paypal: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=G8BLZR2YFBWHU
