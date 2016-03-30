@@ -8,4 +8,4 @@ All scripts released here are written by Roach:
 
 Donations:
 ----------
-Paypal: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=G8BLZR2YFBWHU
+ * [PayPal Donation Link](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=G8BLZR2YFBWHU)
