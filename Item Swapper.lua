@@ -58,7 +58,7 @@
 local Script =
 {
 	Name = "Item Swapper",
-	Version = 2.0
+	Version = 2.1
 }
 
 local function Print(string)
