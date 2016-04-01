@@ -562,13 +562,3 @@ function AutoLantern:GrabLantern(object)
 	
 	SendPacket(CustomPacket)
 end
-
-AddSendPacketCallback(function(p)
-	if p.header == 0xFD or p.header == 0xBA or p.header == 0x0C then
-		return
-	end
-	
-	print("Header: 0x" .. string.format("%02X", p.header))
-	print("vTable: 0x" .. string.format("%02X", p.vTable))
-	print("Data: 0x" .. DumpPacketData(p))
-end)
