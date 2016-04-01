@@ -12,6 +12,9 @@
 	Keyboard Controller - Move your hero using the keyboard!
 
 	Changelog:
+		April 01, 2016 [r1.7]:
+			- Updated for 6.6HF.
+
 		March 28, 2016 [r1.6]:
 			- Added an Auto-Updater.
 
@@ -39,10 +42,10 @@
 local Script =
 {
 	Name = "Keyboard Controller",
-	Version = 1.6
+	Version = 1.7
 }
 
-function Print(string)
+local function Print(string)
 	print("<font color=\"#EB9F0F\">" .. Script.Name .. ":</font> <font color=\"#C34177\">" .. string .. "</font>")
 end
 
@@ -353,6 +356,7 @@ function KeyboardController:__init()
 	self.GameVersion = GetGameVersion():sub(1, 9)
 	self.CastSpellHeader =
 	{
+		['6.6.138.7'] = 0x15A,
 		['6.6.137.4'] = 0x15A,
 		['6.5.0.280'] = 0x10E,
 		['6.5.0.277'] = 0x10E,
@@ -388,7 +392,7 @@ function KeyboardController:OnLoad()
 				self:OnSendPacket(p)
 			end)
 		else
-			Print("Spell disabling is outdated for this version of the game (" .. GameVersion .. ")!")
+			Print("Spell disabling is outdated for this version of the game (" .. self.GameVersion .. ")!")
 		end
 	else
 		Print("As a non VIP User you can't Block Spells if you are moving using Spell Keys!")
