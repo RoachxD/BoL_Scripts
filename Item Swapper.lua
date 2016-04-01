@@ -12,6 +12,9 @@
 	Item Swapper - Swap items from your inventory using the Numpad!
 
 	Changelog:
+		April 01, 2016 [r2.1]:
+			- Updated for 6.6HF.
+
 		March 28, 2016 [r2.0]:
 			- Improved the Auto-Updater.
 			- Added Global Y Offset for the Auto-Updater so the Drawing won't draw in the same Spot.
@@ -356,6 +359,21 @@ function ItemSwapper:__init()
 	self.GameVersion = GetGameVersion():sub(1, 9)
 	self.Packet =
 	{
+		['6.6.138.7'] =
+		{
+			Header = 0x139,
+			vTable = 0xEC2164,
+			SourceSlotTable =
+			{
+				[1] = 0xF8, [2] = 0x4F, [3] = 0x14,
+				[4] = 0x9E, [5] = 0x24, [6] = 0x50
+			},
+			TargetSlotTable =
+			{
+				[1] = 0x2C, [2] = 0xD9, [3] = 0x7F,
+				[4] = 0xF4, [5] = 0xF1, [6] = 0x8D
+			}
+		},
 		['6.6.137.4'] =
 		{
 			Header = 0x139,
