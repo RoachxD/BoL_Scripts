@@ -12,6 +12,10 @@
 	Item Swapper - Swap items from your inventory using the Numpad!
 
 	Changelog:
+		April 04, 2016 [r2.2]
+			- Deleted IndexOf function and its usage.
+			- Added Script Version and Game Version to the menu.
+
 		April 01, 2016 [r2.1]:
 			- Updated for 6.6HF.
 
@@ -52,13 +56,12 @@
 
 		February 28, 2016 [r1.0]:
 			- First Release.
-
 ]]--
 
 local Script =
 {
 	Name = "Item Swapper",
-	Version = 2.1
+	Version = 2.2
 }
 
 local function Print(string)
@@ -441,8 +444,8 @@ function ItemSwapper:__init()
 		FirstKey = 0x60,
 		SlotKeys =
 		{
-			[1] = 0x64, [2] = 0x65, [3] = 0x66,
-			[4] = 0x61, [5] = 0x62, [6] = 0x63
+			[0x64] = 1, [0x65] = 2, [0x66] = 3,
+			[0x61] = 4, [0x62] = 5, [0x63] = 6
 		}
 	}
 	
@@ -465,7 +468,9 @@ function ItemSwapper:OnLoad()
 	self.Config:addParam("Numpad6", "Numpad 6: Item Slot 3", SCRIPT_PARAM_INFO, "")
 	self.Config:addParam("Sep", "", SCRIPT_PARAM_INFO, "")
 	self.Config:addParam("NumLock", "Num Lock must be Active!", SCRIPT_PARAM_INFO, "")
-	
+	self.Config:addParam("ScriptVersion", "Script Version: ", SCRIPT_PARAM_INFO, "r" .. string.format("%.1f", Script.Version))
+	self.Config:addParam("GameVersion", "Game Version: ", SCRIPT_PARAM_INFO, self.GameVersion:sub(1, 3))
+
 	Print("Successfully loaded r" .. string.format("%.1f", Script.Version) .. ", have fun!")
 	if self.Packet[self.GameVersion] == nil then
 		Print("The script is outdated for this version of the game (" .. self.GameVersion .. ")!")
@@ -481,7 +486,7 @@ function ItemSwapper:OnWndMsg(msg, key)
 		self.Keys.FirstKey = 0x60;
 	end
 	
-	if msg ~= 0x100 or self:IndexOf(self.Keys.SlotKeys, key) == nil then
+	if msg ~= 0x100 or self.Keys.SlotKeys[key] == nil then
 		return
 	end
 	
@@ -493,18 +498,8 @@ function ItemSwapper:OnWndMsg(msg, key)
 		return
 	end
 	
-	self:SwapItem(self:IndexOf(self.Keys.SlotKeys, self.Keys.FirstKey), self:IndexOf(self.Keys.SlotKeys, key))
+	self:SwapItem(self.Keys.SlotKeys[self.Keys.FirstKey], self.Keys.SlotKeys[key])
 	self.Keys.FirstKey = 0x60
-end
-
-function ItemSwapper:IndexOf(table, value)
-	for i = 1, #table do
-		if table[i] == value then
-			return i
-		end
-	end
-	
-	return nil
 end
 
 function ItemSwapper:SwapItem(sourceSlotId, targetSlotId)
