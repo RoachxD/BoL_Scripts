@@ -12,6 +12,10 @@
 	Anti BaseUlt - Never fear a BaseUlt again!
 
 	Changelog:
+		April 04, 2016 [r1.1]:
+			- Improved a bit the menu.
+			- Added a Debug Option.
+
 		April 04, 2016 [r1.0]:
 			- First Release.
 ]]--
@@ -19,7 +23,7 @@
 local Script =
 {
 	Name = "Anti BaseUlt",
-	Version = 1.0
+	Version = 1.1
 }
 
 local function Print(string)
@@ -342,25 +346,29 @@ function AntiBaseUlt:__init()
 end
 
 function AntiBaseUlt:OnLoad()
-	self.Config = scriptConfig("Anti BaseUlt", "ABU")
-	self.Config:addSubMenu("Champions", "Champions")
+	self.Config = scriptConfig(Script.Name, "ABU")
+	self.Config:addSubMenu("Champion Settings", "Champion")
 	for _, Hero in pairs(GetEnemyHeroes()) do
 		if self.SpellData[Hero.charName] ~= nil then
-			self.Config.Champions:addParam(Hero.charName, Hero.charName .. " - " .. self.SpellData[Hero.charName].MissileName, SCRIPT_PARAM_ONOFF, true)
+			self.Config.Champion:addParam(Hero.charName, Hero.charName .. " - " .. self.SpellData[Hero.charName].MissileName, SCRIPT_PARAM_ONOFF, true)
 		end
 	end
 	
 	Print("Successfully loaded r" .. string.format("%.1f", Script.Version) .. ", have fun!")
 	
-	if next(self.Config.Champions._param) == nil then
-	   self.Config.Champions:addParam("Info", "No champions supported!", SCRIPT_PARAM_INFO, "")
+	if next(self.Config.Champion._param) == nil then
+	   self.Config.Champion:addParam("Info", "No champions supported!", SCRIPT_PARAM_INFO, "")
 	   Print("No champions supported in the enemy team, the script will unload!")
 	end
 	
+	self.Config:addSubMenu("Debug Settings", "Debug")
+	self.Config.Debug:addParam("Prints", "Debug Printing", SCRIPT_PARAM_ONOFF, false)
+	
 	self.Config:addParam("Enable", "Enable Anti BaseUlt", SCRIPT_PARAM_ONOFF, true)
+	self.Config:addParam("ScriptVersion", "Script Version: ", SCRIPT_PARAM_INFO, "r" .. string.format("%.1f", Script.Version))
 
 	
-	if self.Config.Champions.Info == nil then
+	if self.Config.Champion.Info == nil then
 		AddProcessSpellCallback(function(unit, spell)
 			self:OnProcessSpell(unit, spell)
 		end)
@@ -388,7 +396,7 @@ function AntiBaseUlt:OnProcessSpell(unit, spell)
 		}
 		
 		self.RecallingTime = os.clock() + RecallSpells[spell.name:lower()]
-		Print("Detected Recall (Finish tick: " .. self.RecallingTime .." | Actual Tick: " .. os.clock() .. ").")
+		self:Debug("Recall Detected! (Finish Time: " .. self.RecallingTime .. " | Actual Time" .. os.clock() .. ").")
 	end
 end
 
@@ -414,7 +422,7 @@ function AntiBaseUlt:OnCreateObj(object)
 		return
 	end
 	
-	if self.SpellData[SpellOwner.charName] == nil or not self.Config.Champions[SpellOwner.charName] then
+	if self.SpellData[SpellOwner.charName] == nil or not self.Config.Champion[SpellOwner.charName] then
 		return
 	end
 	
@@ -424,11 +432,13 @@ function AntiBaseUlt:OnCreateObj(object)
 	
 	local FountainPos = GetFountain()
 	if not self:IsLineCircleIntersection(FountainPos, 500, object.pos, object.spellEnd) then
+		self.Debug("BaseUlt not in fountain (" .. SpellOwner.charName .. " - " .. object.spellName ..").")
 		return
 	end
 
 	local Time = os.clock() + (GetDistance(object.pos, FountainPos) / self.SpellData[SpellOwner.charName].Speed)
 	if self.RecallingTime + 1 < Time or self.RecallingTime - 1 > Time then
+		self.Debug("BaseUlt not correctly timed (" .. SpellOwner.charName .. " - " .. object.spellName ..").")
 		return
 	end
 	
@@ -446,4 +456,12 @@ function AntiBaseUlt:IsLineCircleIntersection(circle, radius, v1, v2)
 	local D = circle - Closest
 	local Dist = (D.x * D.x) + (D.y * D.y)
 	return Dist <= radius * radius
+end
+
+function AntiBaseUlt:Debug(text)
+	if not self.Config.Debug.Prints then
+		return
+	end
+	
+	Print(text)
 end
