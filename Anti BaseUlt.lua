@@ -447,5 +447,3 @@ function AntiBaseUlt:IsLineCircleIntersection(circle, radius, v1, v2)
 	local Dist = (D.x * D.x) + (D.y * D.y)
 	return Dist <= radius * radius
 end
-
-AntiBaseUlt()
