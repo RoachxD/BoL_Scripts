@@ -12,6 +12,9 @@
 	Anti BaseUlt - Never fear a BaseUlt again!
 
 	Changelog:
+		April 07, 2016 [r1.2]:
+			- Fixed a bug that was causing the Debug option to create errors.
+
 		April 04, 2016 [r1.1]:
 			- Improved a bit the menu.
 			- Added a Debug Option.
@@ -23,7 +26,7 @@
 local Script =
 {
 	Name = "Anti BaseUlt",
-	Version = 1.1
+	Version = 1.2
 }
 
 local function Print(string)
@@ -432,13 +435,13 @@ function AntiBaseUlt:OnCreateObj(object)
 	
 	local FountainPos = GetFountain()
 	if not self:IsLineCircleIntersection(FountainPos, 500, object.pos, object.spellEnd) then
-		self.Debug("BaseUlt not in fountain (" .. SpellOwner.charName .. " - " .. object.spellName ..").")
+		self:Debug("BaseUlt not in fountain (" .. SpellOwner.charName .. " - " .. object.spellName ..").")
 		return
 	end
 
 	local Time = os.clock() + (GetDistance(object.pos, FountainPos) / self.SpellData[SpellOwner.charName].Speed)
 	if self.RecallingTime + 1 < Time or self.RecallingTime - 1 > Time then
-		self.Debug("BaseUlt not correctly timed (" .. SpellOwner.charName .. " - " .. object.spellName ..").")
+		self:Debug("BaseUlt not correctly timed (" .. SpellOwner.charName .. " - " .. object.spellName ..").")
 		return
 	end
 	
@@ -458,10 +461,10 @@ function AntiBaseUlt:IsLineCircleIntersection(circle, radius, v1, v2)
 	return Dist <= radius * radius
 end
 
-function AntiBaseUlt:Debug(text)
+function AntiBaseUlt:Debug(string)
 	if not self.Config.Debug.Prints then
 		return
 	end
 	
-	Print(text)
+	Print(string)
 end
