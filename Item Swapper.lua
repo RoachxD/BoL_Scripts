@@ -12,6 +12,11 @@
 	Item Swapper - Swap items from your inventory using the Numpad!
 
 	Changelog:
+		April 08, 2016 [r2.4]:
+			- Updated for 6.7HF.
+			- Fixed a 'nil value' throwing error.
+			- Re-structured the Packet Table.
+
 		April 06, 2016 [r2.3]:
 			- Updated for 6.7.
 
@@ -64,7 +69,7 @@
 local Script =
 {
 	Name = "Item Swapper",
-	Version = 2.3
+	Version = 2.4
 }
 
 local function Print(string)
@@ -365,6 +370,21 @@ function ItemSwapper:__init()
 	self.GameVersion = GetGameVersion():sub(1, 9)
 	self.Packet =
 	{
+		['6.7.139.4'] =
+		{
+			Header = 0xFE,
+			vTable = 0xE941B8,
+			SourceSlotTable =
+			{
+				[1] = 0x7C, [2] = 0x5C, [3] = 0x1B,
+				[4] = 0x0E, [5] = 0x35, [6] = 0xCD
+			},
+			TargetSlotTable =
+			{
+				[1] = 0x52, [2] = 0x28, [3] = 0xDA,
+				[4] = 0x59, [5] = 0x50, [6] = 0x7C
+			}
+		},
 		['6.7.138.9'] =
 		{
 			Header = 0xFE,
@@ -378,13 +398,7 @@ function ItemSwapper:__init()
 			{
 				[1] = 0x52, [2] = 0x28, [3] = 0xDA,
 				[4] = 0x59, [5] = 0x50, [6] = 0x7C
-			},
-			Encode = function(packet, networkID, sourceSlotId, targetSlotId)
-				packet:EncodeF(networkID)
-				packet:Encode1(self.Packet[self.GameVersion].TargetSlotTable[targetSlotId])
-				packet:Encode1(self.Packet[self.GameVersion].SourceSlotTable[sourceSlotId])
-			end
-			
+			}
 		},
 		['6.6.138.7'] =
 		{
@@ -399,12 +413,7 @@ function ItemSwapper:__init()
 			{
 				[1] = 0x2C, [2] = 0xD9, [3] = 0x7F,
 				[4] = 0xF4, [5] = 0xF1, [6] = 0x8D
-			},
-			Encode = function(packet, networkID, sourceSlotId, targetSlotId)
-				packet:EncodeF(networkID)
-				packet:Encode1(self.Packet[self.GameVersion].SourceSlotTable[sourceSlotId])
-				packet:Encode1(self.Packet[self.GameVersion].TargetSlotTable[targetSlotId])
-			end
+			}
 		},
 		['6.6.137.4'] =
 		{
@@ -419,53 +428,44 @@ function ItemSwapper:__init()
 			{
 				[1] = 0x2C, [2] = 0xD9, [3] = 0x7F,
 				[4] = 0xF4, [5] = 0xF1, [6] = 0x8D
-			},
-			Encode = function(packet, networkID, sourceSlotId, targetSlotId)
-				packet:EncodeF(networkID)
-				packet:Encode1(self.Packet[self.GameVersion].SourceSlotTable[sourceSlotId])
-				packet:Encode1(self.Packet[self.GameVersion].TargetSlotTable[targetSlotId])
-			end
+			}
 		},
-		['6.5.0.280'] =
-		{
-			Header = 0x121,
-			vTable = 0xED67EC,
-			SourceSlotTable =
+		Encode = function(packet, networkID, sourceSlotId, targetSlotId)
+			local Struct =
 			{
-				[1] = 0x56, [2] = 0x17, [3] = 0x42,
-				[4] = 0x6D, [5] = 0x74, [6] = 0xC5
-			},
-			TargetSlotTable =
-			{
-				[1] = 0x48, [2] = 0x80, [3] = 0x81,
-				[4] = 0x2C, [5] = 0xD4, [6] = 0x84
-			},
-			Encode = function(packet, networkID, sourceSlotId, targetSlotId)
-				packet:EncodeF(networkID)
-				packet:Encode1(self.Packet[self.GameVersion].SourceSlotTable[sourceSlotId])
-				packet:Encode1(self.Packet[self.GameVersion].TargetSlotTable[targetSlotId])
-			end
-		},
-		['6.5.0.277'] =
-		{
-			Header = 0x121,
-			vTable = 0xEF4D68,
-			SourceSlotTable =
-			{
-				[1] = 0x56, [2] = 0x17, [3] = 0x42,
-				[4] = 0x6D, [5] = 0x74, [6] = 0xC5
-			},
-			TargetSlotTable =
-			{
-				[1] = 0x48, [2] = 0x80, [3] = 0x81,
-				[4] = 0x2C, [5] = 0xD4, [6] = 0x84
-			},
-			Encode = function(packet, networkID, sourceSlotId, targetSlotId)
-				packet:EncodeF(networkID)
-				packet:Encode1(self.Packet[self.GameVersion].SourceSlotTable[sourceSlotId])
-				packet:Encode1(self.Packet[self.GameVersion].TargetSlotTable[targetSlotId])
-			end
-		}
+				['6.7.139.4'] = function()
+					packet:EncodeF(networkID)
+					packet:Encode1(self.Packet[self.GameVersion].TargetSlotTable[targetSlotId])
+					packet:Encode1(self.Packet[self.GameVersion].SourceSlotTable[sourceSlotId])
+				end,
+				['6.7.138.9'] = function()
+					packet:EncodeF(networkID)
+					packet:Encode1(self.Packet[self.GameVersion].TargetSlotTable[targetSlotId])
+					packet:Encode1(self.Packet[self.GameVersion].SourceSlotTable[sourceSlotId])
+				end,
+				['6.6.138.7'] = function()
+					packet:EncodeF(networkID)
+					packet:Encode1(self.Packet[self.GameVersion].SourceSlotTable[sourceSlotId])
+					packet:Encode1(self.Packet[self.GameVersion].TargetSlotTable[targetSlotId])
+				end,
+				['6.6.137.4'] = function()
+					packet:EncodeF(networkID)
+					packet:Encode1(self.Packet[self.GameVersion].SourceSlotTable[sourceSlotId])
+					packet:Encode1(self.Packet[self.GameVersion].TargetSlotTable[targetSlotId])
+				end,
+				['6.5.0.280'] = function()
+					packet:EncodeF(networkID)
+					packet:Encode1(self.Packet[self.GameVersion].SourceSlotTable[sourceSlotId])
+					packet:Encode1(self.Packet[self.GameVersion].TargetSlotTable[targetSlotId])
+				end,
+				['6.5.0.277'] = function()
+					packet:EncodeF(networkID)
+					packet:Encode1(self.Packet[self.GameVersion].SourceSlotTable[sourceSlotId])
+					packet:Encode1(self.Packet[self.GameVersion].TargetSlotTable[targetSlotId])
+				end
+			}
+			Struct[self.GameVersion]()
+		end
 	}
 
 	self.Keys =
@@ -505,9 +505,11 @@ function ItemSwapper:OnLoad()
 		Print("The script is outdated for this version of the game (" .. self.GameVersion .. ")!")
 	end
 	
-	AddMsgCallback(function(msg, key)
-		self:OnWndMsg(msg, key)
-	end)
+	if self.Packet[self.GameVersion] ~= nil then
+		AddMsgCallback(function(msg, key)
+			self:OnWndMsg(msg, key)
+		end)
+	end
 end
 
 function ItemSwapper:OnWndMsg(msg, key)
@@ -546,7 +548,7 @@ function ItemSwapper:SwapItem(sourceSlotId, targetSlotId)
 	
 	local CustomPacket = CLoLPacket(self.Packet[self.GameVersion].Header)
 	CustomPacket.vTable = self.Packet[self.GameVersion].vTable
-	self.Packet[self.GameVersion].Encode(CustomPacket, myHero.networkID, sourceSlotId, targetSlotId)
+	self.Packet.Encode(CustomPacket, myHero.networkID, sourceSlotId, targetSlotId)
 	
 	SendPacket(CustomPacket)
 end
