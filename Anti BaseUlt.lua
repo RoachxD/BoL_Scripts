@@ -12,6 +12,9 @@
 	Anti BaseUlt - Never fear a BaseUlt again!
 
 	Changelog:
+		April 16, 2016 [r1.6]:
+			- Improved the performance of the Script.
+
 		April 07, 2016 [r1.2]:
 			- Fixed a bug that was causing the Debug option to create errors.
 
@@ -26,7 +29,7 @@
 local Script =
 {
 	Name = "Anti BaseUlt",
-	Version = 1.2
+	Version = 1.3
 }
 
 local function Print(string)
@@ -34,11 +37,12 @@ local function Print(string)
 end
 
 class "ABUpdater"
+local random, round = math.random, math.round
 function ABUpdater:__init(LocalVersion, Host, Path, LocalPath, CallbackUpdate, CallbackNoUpdate, CallbackNewVersion, CallbackError)
 	self.LocalVersion = LocalVersion
 	self.Host = Host
-	self.VersionPath = '/BoL/TCPUpdater/GetScript5.php?script=' .. self:Base64Encode(self.Host .. Path .. '.ver') .. '&rand=' .. math.random(99999999)
-	self.ScriptPath = '/BoL/TCPUpdater/GetScript5.php?script=' .. self:Base64Encode(self.Host .. Path .. '.lua') .. '&rand=' .. math.random(99999999)
+	self.VersionPath = '/BoL/TCPUpdater/GetScript6.php?script=' .. self:Base64Encode(self.Host .. Path .. '.ver') .. '&rand=' .. random(99999999)
+	self.ScriptPath = '/BoL/TCPUpdater/GetScript6.php?script=' .. self:Base64Encode(self.Host .. Path .. '.lua') .. '&rand=' .. random(99999999)
 	self.LocalPath = LocalPath
 	self.CallbackUpdate = CallbackUpdate
 	self.CallbackNoUpdate = CallbackNoUpdate
@@ -46,7 +50,7 @@ function ABUpdater:__init(LocalVersion, Host, Path, LocalPath, CallbackUpdate, C
 	self.CallbackError = CallbackError
 	
 	self.OffsetY = _G.OffsetY and _G.OffsetY or 0
-	_G.OffsetY = _G.OffsetY and _G.OffsetY + math.round(0.08333333333 * WINDOW_H) or math.round(0.08333333333 * WINDOW_H)
+	_G.OffsetY = _G.OffsetY and _G.OffsetY + round(0.08333333333 * WINDOW_H) or round(0.08333333333 * WINDOW_H)
 	
 	AddDrawCallback(function()
 		self:OnDraw()
@@ -67,13 +71,13 @@ function ABUpdater:OnDraw()
 	
 	local LoadingBar =
 	{
-		X = math.round(0.91 * WINDOW_W),
-		Y = math.round(0.73 * WINDOW_H) - self.OffsetY,
-		Height = math.round(0.01666666666 * WINDOW_H),
-		Width = math.round(0.171875 * WINDOW_W),
+		X = round(0.91 * WINDOW_W),
+		Y = round(0.73 * WINDOW_H) - self.OffsetY,
+		Height = round(0.01666666666 * WINDOW_H),
+		Width = round(0.171875 * WINDOW_W),
 		Border = 1,
-		HeaderFontSize = math.round(0.01666666666 * WINDOW_H),
-		ProgressFontSize = math.round(0.01125 * WINDOW_H),
+		HeaderFontSize = round(0.01666666666 * WINDOW_H),
+		ProgressFontSize = round(0.01125 * WINDOW_H),
 		BackgroundColor = 0xFFBFC0C2,
 		ForegroundColor = 0xFF5A87C8
 	}
@@ -110,29 +114,31 @@ function ABUpdater:CreateSocket(url)
 	self.File = ""
 end
 
+local byte, gsub, sub = string.byte, string.gsub, string.sub
 function ABUpdater:Base64Encode(data)
 	local b = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-	return ((data:gsub('.', function(x)
-		local r, b = '', x:byte()
+	return (gsub((gsub(data, '.', function(x)
+		local r, b = '', byte(x)
 		for i = 8, 1, -1 do
 			r = r .. (b % 2 ^ i - b % 2 ^ (i - 1) > 0 and '1' or '0')
 		end
 		
-		return r;
-	end) .. '0000'):gsub('%d%d%d?%d?%d?%d?', function(x)
+		return r
+	end) .. '0000'), '%d%d%d?%d?%d?%d?', function(x)
 		if (#x < 6) then
 			return ''
 		end
 		
 		local c = 0
 		for i = 1, 6 do
-			c = c + (x:sub(i, i) == '1' and 2 ^ (6 - i) or 0)
+			c = c + (sub(x, i, i) == '1' and 2 ^ (6 - i) or 0)
 		end
 		
-		return b:sub(c + 1, c + 1)
+		return sub(b, 1 + c, 1 + c)
 	end) .. ({ '', '==', '=' })[#data % 3 + 1])
 end
 
+local find, len = string.find, string.len
 function ABUpdater:GetOnlineVersion()
 	if self.GotScriptVersion then
 		return
@@ -151,41 +157,41 @@ function ABUpdater:GetOnlineVersion()
 	end
 
 	self.File = self.File .. (self.Receive or self.Snipped)
-	if self.File:find('</size>') then
+	if find(self.File, '</size>') then
 		if not self.Size then
-			self.Size = tonumber(self.File:sub(self.File:find('<size>') + 6, self.File:find('</size>') - 1))
+			self.Size = tonumber(sub(self.File, 6 + find(self.File, '<size>'), find(self.File, '</size>') - 1))
 		end
 		
-		if self.File:find('<script>') then
-			local _,ScriptFind = self.File:find('<script>')
-			local ScriptEnd = self.File:find('</script>')
+		if find(self.File, '<script>') then
+			local _,ScriptFind = find(self.File, '<script>')
+			local ScriptEnd = find(self.File, '</script>')
 			if ScriptEnd then
 				ScriptEnd = ScriptEnd - 1
 			end
 			
-			local DownloadedSize = self.File:sub(ScriptFind + 1, ScriptEnd or -1):len()
-			self.Progress = math.round(100 / self.Size * DownloadedSize, 2)
+			local DownloadedSize = len(sub(self.File, 1 + ScriptFind, ScriptEnd or -1))
+			self.Progress = round(100 / self.Size * DownloadedSize, 2)
 		end
 	end
 	
-	if self.File:find('</script>') then
-		local a, b = self.File:find('\r\n\r\n')
-		self.File = self.File:sub(a, -1)
+	if find(self.File, '</script>') then
+		local a, b = find(self.File, '\r\n\r\n')
+		self.File = sub(self.File, a, -1)
 		self.NewFile = ''
 		for line, content in ipairs(self.File:split('\n')) do
-			if content:len() > 5 then
+			if len(content) > 5 then
 				self.NewFile = self.NewFile .. content
 			end
 		end
 		
-		local HeaderEnd, ContentStart = self.File:find('<script>')
-		local ContentEnd, _ = self.File:find('</script>')
-		if not ContentStart or not ContentEnd then
+		local HeaderEnd, ContentStart = find(self.File, '<script>')
+		local ContentEnd, _ = find(self.File, '</script>')
+		if not ContentStart or not ContentEnd or find(self.File, self:Base64Encode("Not Found")) then
 			if self.CallbackError and type(self.CallbackError) == 'function' then
 				self.CallbackError()
 			end
 		else
-			self.OnlineVersion = (Base64Decode(self.File:sub(ContentStart + 1, ContentEnd - 1)))
+			self.OnlineVersion = (Base64Decode(sub(self.File, 1 + ContentStart, ContentEnd - 1)))
 			self.OnlineVersion = tonumber(self.OnlineVersion)
 			if self.OnlineVersion > self.LocalVersion then
 				if self.CallbackNewVersion and type(self.CallbackNewVersion) == 'function' then
@@ -227,43 +233,43 @@ function ABUpdater:DownloadUpdate()
 	end
 
 	self.File = self.File .. (self.Receive or self.Snipped)
-	if self.File:find('</size>') then
+	if find(self.File, '</size>') then
 		if not self.Size then
-			self.Size = tonumber(self.File:sub(self.File:find('<size>') + 6, self.File:find('</size>') - 1))
+			self.Size = tonumber(sub(self.File, 6 + find(self.File, '<size>'), find(self.File, '</size>') - 1))
 		end
 		
-		if self.File:find('<script>') then
-			local _, ScriptFind = self.File:find('<script>')
-			local ScriptEnd = self.File:find('</script>')
+		if find(self.File, '<script>') then
+			local _, ScriptFind = find(self.File, '<script>')
+			local ScriptEnd = find(self.File, '</script>')
 			if ScriptEnd then
 				ScriptEnd = ScriptEnd - 1
 			end
 			
-			local DownloadedSize = self.File:sub(ScriptFind + 1, ScriptEnd or -1):len()
-			self.Progress = math.round(100 / self.Size * DownloadedSize, 2)
+			local DownloadedSize = len(sub(self.File, 1 + ScriptFind, ScriptEnd or -1))
+			self.Progress = round(100 / self.Size * DownloadedSize, 2)
 		end
 	end
 	
-	if self.File:find('</script>') then
-		local a, b = self.File:find('\r\n\r\n')
-		self.File = self.File:sub(a,-1)
+	if find(self.File, '</script>') then
+		local a, b = find(self.File, '\r\n\r\n')
+		self.File = sub(self.File, a, -1)
 		self.NewFile = ''
 		for line, content in ipairs(self.File:split('\n')) do
-			if content:len() > 5 then
+			if len(content) > 5 then
 				self.NewFile = self.NewFile .. content
 			end
 		end
 		
-		local HeaderEnd, ContentStart = self.NewFile:find('<script>')
-		local ContentEnd, _ = self.NewFile:find('</script>')
+		local HeaderEnd, ContentStart = find(self.NewFile, '<script>')
+		local ContentEnd, _ = find(self.NewFile, '</script>')
 		if not ContentStart or not ContentEnd then
 			if self.CallbackError and type(self.CallbackError) == 'function' then
 				self.CallbackError()
 			end
 		else
-			local newf = self.NewFile:sub(ContentStart + 1, ContentEnd - 1)
-			local newf = newf:gsub('\r','')
-			if newf:len() ~= self.Size then
+			local newf = sub(self.NewFile, 1 + ContentStart, ContentEnd - 1)
+			local newf = gsub(newf, '\r','')
+			if len(newf) ~= self.Size then
 				if self.CallbackError and type(self.CallbackError) == 'function' then
 					self.CallbackError()
 				end
@@ -290,22 +296,23 @@ function ABUpdater:DownloadUpdate()
 	end
 end
 
+local format = string.format
 AddLoadCallback(function()
 	local UpdaterInfo =
 	{
 		Version = Script.Version,
 		Host = 'raw.githubusercontent.com',
-		Path = '/RoachxD/BoL_Scripts/master/' .. Script.Name:gsub(' ', '%%20'),
+		Path = '/RoachxD/BoL_Scripts/master/' .. gsub(Script.Name, ' ', '%%20'),
 		LocalPath = SCRIPT_PATH .. '/' .. Script.Name .. '.lua',
 		CallbackUpdate = function(newVersion, oldVersion)
-			Print("Updated to r" .. string.format("%.1f", newVersion) .. ", please 2xF9 to reload!")
+			Print("Updated to r" .. format("%.1f", newVersion) .. ", please 2xF9 to reload!")
 		end,
 		CallbackNoUpdate = function(version)
 			Print("No updates found!")
 			AntiBaseUlt()
 		end,
 		CallbackNewVersion = function(version)
-			Print("New release found (r" .. string.format("%.1f", version) .. "), please wait until it's downloaded!")
+			Print("New release found (r" .. format("%.1f", version) .. "), please wait until it's downloaded!")
 		end,
 		CallbackError = function(version)
 			Print("Download failed, please try again!")
@@ -357,7 +364,7 @@ function AntiBaseUlt:OnLoad()
 		end
 	end
 	
-	Print("Successfully loaded r" .. string.format("%.1f", Script.Version) .. ", have fun!")
+	Print("Successfully loaded r" .. format("%.1f", Script.Version) .. ", have fun!")
 	
 	if next(self.Config.Champion._param) == nil then
 	   self.Config.Champion:addParam("Info", "No champions supported!", SCRIPT_PARAM_INFO, "")
@@ -368,7 +375,7 @@ function AntiBaseUlt:OnLoad()
 	self.Config.Debug:addParam("Prints", "Debug Printing", SCRIPT_PARAM_ONOFF, false)
 	
 	self.Config:addParam("Enable", "Enable Anti BaseUlt", SCRIPT_PARAM_ONOFF, true)
-	self.Config:addParam("ScriptVersion", "Script Version: ", SCRIPT_PARAM_INFO, "r" .. string.format("%.1f", Script.Version))
+	self.Config:addParam("ScriptVersion", "Script Version: ", SCRIPT_PARAM_INFO, "r" .. format("%.1f", Script.Version))
 
 	
 	if self.Config.Champion.Info == nil then
@@ -382,12 +389,13 @@ function AntiBaseUlt:OnLoad()
 	end
 end
 
+local lower, clock = string.lower, os.clock
 function AntiBaseUlt:OnProcessSpell(unit, spell)
 	if not self.Config.Enable then
 		return
 	end
 	
-	if unit == myHero and spell.name:find("recall") then
+	if unit == myHero and find(spell.name, "recall") then
 		local RecallSpells =
 		{
 			['recall'] = 8.0,
@@ -398,8 +406,8 @@ function AntiBaseUlt:OnProcessSpell(unit, spell)
 			['superrecallimproved'] = 4.0
 		}
 		
-		self.RecallingTime = os.clock() + RecallSpells[spell.name:lower()]
-		self:Debug("Recall Detected! (Finish Time: " .. self.RecallingTime .. " | Actual Time" .. os.clock() .. ").")
+		self.RecallingTime = clock() + RecallSpells[lower(spell.name)]
+		self:Debug("Recall Detected! (Finish Time: " .. self.RecallingTime .. " | Actual Time" .. clock() .. ").")
 	end
 end
 
@@ -417,7 +425,7 @@ function AntiBaseUlt:OnCreateObj(object)
 		return
 	end
 	
-	if self.RecallingTime < os.clock() then
+	if self.RecallingTime < clock() then
 		return
 	end
 	
@@ -440,12 +448,12 @@ function AntiBaseUlt:OnCreateObj(object)
 	end
 
 	local Time = os.clock() + (GetDistance(object.pos, FountainPos) / self.SpellData[SpellOwner.charName].Speed)
-	if self.RecallingTime + 1 < Time or self.RecallingTime - 1 > Time then
+	if 1 + self.RecallingTime < Time or self.RecallingTime - 1 > Time then
 		self:Debug("BaseUlt not correctly timed (" .. SpellOwner.charName .. " - " .. object.spellName ..").")
 		return
 	end
 	
-	myHero:MoveTo(myHero.x + 1, myHero.z + 1)
+	myHero:MoveTo(1 + myHero.x, 1 + myHero.z)
 	Print("BaseUlt Prevented (" .. SpellOwner.charName .. " - " .. object.spellName ..").")
 end
 
