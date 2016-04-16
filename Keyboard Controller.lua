@@ -12,6 +12,10 @@
 	Keyboard Controller - Move your hero using the keyboard!
 
 	Changelog:
+		April 16, 2016 [r2.1]:
+			- Fixed a bug with the Auto-Updater.
+			- Modified the menu.
+
 		April 16, 2016 [r2.0]:
 			- Improved the performance of the Script.
 
@@ -51,7 +55,7 @@
 local Script =
 {
 	Name = "Keyboard Controller",
-	Version = 2.0
+	Version = 2.1
 }
 
 local function Print(string)
@@ -136,7 +140,7 @@ function KCUpdater:CreateSocket(url)
 	self.File = ""
 end
 
-local byte, gsub, sub = string.byte, string.gsub, string.sub
+local gsub, byte, sub = string.gsub, string.byte, string.sub
 function KCUpdater:Base64Encode(data)
 	local b = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
 	return (gsub((gsub(data, '.', function(x)
@@ -145,7 +149,7 @@ function KCUpdater:Base64Encode(data)
 			r = r .. (b % 2 ^ i - b % 2 ^ (i - 1) > 0 and '1' or '0')
 		end
 		
-		return r
+		return r;
 	end) .. '0000'), '%d%d%d?%d?%d?%d?', function(x)
 		if (#x < 6) then
 			return ''
@@ -165,7 +169,7 @@ function KCUpdater:GetOnlineVersion()
 	if self.GotScriptVersion then
 		return
 	end
-
+	
 	self.Receive, self.Status, self.Snipped = self.Socket:receive(1024)
 	if self.Status == 'timeout' and not self.Started then
 		self.Started = true
@@ -208,7 +212,7 @@ function KCUpdater:GetOnlineVersion()
 		
 		local HeaderEnd, ContentStart = find(self.File, '<script>')
 		local ContentEnd, _ = find(self.File, '</script>')
-		if not ContentStart or not ContentEnd or find(self.File, self:Base64Encode("Not Found")) then
+		if not ContentStart or not ContentEnd then
 			if self.CallbackError and type(self.CallbackError) == 'function' then
 				self.CallbackError()
 			end
@@ -267,7 +271,7 @@ function KCUpdater:DownloadUpdate()
 				ScriptEnd = ScriptEnd - 1
 			end
 			
-			local DownloadedSize = len(sub(self.File, ScriptFind + 1, ScriptEnd or -1))
+			local DownloadedSize = len(sub(self.File, 1 + ScriptFind, ScriptEnd or -1))
 			self.Progress = round(100 / self.Size * DownloadedSize, 2)
 		end
 	end
@@ -289,7 +293,7 @@ function KCUpdater:DownloadUpdate()
 				self.CallbackError()
 			end
 		else
-			local newf = sub(self.NewFile, ContentStart + 1, ContentEnd - 1)
+			local newf = sub(self.NewFile, 1 + ContentStart, ContentEnd - 1)
 			local newf = gsub(newf, '\r','')
 			if len(newf) ~= self.Size then
 				if self.CallbackError and type(self.CallbackError) == 'function' then
@@ -313,7 +317,7 @@ function KCUpdater:DownloadUpdate()
 				end
 			end
 		end
-		
+
 		self.GotScriptUpdate = true
 	end
 end
@@ -384,19 +388,17 @@ end
 
 function KeyboardController:OnLoad()
 	self.Config = scriptConfig(Script.Name, "KC")
-	self.Config:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
-	self.Config:addParam("Info", "Keys Settings:", SCRIPT_PARAM_INFO, "")
-	self.Config:addParam("Up", "Up", SCRIPT_PARAM_ONKEYDOWN, false, 38)
-	self.Config:addParam("Left", "Left", SCRIPT_PARAM_ONKEYDOWN, false, 37)
-	self.Config:addParam("Down", "Down", SCRIPT_PARAM_ONKEYDOWN, false, 40)
-	self.Config:addParam("Right", "Right", SCRIPT_PARAM_ONKEYDOWN, false, 39)
+	self.Config:addSubMenu("Keys Settings", "Keys")
+	self.Config.Keys:addParam("Up", "Up", SCRIPT_PARAM_ONKEYDOWN, false, 38)
+	self.Config.Keys:addParam("Left", "Left", SCRIPT_PARAM_ONKEYDOWN, false, 37)
+	self.Config.Keys:addParam("Down", "Down", SCRIPT_PARAM_ONKEYDOWN, false, 40)
+	self.Config.Keys:addParam("Right", "Right", SCRIPT_PARAM_ONKEYDOWN, false, 39)
 	
 	Print("Successfully loaded r" .. format("%.1f", Script.Version) .. ", have fun!")
 	
 	if VIP_USER then
 		if self.CastSpellHeader[self.GameVersion] ~= nil then
-			self.Config:addParam("Sep", "", SCRIPT_PARAM_INFO, "")
-			self.Config:addParam("DisableSpells", "Disable spells when script's keys are binded to spells' keys", SCRIPT_PARAM_ONOFF, true)
+			self.Config:addParam("DisableSpells", "Disable spells when moving", SCRIPT_PARAM_ONOFF, true)
 			
 			Print("As a VIP User you can Block Spells if you are moving using Spell Keys!")
 			
@@ -410,6 +412,10 @@ function KeyboardController:OnLoad()
 		Print("As a non VIP User you can't Block Spells if you are moving using Spell Keys!")
 	end
 	
+	self.Config:addParam("Enable", "Enable Keyboard Controller", SCRIPT_PARAM_ONOFF, true)
+	self.Config:addParam("ScriptVersion", "Script Version: ", SCRIPT_PARAM_INFO, "r" .. format("%.1f", Script.Version))
+	self.Config:addParam("GameVersion", "Game Version: ", SCRIPT_PARAM_INFO, sub(self.GameVersion, 1, 3))
+	
 	AddTickCallback(function()
 		self:OnTick()
 	end)
@@ -421,8 +427,8 @@ function KeyboardController:OnTick()
 	end
 	
 	local Direction = { X = myHero.x, Y = myHero.z }
-	for _, v in pairs(self.Config._param) do
-		if self.Config[v.var] and self.DirectionCases[v.var] ~= nil then
+	for _, v in pairs(self.Config.Keys._param) do
+		if self.Config.Keys[v.var] and self.DirectionCases[v.var] ~= nil then
 			Direction = { X = Direction.X + self.DirectionCases[v.var].X, Y = Direction.Y + self.DirectionCases[v.var].Y }
 		end
 	end
@@ -442,8 +448,8 @@ function KeyboardController:OnSendPacket(p)
 		return
 	end
 	
-	for _, v in pairs(self.Config._param) do
-		if self.Config[v.var] and v.key ~= nil and self.SpellsCharacters[char(v.key)] ~= nil and self.SpellsCharacters[char(v.key)] then
+	for _, v in pairs(self.Config.Keys._param) do
+		if self.Config.Keys[v.var] and v.key ~= nil and self.SpellsCharacters[char(v.key)] ~= nil and self.SpellsCharacters[char(v.key)] then
 			p:Block()
 		end
 	end

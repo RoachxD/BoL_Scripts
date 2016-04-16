@@ -12,6 +12,9 @@
 	Item Swapper - Swap items from your inventory using the Numpad!
 
 	Changelog:
+		April 16, 2016 [r2.6]:
+			- Fixed a bug with the Auto-Updater.
+
 		April 16, 2016 [r2.5]:
 			- Improved the performance of the Script.
 
@@ -72,7 +75,7 @@
 local Script =
 {
 	Name = "Item Swapper",
-	Version = 2.5
+	Version = 2.6
 }
 
 local function Print(string)
@@ -89,8 +92,8 @@ local random, round = math.random, math.round
 function ISUpdater:__init(LocalVersion, Host, Path, LocalPath, CallbackUpdate, CallbackNoUpdate, CallbackNewVersion, CallbackError)
 	self.LocalVersion = LocalVersion
 	self.Host = Host
-	self.VersionPath = '/BoL/TCPUpdater/GetScript6.php?script=' .. self:Base64Encode(self.Host .. Path .. '.ver') .. '&rand=' .. random(99999999)
-	self.ScriptPath = '/BoL/TCPUpdater/GetScript6.php?script=' .. self:Base64Encode(self.Host .. Path .. '.lua') .. '&rand=' .. random(99999999)
+	self.VersionPath = '/BoL/TCPUpdater/GetScript5.php?script=' .. self:Base64Encode(self.Host .. Path .. '.ver') .. '&rand=' .. random(99999999)
+	self.ScriptPath = '/BoL/TCPUpdater/GetScript5.php?script=' .. self:Base64Encode(self.Host .. Path .. '.lua') .. '&rand=' .. random(99999999)
 	self.LocalPath = LocalPath
 	self.CallbackUpdate = CallbackUpdate
 	self.CallbackNoUpdate = CallbackNoUpdate
@@ -162,7 +165,7 @@ function ISUpdater:CreateSocket(url)
 	self.File = ""
 end
 
-local byte, gsub, sub = string.byte, string.gsub, string.sub
+local gsub, byte, sub = string.gsub, string.byte, string.sub
 function ISUpdater:Base64Encode(data)
 	local b = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
 	return (gsub((gsub(data, '.', function(x)
@@ -171,7 +174,7 @@ function ISUpdater:Base64Encode(data)
 			r = r .. (b % 2 ^ i - b % 2 ^ (i - 1) > 0 and '1' or '0')
 		end
 		
-		return r
+		return r;
 	end) .. '0000'), '%d%d%d?%d?%d?%d?', function(x)
 		if (#x < 6) then
 			return ''
@@ -234,7 +237,7 @@ function ISUpdater:GetOnlineVersion()
 		
 		local HeaderEnd, ContentStart = find(self.File, '<script>')
 		local ContentEnd, _ = find(self.File, '</script>')
-		if not ContentStart or not ContentEnd or find(self.File, self:Base64Encode("Not Found")) then
+		if not ContentStart or not ContentEnd then
 			if self.CallbackError and type(self.CallbackError) == 'function' then
 				self.CallbackError()
 			end

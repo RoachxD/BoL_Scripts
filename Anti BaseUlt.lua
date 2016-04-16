@@ -12,7 +12,10 @@
 	Anti BaseUlt - Never fear a BaseUlt again!
 
 	Changelog:
-		April 16, 2016 [r1.6]:
+		April 16, 2016 [r1.4]:
+			- Fixed a bug with the Auto-Updater.
+
+		April 16, 2016 [r1.3]:
 			- Improved the performance of the Script.
 
 		April 07, 2016 [r1.2]:
@@ -29,7 +32,7 @@
 local Script =
 {
 	Name = "Anti BaseUlt",
-	Version = 1.3
+	Version = 1.4
 }
 
 local function Print(string)
@@ -41,8 +44,8 @@ local random, round = math.random, math.round
 function ABUpdater:__init(LocalVersion, Host, Path, LocalPath, CallbackUpdate, CallbackNoUpdate, CallbackNewVersion, CallbackError)
 	self.LocalVersion = LocalVersion
 	self.Host = Host
-	self.VersionPath = '/BoL/TCPUpdater/GetScript6.php?script=' .. self:Base64Encode(self.Host .. Path .. '.ver') .. '&rand=' .. random(99999999)
-	self.ScriptPath = '/BoL/TCPUpdater/GetScript6.php?script=' .. self:Base64Encode(self.Host .. Path .. '.lua') .. '&rand=' .. random(99999999)
+	self.VersionPath = '/BoL/TCPUpdater/GetScript5.php?script=' .. self:Base64Encode(self.Host .. Path .. '.ver') .. '&rand=' .. random(99999999)
+	self.ScriptPath = '/BoL/TCPUpdater/GetScript5.php?script=' .. self:Base64Encode(self.Host .. Path .. '.lua') .. '&rand=' .. random(99999999)
 	self.LocalPath = LocalPath
 	self.CallbackUpdate = CallbackUpdate
 	self.CallbackNoUpdate = CallbackNoUpdate
@@ -55,6 +58,8 @@ function ABUpdater:__init(LocalVersion, Host, Path, LocalPath, CallbackUpdate, C
 	AddDrawCallback(function()
 		self:OnDraw()
 	end)
+	
+	
 	
 	self:CreateSocket(self.VersionPath)
 	self.DownloadStatus = 'Connecting to Server..'
@@ -114,7 +119,7 @@ function ABUpdater:CreateSocket(url)
 	self.File = ""
 end
 
-local byte, gsub, sub = string.byte, string.gsub, string.sub
+local gsub, byte, sub = string.gsub, string.byte, string.sub
 function ABUpdater:Base64Encode(data)
 	local b = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
 	return (gsub((gsub(data, '.', function(x)
@@ -123,7 +128,7 @@ function ABUpdater:Base64Encode(data)
 			r = r .. (b % 2 ^ i - b % 2 ^ (i - 1) > 0 and '1' or '0')
 		end
 		
-		return r
+		return r;
 	end) .. '0000'), '%d%d%d?%d?%d?%d?', function(x)
 		if (#x < 6) then
 			return ''
@@ -143,7 +148,7 @@ function ABUpdater:GetOnlineVersion()
 	if self.GotScriptVersion then
 		return
 	end
-
+	
 	self.Receive, self.Status, self.Snipped = self.Socket:receive(1024)
 	if self.Status == 'timeout' and not self.Started then
 		self.Started = true
@@ -186,7 +191,7 @@ function ABUpdater:GetOnlineVersion()
 		
 		local HeaderEnd, ContentStart = find(self.File, '<script>')
 		local ContentEnd, _ = find(self.File, '</script>')
-		if not ContentStart or not ContentEnd or find(self.File, self:Base64Encode("Not Found")) then
+		if not ContentStart or not ContentEnd then
 			if self.CallbackError and type(self.CallbackError) == 'function' then
 				self.CallbackError()
 			end
@@ -376,6 +381,7 @@ function AntiBaseUlt:OnLoad()
 	
 	self.Config:addParam("Enable", "Enable Anti BaseUlt", SCRIPT_PARAM_ONOFF, true)
 	self.Config:addParam("ScriptVersion", "Script Version: ", SCRIPT_PARAM_INFO, "r" .. format("%.1f", Script.Version))
+	self.Config:addParam("GameVersion", "Game Version: ", SCRIPT_PARAM_INFO, sub(self.GameVersion, 1, 3))
 
 	
 	if self.Config.Champion.Info == nil then
@@ -447,7 +453,7 @@ function AntiBaseUlt:OnCreateObj(object)
 		return
 	end
 
-	local Time = os.clock() + (GetDistance(object.pos, FountainPos) / self.SpellData[SpellOwner.charName].Speed)
+	local Time = clock() + (GetDistance(object.pos, FountainPos) / self.SpellData[SpellOwner.charName].Speed)
 	if 1 + self.RecallingTime < Time or self.RecallingTime - 1 > Time then
 		self:Debug("BaseUlt not correctly timed (" .. SpellOwner.charName .. " - " .. object.spellName ..").")
 		return

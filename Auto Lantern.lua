@@ -12,6 +12,9 @@
 	Auto Lantern - Grab the lantern with ease!
 
 	Changelog:
+		April 16, 2016 [r2.1]
+			- Fixed a bug with the Auto-Updater.
+
 		April 16, 2016 [r2.0]:
 			- Improved the performance of the Script.
 
@@ -52,7 +55,7 @@
 local Script =
 {
 	Name = "Auto Lantern",
-	Version = 2.0
+	Version = 2.1
 }
 
 local function Print(string)
@@ -69,8 +72,8 @@ local random, round = math.random, math.round
 function ALUpdater:__init(LocalVersion, Host, Path, LocalPath, CallbackUpdate, CallbackNoUpdate, CallbackNewVersion, CallbackError)
 	self.LocalVersion = LocalVersion
 	self.Host = Host
-	self.VersionPath = '/BoL/TCPUpdater/GetScript6.php?script=' .. self:Base64Encode(self.Host .. Path .. '.ver') .. '&rand=' .. random(99999999)
-	self.ScriptPath = '/BoL/TCPUpdater/GetScript6.php?script=' .. self:Base64Encode(self.Host .. Path .. '.lua') .. '&rand=' .. random(99999999)
+	self.VersionPath = '/BoL/TCPUpdater/GetScript5.php?script=' .. self:Base64Encode(self.Host .. Path .. '.ver') .. '&rand=' .. random(99999999)
+	self.ScriptPath = '/BoL/TCPUpdater/GetScript5.php?script=' .. self:Base64Encode(self.Host .. Path .. '.lua') .. '&rand=' .. random(99999999)
 	self.LocalPath = LocalPath
 	self.CallbackUpdate = CallbackUpdate
 	self.CallbackNoUpdate = CallbackNoUpdate
@@ -142,7 +145,7 @@ function ALUpdater:CreateSocket(url)
 	self.File = ""
 end
 
-local byte, gsub, sub = string.byte, string.gsub, string.sub
+local gsub, byte, sub = string.gsub, string.byte, string.sub
 function ALUpdater:Base64Encode(data)
 	local b = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
 	return (gsub((gsub(data, '.', function(x)
@@ -151,7 +154,7 @@ function ALUpdater:Base64Encode(data)
 			r = r .. (b % 2 ^ i - b % 2 ^ (i - 1) > 0 and '1' or '0')
 		end
 		
-		return r
+		return r;
 	end) .. '0000'), '%d%d%d?%d?%d?%d?', function(x)
 		if (#x < 6) then
 			return ''
@@ -214,21 +217,11 @@ function ALUpdater:GetOnlineVersion()
 		
 		local HeaderEnd, ContentStart = find(self.File, '<script>')
 		local ContentEnd, _ = find(self.File, '</script>')
-		if not ContentStart or not ContentEnd or find(self.File, self:Base64Encode("Not Found")) then
+		if not ContentStart or not ContentEnd then
 			if self.CallbackError and type(self.CallbackError) == 'function' then
 				self.CallbackError()
 			end
 		else
-			local newv = sub(self.NewFile, 1 + ContentStart, ContentEnd - 1)
-			local newv = gsub(newv, '\r','')
-			if len(newv) ~= self.Size then
-				if self.CallbackError and type(self.CallbackError) == 'function' then
-					self.CallbackError()
-				end
-				
-				return
-			end
-			
 			self.OnlineVersion = (Base64Decode(sub(self.File, 1 + ContentStart, ContentEnd - 1)))
 			self.OnlineVersion = tonumber(self.OnlineVersion)
 			if self.OnlineVersion > self.LocalVersion then
