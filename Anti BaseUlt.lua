@@ -381,7 +381,6 @@ function AntiBaseUlt:OnLoad()
 	
 	self.Config:addParam("Enable", "Enable Anti BaseUlt", SCRIPT_PARAM_ONOFF, true)
 	self.Config:addParam("ScriptVersion", "Script Version: ", SCRIPT_PARAM_INFO, "r" .. format("%.1f", Script.Version))
-	self.Config:addParam("GameVersion", "Game Version: ", SCRIPT_PARAM_INFO, sub(self.GameVersion, 1, 3))
 
 	
 	if self.Config.Champion.Info == nil then
