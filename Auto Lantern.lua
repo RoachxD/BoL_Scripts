@@ -12,7 +12,10 @@
 	Auto Lantern - Grab the lantern with ease!
 
 	Changelog:
-		April 16, 2016 [r2.1]
+		April 19, 2016 [r2.2]:
+			- Fixed some FPS Dropping problems.
+
+		April 16, 2016 [r2.1]:
 			- Fixed a bug with the Auto-Updater.
 
 		April 16, 2016 [r2.0]:
@@ -55,7 +58,7 @@
 local Script =
 {
 	Name = "Auto Lantern",
-	Version = 2.1
+	Version = 2.2
 }
 
 local function Print(string)
@@ -591,13 +594,13 @@ function AutoLantern:OnCreateObj(object)
 end
 
 function AutoLantern:OnTick()
-	local TickCalc = clock() - self.LanternTick
-	if self.LanternObject == nil or TickCalc < 5 then
-		return
-	end
-
 	local HPPercentage = (myHero.health / myHero.maxHealth) * 100
 	if (self.Config.GeneralSettings.LowHP and self.Config.GeneralSettings.Percentage >= HPPercentage) or self.Config.OnTap then
+		local TickCalc = clock() - self.LanternTick
+		if self.LanternObject == nil or TickCalc < 5 then
+			return
+		end
+
 		self:GrabLantern(self.LanternObject)
 	end
 end
