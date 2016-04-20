@@ -12,6 +12,10 @@
 	Item Swapper - Swap items from your inventory using the Numpad!
 
 	Changelog:
+		April 20, 2016 [r2.7]:
+			- Updated for 6.8.
+			- Updated BoL-Tracker's code.
+
 		April 16, 2016 [r2.6]:
 			- Fixed a bug with the Auto-Updater.
 
@@ -75,7 +79,7 @@
 local Script =
 {
 	Name = "Item Swapper",
-	Version = 2.6
+	Version = 2.7
 }
 
 local function Print(string)
@@ -99,14 +103,14 @@ function ISUpdater:__init(LocalVersion, Host, Path, LocalPath, CallbackUpdate, C
 	self.CallbackNoUpdate = CallbackNoUpdate
 	self.CallbackNewVersion = CallbackNewVersion
 	self.CallbackError = CallbackError
-	
+
 	self.OffsetY = _G.OffsetY and _G.OffsetY or 0
 	_G.OffsetY = _G.OffsetY and _G.OffsetY + round(0.08333333333 * WINDOW_H) or round(0.08333333333 * WINDOW_H)
-	
+
 	AddDrawCallback(function()
 		self:OnDraw()
 	end)
-	
+
 	self:CreateSocket(self.VersionPath)
 	self.DownloadStatus = 'Connecting to Server..'
 	self.Progress = 0
@@ -119,7 +123,7 @@ function ISUpdater:OnDraw()
 	if (self.DownloadStatus == 'Downloading Script:' or self.DownloadStatus == 'Downloading Version:') and self.Progress == 100 then
 		return
 	end
-	
+
 	local LoadingBar =
 	{
 		X = round(0.91 * WINDOW_W),
@@ -132,7 +136,7 @@ function ISUpdater:OnDraw()
 		BackgroundColor = 0xFF3A99D9,
 		ForegroundColor = 0xFF35445A
 	}
-	
+
 	DrawText(self.DownloadStatus, LoadingBar.HeaderFontSize, LoadingBar.X - 0.5 * LoadingBar.Width, LoadingBar.Y - LoadingBar.Height - LoadingBar.Border, LoadingBar.BackgroundColor)
 	DrawLine(LoadingBar.X, LoadingBar.Y, LoadingBar.X, LoadingBar.Y + LoadingBar.Height, LoadingBar.Width, LoadingBar.BackgroundColor)
 	if self.Progress > 0 then
@@ -140,7 +144,7 @@ function ISUpdater:OnDraw()
 		local Offset = 0.5 * (LoadingBar.Width - Width)
 		DrawLine(LoadingBar.X - Offset + LoadingBar.Border, LoadingBar.Y + LoadingBar.Border, LoadingBar.X - Offset + LoadingBar.Border, LoadingBar.Y + LoadingBar.Height - LoadingBar.Border, Width, LoadingBar.ForegroundColor)
 	end
-	
+
 	DrawText(self.Progress .. '%', LoadingBar.ProgressFontSize, LoadingBar.X - 2 * LoadingBar.Border, LoadingBar.Y + LoadingBar.Border, self.Progress < 50 and LoadingBar.ForegroundColor or LoadingBar.BackgroundColor)
 end
 
@@ -153,7 +157,7 @@ function ISUpdater:CreateSocket(url)
 		self.Size = nil
 		self.RecvStarted = false
 	end
-	
+
 	self.LuaSocket = require("socket")
 	self.Socket = self.LuaSocket.tcp()
 	self.Socket:settimeout(0, 'b')
@@ -173,18 +177,18 @@ function ISUpdater:Base64Encode(data)
 		for i = 8, 1, -1 do
 			r = r .. (b % 2 ^ i - b % 2 ^ (i - 1) > 0 and '1' or '0')
 		end
-		
+
 		return r;
 	end) .. '0000'), '%d%d%d?%d?%d?%d?', function(x)
 		if (#x < 6) then
 			return ''
 		end
-		
+
 		local c = 0
 		for i = 1, 6 do
 			c = c + (sub(x, i, i) == '1' and 2 ^ (6 - i) or 0)
 		end
-		
+
 		return sub(b, 1 + c, 1 + c)
 	end) .. ({ '', '==', '=' })[#data % 3 + 1])
 end
@@ -200,7 +204,7 @@ function ISUpdater:GetOnlineVersion()
 		self.Started = true
 		self.Socket:send("GET " .. self.Url .. " HTTP/1.1\r\nHost: sx-bol.eu\r\n\r\n")
 	end
-	
+
 	if (self.Receive or (#self.Snipped > 0)) and not self.RecvStarted then
 		self.RecvStarted = true
 		self.DownloadStatus = 'Downloading Version:'
@@ -212,19 +216,19 @@ function ISUpdater:GetOnlineVersion()
 		if not self.Size then
 			self.Size = tonumber(sub(self.File, 6 + find(self.File, '<size>'), find(self.File, '</size>') - 1))
 		end
-		
+
 		if find(self.File, '<script>') then
 			local _,ScriptFind = find(self.File, '<script>')
 			local ScriptEnd = find(self.File, '</script>')
 			if ScriptEnd then
 				ScriptEnd = ScriptEnd - 1
 			end
-			
+
 			local DownloadedSize = len(sub(self.File, 1 + ScriptFind, ScriptEnd or -1))
 			self.Progress = round(100 / self.Size * DownloadedSize, 2)
 		end
 	end
-	
+
 	if find(self.File, '</script>') then
 		local a, b = find(self.File, '\r\n\r\n')
 		self.File = sub(self.File, a, -1)
@@ -234,7 +238,7 @@ function ISUpdater:GetOnlineVersion()
 				self.NewFile = self.NewFile .. content
 			end
 		end
-		
+
 		local HeaderEnd, ContentStart = find(self.File, '<script>')
 		local ContentEnd, _ = find(self.File, '</script>')
 		if not ContentStart or not ContentEnd then
@@ -248,7 +252,7 @@ function ISUpdater:GetOnlineVersion()
 				if self.CallbackNewVersion and type(self.CallbackNewVersion) == 'function' then
 					self.CallbackNewVersion(self.OnlineVersion,self.LocalVersion)
 				end
-				
+
 				self:CreateSocket(self.ScriptPath)
 				self.DownloadStatus = 'Connecting to Server..'
 				self.Progress = 0
@@ -261,7 +265,7 @@ function ISUpdater:GetOnlineVersion()
 				end
 			end
 		end
-		
+
 		self.GotScriptVersion = true
 	end
 end
@@ -270,13 +274,13 @@ function ISUpdater:DownloadUpdate()
 	if self.GotScriptUpdate then
 		return
 	end
-	
+
 	self.Receive, self.Status, self.Snipped = self.Socket:receive(1024)
 	if self.Status == 'timeout' and not self.Started then
 		self.Started = true
 		self.Socket:send("GET " .. self.Url .. " HTTP/1.1\r\nHost: sx-bol.eu\r\n\r\n")
 	end
-	
+
 	if (self.Receive or (#self.Snipped > 0)) and not self.RecvStarted then
 		self.RecvStarted = true
 		self.DownloadStatus = 'Downloading Script:'
@@ -288,19 +292,19 @@ function ISUpdater:DownloadUpdate()
 		if not self.Size then
 			self.Size = tonumber(sub(self.File, 6 + find(self.File, '<size>'), find(self.File, '</size>') - 1))
 		end
-		
+
 		if find(self.File, '<script>') then
 			local _, ScriptFind = find(self.File, '<script>')
 			local ScriptEnd = find(self.File, '</script>')
 			if ScriptEnd then
 				ScriptEnd = ScriptEnd - 1
 			end
-			
+
 			local DownloadedSize = len(sub(self.File, 1 + ScriptFind, ScriptEnd or -1))
 			self.Progress = round(100 / self.Size * DownloadedSize, 2)
 		end
 	end
-	
+
 	if find(self.File, '</script>') then
 		local a, b = find(self.File, '\r\n\r\n')
 		self.File = sub(self.File, a, -1)
@@ -310,7 +314,7 @@ function ISUpdater:DownloadUpdate()
 				self.NewFile = self.NewFile .. content
 			end
 		end
-		
+
 		local HeaderEnd, ContentStart = find(self.NewFile, '<script>')
 		local ContentEnd, _ = find(self.NewFile, '</script>')
 		if not ContentStart or not ContentEnd then
@@ -324,10 +328,10 @@ function ISUpdater:DownloadUpdate()
 				if self.CallbackError and type(self.CallbackError) == 'function' then
 					self.CallbackError()
 				end
-				
+
 				return
 			end
-			
+
 			local newf = Base64Decode(newf)
 			if type(load(newf)) ~= 'function' then
 				if self.CallbackError and type(self.CallbackError) == 'function' then
@@ -342,7 +346,7 @@ function ISUpdater:DownloadUpdate()
 				end
 			end
 		end
-		
+
 		self.GotScriptUpdate = true
 	end
 end
@@ -371,7 +375,7 @@ AddLoadCallback(function()
 			ItemSwapper()
 		end
 	}
-	
+
 	ISUpdater(UpdaterInfo.Version, UpdaterInfo.Host, UpdaterInfo.Path, UpdaterInfo.LocalPath, UpdaterInfo.CallbackUpdate, UpdaterInfo.CallbackNoUpdate, UpdaterInfo.CallbackNewVersion, UpdaterInfo.CallbackError)
 end)
 
@@ -380,6 +384,22 @@ function ItemSwapper:__init()
 	self.GameVersion = sub(GetGameVersion(), 1, 9)
 	self.Packet =
 	{
+		
+		['6.8.140.7'] =
+		{
+			Header = 0x14,
+			vTable = 0xEB7BC4,
+			SourceSlotTable =
+			{
+				[1] = 0x92, [2] = 0x89, [3] = 0x25,
+				[4] = 0x27, [5] = 0x69, [6] = 0x40
+			},
+			TargetSlotTable =
+			{
+				[1] = 0xDE, [2] = 0xDC, [3] = 0xDA,
+				[4] = 0xD8, [5] = 0xD6, [6] = 0xD4
+			}
+		},
 		['6.7.139.4'] =
 		{
 			Header = 0xFE,
@@ -443,6 +463,11 @@ function ItemSwapper:__init()
 		Encode = function(packet, networkID, sourceSlotId, targetSlotId)
 			local Struct =
 			{
+				['6.8.140.7'] = function()
+					packet:EncodeF(networkID)
+					packet:Encode1(self.Packet[self.GameVersion].SourceSlotTable[sourceSlotId])
+					packet:Encode1(self.Packet[self.GameVersion].TargetSlotTable[targetSlotId])
+				end,
 				['6.7.139.4'] = function()
 					packet:EncodeF(networkID)
 					packet:Encode1(self.Packet[self.GameVersion].TargetSlotTable[targetSlotId])
@@ -474,6 +499,7 @@ function ItemSwapper:__init()
 					packet:Encode1(self.Packet[self.GameVersion].TargetSlotTable[targetSlotId])
 				end
 			}
+
 			Struct[self.GameVersion]()
 		end
 	}
@@ -487,11 +513,11 @@ function ItemSwapper:__init()
 			[0x61] = 4, [0x62] = 5, [0x63] = 6
 		}
 	}
-	
+
 	self:OnLoad()
-	
+
 	-- Bol-Tools Tracker
-	assert(load(Base64Decode("G0x1YVIAAQQEBAgAGZMNChoKAAAAAAAAAAAAAQQfAAAAAwAAAEQAAACGAEAA5QAAAJ1AAAGGQEAA5UAAAJ1AAAGlgAAACIAAgaXAAAAIgICBhgBBAOUAAQCdQAABhkBBAMGAAQCdQAABhoBBAOVAAQCKwICDhoBBAOWAAQCKwACEhoBBAOXAAQCKwICEhoBBAOUAAgCKwACFHwCAAAsAAAAEEgAAAEFkZFVubG9hZENhbGxiYWNrAAQUAAAAQWRkQnVnc3BsYXRDYWxsYmFjawAEDAAAAFRyYWNrZXJMb2FkAAQNAAAAQm9sVG9vbHNUaW1lAAQQAAAAQWRkVGlja0NhbGxiYWNrAAQGAAAAY2xhc3MABA4AAABTY3JpcHRUcmFja2VyAAQHAAAAX19pbml0AAQSAAAAU2VuZFZhbHVlVG9TZXJ2ZXIABAoAAABzZW5kRGF0YXMABAsAAABHZXRXZWJQYWdlAAkAAAACAAAAAwAAAAAAAwkAAAAFAAAAGABAABcAAIAfAIAABQAAAAxAQACBgAAAHUCAAR8AgAADAAAAAAQSAAAAU2VuZFZhbHVlVG9TZXJ2ZXIABAcAAAB1bmxvYWQAAAAAAAEAAAABAQAAAAAAAAAAAAAAAAAAAAAEAAAABQAAAAAAAwkAAAAFAAAAGABAABcAAIAfAIAABQAAAAxAQACBgAAAHUCAAR8AgAADAAAAAAQSAAAAU2VuZFZhbHVlVG9TZXJ2ZXIABAkAAABidWdzcGxhdAAAAAAAAQAAAAEBAAAAAAAAAAAAAAAAAAAAAAUAAAAHAAAAAQAEDQAAAEYAwACAAAAAXYAAAUkAAABFAAAATEDAAMGAAABdQIABRsDAAKUAAADBAAEAXUCAAR8AgAAFAAAABA4AAABTY3JpcHRUcmFja2VyAAQSAAAAU2VuZFZhbHVlVG9TZXJ2ZXIABAUAAABsb2FkAAQMAAAARGVsYXlBY3Rpb24AAwAAAAAAQHpAAQAAAAYAAAAHAAAAAAADBQAAAAUAAAAMAEAAgUAAAB1AgAEfAIAAAgAAAAQSAAAAU2VuZFZhbHVlVG9TZXJ2ZXIABAgAAAB3b3JraW5nAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAEBAAAAAAAAAAAAAAAAAAAAAAAACAAAAA0AAAAAAAYyAAAABgBAAB2AgAAaQEAAF4AAgEGAAABfAAABF0AKgEYAQQBHQMEAgYABAMbAQQDHAMIBEEFCAN0AAAFdgAAACECAgUYAQQBHQMEAgYABAMbAQQDHAMIBEMFCAEbBQABPwcICDkEBAt0AAAFdgAAACEAAhUYAQQBHQMEAgYABAMbAQQDHAMIBBsFAAA9BQgIOAQEARoFCAE/BwgIOQQEC3QAAAV2AAAAIQACGRsBAAIFAAwDGgEIAAUEDAEYBQwBWQIEAXwAAAR8AgAAOAAAABA8AAABHZXRJbkdhbWVUaW1lcgADAAAAAAAAAAAECQAAADAwOjAwOjAwAAQGAAAAaG91cnMABAcAAABzdHJpbmcABAcAAABmb3JtYXQABAYAAAAlMDIuZgAEBQAAAG1hdGgABAYAAABmbG9vcgADAAAAAAAgrEAEBQAAAG1pbnMAAwAAAAAAAE5ABAUAAABzZWNzAAQCAAAAOgAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAA4AAAATAAAAAAAIKAAAAAEAAABGQEAAR4DAAIEAAAAhAAiABkFAAAzBQAKAAYABHYGAAVgAQQIXgAaAR0FBAhiAwQIXwAWAR8FBAhkAwAIXAAWARQGAAFtBAAAXQASARwFCAoZBQgCHAUIDGICBAheAAYBFAQABTIHCAsHBAgBdQYABQwGAAEkBgAAXQAGARQEAAUyBwgLBAQMAXUGAAUMBgABJAYAAIED3fx8AgAANAAAAAwAAAAAAAPA/BAsAAABvYmpNYW5hZ2VyAAQLAAAAbWF4T2JqZWN0cwAECgAAAGdldE9iamVjdAAABAUAAAB0eXBlAAQHAAAAb2JqX0hRAAQHAAAAaGVhbHRoAAQFAAAAdGVhbQAEBwAAAG15SGVybwAEEgAAAFNlbmRWYWx1ZVRvU2VydmVyAAQGAAAAbG9vc2UABAQAAAB3aW4AAAAAAAMAAAAAAAEAAQEAAAAAAAAAAAAAAAAAAAAAFAAAABQAAAACAAICAAAACkAAgB8AgAABAAAABAoAAABzY3JpcHRLZXkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAAAABUAAAACAAUKAAAAhgBAAMAAgACdgAABGEBAARfAAICFAIAAjIBAAQABgACdQIABHwCAAAMAAAAEBQAAAHR5cGUABAcAAABzdHJpbmcABAoAAABzZW5kRGF0YXMAAAAAAAIAAAAAAAEBAAAAAAAAAAAAAAAAAAAAABYAAAAlAAAAAgATPwAAAApAAICGgEAAnYCAAAqAgICGAEEAxkBBAAaBQQAHwUECQQECAB2BAAFGgUEAR8HBAoFBAgBdgQABhoFBAIfBQQPBgQIAnYEAAcaBQQDHwcEDAcICAN2BAAEGgkEAB8JBBEECAwAdggABFgECAt0AAAGdgAAACoCAgYaAQwCdgIAACoCAhgoAxIeGQEQAmwAAABdAAIAKgMSHFwAAgArAxIeGQEUAh4BFAQqAAIqFAIAAjMBFAQEBBgBBQQYAh4FGAMHBBgAAAoAAQQIHAIcCRQDBQgcAB0NAAEGDBwCHw0AAwcMHAAdEQwBBBAgAh8RDAFaBhAKdQAACHwCAACEAAAAEBwAAAGFjdGlvbgAECQAAAHVzZXJuYW1lAAQIAAAAR2V0VXNlcgAEBQAAAGh3aWQABA0AAABCYXNlNjRFbmNvZGUABAkAAAB0b3N0cmluZwAEAwAAAG9zAAQHAAAAZ2V0ZW52AAQVAAAAUFJPQ0VTU09SX0lERU5USUZJRVIABAkAAABVU0VSTkFNRQAEDQAAAENPTVBVVEVSTkFNRQAEEAAAAFBST0NFU1NPUl9MRVZFTAAEEwAAAFBST0NFU1NPUl9SRVZJU0lPTgAECwAAAGluZ2FtZVRpbWUABA0AAABCb2xUb29sc1RpbWUABAYAAABpc1ZpcAAEAQAAAAAECQAAAFZJUF9VU0VSAAMAAAAAAADwPwMAAAAAAAAAAAQJAAAAY2hhbXBpb24ABAcAAABteUhlcm8ABAkAAABjaGFyTmFtZQAECwAAAEdldFdlYlBhZ2UABA4AAABib2wtdG9vbHMuY29tAAQXAAAAL2FwaS9ldmVudHM/c2NyaXB0S2V5PQAECgAAAHNjcmlwdEtleQAECQAAACZhY3Rpb249AAQLAAAAJmNoYW1waW9uPQAEDgAAACZib2xVc2VybmFtZT0ABAcAAAAmaHdpZD0ABA0AAAAmaW5nYW1lVGltZT0ABAgAAAAmaXNWaXA9AAAAAAACAAAAAAABAQAAAAAAAAAAAAAAAAAAAAAmAAAAKgAAAAMACiEAAADGQEAAAYEAAN2AAAHHwMAB3YCAAArAAIDHAEAAzADBAUABgACBQQEA3UAAAscAQADMgMEBQcEBAIABAAHBAQIAAAKAAEFCAgBWQYIC3UCAAccAQADMgMIBQcECAIEBAwDdQAACxwBAAMyAwgFBQQMAgYEDAN1AAAIKAMSHCgDEiB8AgAASAAAABAcAAABTb2NrZXQABAgAAAByZXF1aXJlAAQHAAAAc29ja2V0AAQEAAAAdGNwAAQIAAAAY29ubmVjdAADAAAAAAAAVEAEBQAAAHNlbmQABAUAAABHRVQgAAQSAAAAIEhUVFAvMS4wDQpIb3N0OiAABAUAAAANCg0KAAQLAAAAc2V0dGltZW91dAADAAAAAAAAAAAEAgAAAGIAAwAAAPyD15dBBAIAAAB0AAQKAAAATGFzdFByaW50AAQBAAAAAAQFAAAARmlsZQAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAABAAAAAAAAAAAAAAAAAAAAAAA="), nil, "bt", _ENV))()
+	assert(load(Base64Decode("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"), nil, "bt", _ENV))()
 	TrackerLoad("gbyMzEMM2CMOJnZr")
 end
 
@@ -514,7 +540,7 @@ function ItemSwapper:OnLoad()
 	if self.Packet[self.GameVersion] == nil then
 		Print("The script is outdated for this version of the game (" .. self.GameVersion .. ")!")
 	end
-	
+
 	if self.Packet[self.GameVersion] ~= nil then
 		AddMsgCallback(function(msg, key)
 			self:OnWndMsg(msg, key)
@@ -526,11 +552,11 @@ function ItemSwapper:OnWndMsg(msg, key)
 	if msg == 0x100 and key == 0x60 then
 		self.Keys.FirstKey = 0x60;
 	end
-	
+
 	if msg ~= 0x100 or self.Keys.SlotKeys[key] == nil then
 		return
 	end
-	
+
 	if self.Keys.FirstKey == 0x60 then
 		self.Keys.FirstKey = key
 	end
@@ -538,7 +564,7 @@ function ItemSwapper:OnWndMsg(msg, key)
 	if self.Keys.FirstKey == key then
 		return
 	end
-	
+
 	self:SwapItem(self.Keys.SlotKeys[self.Keys.FirstKey], self.Keys.SlotKeys[key])
 	self.Keys.FirstKey = 0x60
 end
@@ -547,18 +573,18 @@ function ItemSwapper:SwapItem(sourceSlotId, targetSlotId)
 	if self.Packet[self.GameVersion].SourceSlotTable == nil or self.Packet[self.GameVersion].TargetSlotTable == nil then
 		return
 	end
-	
+
 	if GetInventorySlotIsEmpty(5 + sourceSlotId) and GetInventorySlotIsEmpty(5 + targetSlotId) then
 		return
 	end
-	
+
 	if GetInventorySlotIsEmpty(5 + sourceSlotId) and not GetInventorySlotIsEmpty(5 + targetSlotId) then
 		sourceSlotId, targetSlotId = targetSlotId, sourceSlotId
 	end
-	
+
 	local CustomPacket = CLoLPacket(self.Packet[self.GameVersion].Header)
 	CustomPacket.vTable = self.Packet[self.GameVersion].vTable
 	self.Packet.Encode(CustomPacket, myHero.networkID, sourceSlotId, targetSlotId)
-	
+
 	SendPacket(CustomPacket)
 end

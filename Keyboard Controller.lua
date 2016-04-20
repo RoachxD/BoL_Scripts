@@ -12,6 +12,10 @@
 	Keyboard Controller - Move your hero using the keyboard!
 
 	Changelog:
+		April 20, 2016 [r2.2]:
+			- Updated for 6.8.
+			- Updated BoL-Tracker's code.
+
 		April 16, 2016 [r2.1]:
 			- Fixed a bug with the Auto-Updater.
 			- Modified the menu.
@@ -55,7 +59,7 @@
 local Script =
 {
 	Name = "Keyboard Controller",
-	Version = 2.1
+	Version = 2.2
 }
 
 local function Print(string)
@@ -74,14 +78,14 @@ function KCUpdater:__init(LocalVersion, Host, Path, LocalPath, CallbackUpdate, C
 	self.CallbackNoUpdate = CallbackNoUpdate
 	self.CallbackNewVersion = CallbackNewVersion
 	self.CallbackError = CallbackError
-	
+
 	self.OffsetY = _G.OffsetY and _G.OffsetY or 0
 	_G.OffsetY = _G.OffsetY and _G.OffsetY + round(0.08333333333 * WINDOW_H) or round(0.08333333333 * WINDOW_H)
-	
+
 	AddDrawCallback(function()
 		self:OnDraw()
 	end)
-	
+
 	self:CreateSocket(self.VersionPath)
 	self.DownloadStatus = 'Connecting to Server..'
 	self.Progress = 0
@@ -94,7 +98,7 @@ function KCUpdater:OnDraw()
 	if (self.DownloadStatus == 'Downloading Script:' or self.DownloadStatus == 'Downloading Version:') and self.Progress == 100 then
 		return
 	end
-	
+
 	local LoadingBar =
 	{
 		X = round(0.91 * WINDOW_W),
@@ -107,7 +111,7 @@ function KCUpdater:OnDraw()
 		BackgroundColor = 0xFFEB9F0F,
 		ForegroundColor = 0xFFC34177
 	}
-	
+
 	DrawText(self.DownloadStatus, LoadingBar.HeaderFontSize, LoadingBar.X - 0.5 * LoadingBar.Width, LoadingBar.Y - LoadingBar.Height - LoadingBar.Border, LoadingBar.BackgroundColor)
 	DrawLine(LoadingBar.X, LoadingBar.Y, LoadingBar.X, LoadingBar.Y + LoadingBar.Height, LoadingBar.Width, LoadingBar.BackgroundColor)
 	if self.Progress > 0 then
@@ -115,7 +119,7 @@ function KCUpdater:OnDraw()
 		local Offset = 0.5 * (LoadingBar.Width - Width)
 		DrawLine(LoadingBar.X - Offset + LoadingBar.Border, LoadingBar.Y + LoadingBar.Border, LoadingBar.X - Offset + LoadingBar.Border, LoadingBar.Y + LoadingBar.Height - LoadingBar.Border, Width, LoadingBar.ForegroundColor)
 	end
-	
+
 	DrawText(self.Progress .. '%', LoadingBar.ProgressFontSize, LoadingBar.X - 2 * LoadingBar.Border, LoadingBar.Y + LoadingBar.Border, self.Progress < 50 and LoadingBar.ForegroundColor or LoadingBar.BackgroundColor)
 end
 
@@ -128,7 +132,7 @@ function KCUpdater:CreateSocket(url)
 		self.Size = nil
 		self.RecvStarted = false
 	end
-	
+
 	self.LuaSocket = require("socket")
 	self.Socket = self.LuaSocket.tcp()
 	self.Socket:settimeout(0, 'b')
@@ -148,18 +152,18 @@ function KCUpdater:Base64Encode(data)
 		for i = 8, 1, -1 do
 			r = r .. (b % 2 ^ i - b % 2 ^ (i - 1) > 0 and '1' or '0')
 		end
-		
+
 		return r;
 	end) .. '0000'), '%d%d%d?%d?%d?%d?', function(x)
 		if (#x < 6) then
 			return ''
 		end
-		
+
 		local c = 0
 		for i = 1, 6 do
 			c = c + (sub(x, i, i) == '1' and 2 ^ (6 - i) or 0)
 		end
-		
+
 		return sub(b, 1 + c, 1 + c)
 	end) .. ({ '', '==', '=' })[#data % 3 + 1])
 end
@@ -169,13 +173,13 @@ function KCUpdater:GetOnlineVersion()
 	if self.GotScriptVersion then
 		return
 	end
-	
+
 	self.Receive, self.Status, self.Snipped = self.Socket:receive(1024)
 	if self.Status == 'timeout' and not self.Started then
 		self.Started = true
 		self.Socket:send("GET " .. self.Url .. " HTTP/1.1\r\nHost: sx-bol.eu\r\n\r\n")
 	end
-	
+
 	if (self.Receive or (#self.Snipped > 0)) and not self.RecvStarted then
 		self.RecvStarted = true
 		self.DownloadStatus = 'Downloading Version:'
@@ -187,19 +191,19 @@ function KCUpdater:GetOnlineVersion()
 		if not self.Size then
 			self.Size = tonumber(sub(self.File, 6 + find(self.File, '<size>'), find(self.File, '</size>') - 1))
 		end
-		
+
 		if find(self.File, '<script>') then
 			local _,ScriptFind = find(self.File, '<script>')
 			local ScriptEnd = find(self.File, '</script>')
 			if ScriptEnd then
 				ScriptEnd = ScriptEnd - 1
 			end
-			
+
 			local DownloadedSize = len(sub(self.File, 1 + ScriptFind, ScriptEnd or -1))
 			self.Progress = round(100 / self.Size * DownloadedSize, 2)
 		end
 	end
-	
+
 	if find(self.File, '</script>') then
 		local a, b = find(self.File, '\r\n\r\n')
 		self.File = sub(self.File, a, -1)
@@ -209,7 +213,7 @@ function KCUpdater:GetOnlineVersion()
 				self.NewFile = self.NewFile .. content
 			end
 		end
-		
+
 		local HeaderEnd, ContentStart = find(self.File, '<script>')
 		local ContentEnd, _ = find(self.File, '</script>')
 		if not ContentStart or not ContentEnd then
@@ -223,7 +227,7 @@ function KCUpdater:GetOnlineVersion()
 				if self.CallbackNewVersion and type(self.CallbackNewVersion) == 'function' then
 					self.CallbackNewVersion(self.OnlineVersion,self.LocalVersion)
 				end
-				
+
 				self:CreateSocket(self.ScriptPath)
 				self.DownloadStatus = 'Connecting to Server..'
 				self.Progress = 0
@@ -236,7 +240,7 @@ function KCUpdater:GetOnlineVersion()
 				end
 			end
 		end
-		
+
 		self.GotScriptVersion = true
 	end
 end
@@ -245,13 +249,13 @@ function KCUpdater:DownloadUpdate()
 	if self.GotScriptUpdate then
 		return
 	end
-	
+
 	self.Receive, self.Status, self.Snipped = self.Socket:receive(1024)
 	if self.Status == 'timeout' and not self.Started then
 		self.Started = true
 		self.Socket:send("GET " .. self.Url .. " HTTP/1.1\r\nHost: sx-bol.eu\r\n\r\n")
 	end
-	
+
 	if (self.Receive or (#self.Snipped > 0)) and not self.RecvStarted then
 		self.RecvStarted = true
 		self.DownloadStatus = 'Downloading Script:'
@@ -263,19 +267,19 @@ function KCUpdater:DownloadUpdate()
 		if not self.Size then
 			self.Size = tonumber(sub(self.File, 6 + find(self.File, '<size>'), find(self.File, '</size>') - 1))
 		end
-		
+
 		if find(self.File, '<script>') then
 			local _, ScriptFind = find(self.File, '<script>')
 			local ScriptEnd = find(self.File, '</script>')
 			if ScriptEnd then
 				ScriptEnd = ScriptEnd - 1
 			end
-			
+
 			local DownloadedSize = len(sub(self.File, 1 + ScriptFind, ScriptEnd or -1))
 			self.Progress = round(100 / self.Size * DownloadedSize, 2)
 		end
 	end
-	
+
 	if find(self.File, '</script>') then
 		local a, b = find(self.File, '\r\n\r\n')
 		self.File = sub(self.File, a, -1)
@@ -285,7 +289,7 @@ function KCUpdater:DownloadUpdate()
 				self.NewFile = self.NewFile .. content
 			end
 		end
-		
+
 		local HeaderEnd, ContentStart = find(self.NewFile, '<script>')
 		local ContentEnd, _ = find(self.NewFile, '</script>')
 		if not ContentStart or not ContentEnd then
@@ -299,10 +303,10 @@ function KCUpdater:DownloadUpdate()
 				if self.CallbackError and type(self.CallbackError) == 'function' then
 					self.CallbackError()
 				end
-				
+
 				return
 			end
-			
+
 			local newf = Base64Decode(newf)
 			if type(load(newf)) ~= 'function' then
 				if self.CallbackError and type(self.CallbackError) == 'function' then
@@ -346,7 +350,7 @@ AddLoadCallback(function()
 			KeyboardController()
 		end
 	}
-	
+
 	KCUpdater(UpdaterInfo.Version, UpdaterInfo.Host, UpdaterInfo.Path, UpdaterInfo.LocalPath, UpdaterInfo.CallbackUpdate, UpdaterInfo.CallbackNoUpdate, UpdaterInfo.CallbackNewVersion, UpdaterInfo.CallbackError)
 end)
 
@@ -369,20 +373,21 @@ function KeyboardController:__init()
 		["D"] = true,
 		["F"] = true
 	}
-	
+
 	self.GameVersion = sub(GetGameVersion(), 1, 9)
 	self.CastSpellHeader =
 	{
+		['6.8.140.7'] = 0x7F,
 		['6.7.139.4'] = 0x140,
 		['6.7.138.9'] = 0x140,
 		['6.6.138.7'] = 0x15A,
 		['6.6.137.4'] = 0x15A
 	}
-	
+
 	self:OnLoad()
-	
+
 	-- Bol-Tools Tracker
-	assert(load(Base64Decode("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"), nil, "bt", _ENV))()
+	assert(load(Base64Decode("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"), nil, "bt", _ENV))()
 	TrackerLoad("PuhqNuwgSjmUXkB2")
 end
 
@@ -393,15 +398,15 @@ function KeyboardController:OnLoad()
 	self.Config.Keys:addParam("Left", "Left", SCRIPT_PARAM_ONKEYDOWN, false, 37)
 	self.Config.Keys:addParam("Down", "Down", SCRIPT_PARAM_ONKEYDOWN, false, 40)
 	self.Config.Keys:addParam("Right", "Right", SCRIPT_PARAM_ONKEYDOWN, false, 39)
-	
+
 	Print("Successfully loaded r" .. format("%.1f", Script.Version) .. ", have fun!")
-	
+
 	if VIP_USER then
 		if self.CastSpellHeader[self.GameVersion] ~= nil then
 			self.Config:addParam("DisableSpells", "Disable spells when moving", SCRIPT_PARAM_ONOFF, true)
-			
+
 			Print("As a VIP User you can Block Spells if you are moving using Spell Keys!")
-			
+
 			AddSendPacketCallback(function(p)
 				self:OnSendPacket(p)
 			end)
@@ -411,11 +416,11 @@ function KeyboardController:OnLoad()
 	else
 		Print("As a non VIP User you can't Block Spells if you are moving using Spell Keys!")
 	end
-	
+
 	self.Config:addParam("Enable", "Enable Keyboard Controller", SCRIPT_PARAM_ONOFF, true)
 	self.Config:addParam("ScriptVersion", "Script Version: ", SCRIPT_PARAM_INFO, "r" .. format("%.1f", Script.Version))
 	self.Config:addParam("GameVersion", "Game Version: ", SCRIPT_PARAM_INFO, sub(self.GameVersion, 1, 3))
-	
+
 	AddTickCallback(function()
 		self:OnTick()
 	end)
@@ -425,14 +430,14 @@ function KeyboardController:OnTick()
 	if not self.Config.Enable then
 		return
 	end
-	
+
 	local Direction = { X = myHero.x, Y = myHero.z }
 	for _, v in pairs(self.Config.Keys._param) do
 		if self.Config.Keys[v.var] and self.DirectionCases[v.var] ~= nil then
 			Direction = { X = Direction.X + self.DirectionCases[v.var].X, Y = Direction.Y + self.DirectionCases[v.var].Y }
 		end
 	end
-	
+
 	if Direction.X ~= myHero.x or Direction.Y ~= myHero.z then
 		myHero:MoveTo(Direction.X, Direction.Y)
 	end
@@ -443,11 +448,11 @@ function KeyboardController:OnSendPacket(p)
 	if not self.Config.Enable or not self.Config.DisableSpells then
 		return
 	end
-	
+
 	if self.CastSpellHeader[self.GameVersion] == nil or p.header ~= self.CastSpellHeader[self.GameVersion] then
 		return
 	end
-	
+
 	for _, v in pairs(self.Config.Keys._param) do
 		if self.Config.Keys[v.var] and v.key ~= nil and self.SpellsCharacters[char(v.key)] ~= nil and self.SpellsCharacters[char(v.key)] then
 			p:Block()

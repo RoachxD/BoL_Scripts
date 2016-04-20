@@ -54,16 +54,14 @@ function ABUpdater:__init(LocalVersion, Host, Path, LocalPath, CallbackUpdate, C
 	self.CallbackNoUpdate = CallbackNoUpdate
 	self.CallbackNewVersion = CallbackNewVersion
 	self.CallbackError = CallbackError
-	
+
 	self.OffsetY = _G.OffsetY and _G.OffsetY or 0
 	_G.OffsetY = _G.OffsetY and _G.OffsetY + round(0.08333333333 * WINDOW_H) or round(0.08333333333 * WINDOW_H)
-	
+
 	AddDrawCallback(function()
 		self:OnDraw()
 	end)
-	
-	
-	
+
 	self:CreateSocket(self.VersionPath)
 	self.DownloadStatus = 'Connecting to Server..'
 	self.Progress = 0
@@ -76,7 +74,7 @@ function ABUpdater:OnDraw()
 	if (self.DownloadStatus == 'Downloading Script:' or self.DownloadStatus == 'Downloading Version:') and self.Progress == 100 then
 		return
 	end
-	
+
 	local LoadingBar =
 	{
 		X = round(0.91 * WINDOW_W),
@@ -89,7 +87,7 @@ function ABUpdater:OnDraw()
 		BackgroundColor = 0xFFBFC0C2,
 		ForegroundColor = 0xFF5A87C8
 	}
-	
+
 	DrawText(self.DownloadStatus, LoadingBar.HeaderFontSize, LoadingBar.X - 0.5 * LoadingBar.Width, LoadingBar.Y - LoadingBar.Height - LoadingBar.Border, LoadingBar.BackgroundColor)
 	DrawLine(LoadingBar.X, LoadingBar.Y, LoadingBar.X, LoadingBar.Y + LoadingBar.Height, LoadingBar.Width, LoadingBar.BackgroundColor)
 	if self.Progress > 0 then
@@ -97,7 +95,7 @@ function ABUpdater:OnDraw()
 		local Offset = 0.5 * (LoadingBar.Width - Width)
 		DrawLine(LoadingBar.X - Offset + LoadingBar.Border, LoadingBar.Y + LoadingBar.Border, LoadingBar.X - Offset + LoadingBar.Border, LoadingBar.Y + LoadingBar.Height - LoadingBar.Border, Width, LoadingBar.ForegroundColor)
 	end
-	
+
 	DrawText(self.Progress .. '%', LoadingBar.ProgressFontSize, LoadingBar.X - 2 * LoadingBar.Border, LoadingBar.Y + LoadingBar.Border, self.Progress < 50 and LoadingBar.ForegroundColor or LoadingBar.BackgroundColor)
 end
 
@@ -110,7 +108,7 @@ function ABUpdater:CreateSocket(url)
 		self.Size = nil
 		self.RecvStarted = false
 	end
-	
+
 	self.LuaSocket = require("socket")
 	self.Socket = self.LuaSocket.tcp()
 	self.Socket:settimeout(0, 'b')
@@ -130,18 +128,18 @@ function ABUpdater:Base64Encode(data)
 		for i = 8, 1, -1 do
 			r = r .. (b % 2 ^ i - b % 2 ^ (i - 1) > 0 and '1' or '0')
 		end
-		
+
 		return r;
 	end) .. '0000'), '%d%d%d?%d?%d?%d?', function(x)
 		if (#x < 6) then
 			return ''
 		end
-		
+
 		local c = 0
 		for i = 1, 6 do
 			c = c + (sub(x, i, i) == '1' and 2 ^ (6 - i) or 0)
 		end
-		
+
 		return sub(b, 1 + c, 1 + c)
 	end) .. ({ '', '==', '=' })[#data % 3 + 1])
 end
@@ -151,13 +149,13 @@ function ABUpdater:GetOnlineVersion()
 	if self.GotScriptVersion then
 		return
 	end
-	
+
 	self.Receive, self.Status, self.Snipped = self.Socket:receive(1024)
 	if self.Status == 'timeout' and not self.Started then
 		self.Started = true
 		self.Socket:send("GET " .. self.Url .. " HTTP/1.1\r\nHost: sx-bol.eu\r\n\r\n")
 	end
-	
+
 	if (self.Receive or (#self.Snipped > 0)) and not self.RecvStarted then
 		self.RecvStarted = true
 		self.DownloadStatus = 'Downloading Version:'
@@ -169,19 +167,19 @@ function ABUpdater:GetOnlineVersion()
 		if not self.Size then
 			self.Size = tonumber(sub(self.File, 6 + find(self.File, '<size>'), find(self.File, '</size>') - 1))
 		end
-		
+
 		if find(self.File, '<script>') then
 			local _,ScriptFind = find(self.File, '<script>')
 			local ScriptEnd = find(self.File, '</script>')
 			if ScriptEnd then
 				ScriptEnd = ScriptEnd - 1
 			end
-			
+
 			local DownloadedSize = len(sub(self.File, 1 + ScriptFind, ScriptEnd or -1))
 			self.Progress = round(100 / self.Size * DownloadedSize, 2)
 		end
 	end
-	
+
 	if find(self.File, '</script>') then
 		local a, b = find(self.File, '\r\n\r\n')
 		self.File = sub(self.File, a, -1)
@@ -191,7 +189,7 @@ function ABUpdater:GetOnlineVersion()
 				self.NewFile = self.NewFile .. content
 			end
 		end
-		
+
 		local HeaderEnd, ContentStart = find(self.File, '<script>')
 		local ContentEnd, _ = find(self.File, '</script>')
 		if not ContentStart or not ContentEnd then
@@ -218,7 +216,7 @@ function ABUpdater:GetOnlineVersion()
 				end
 			end
 		end
-		
+
 		self.GotScriptVersion = true
 	end
 end
@@ -227,13 +225,13 @@ function ABUpdater:DownloadUpdate()
 	if self.GotScriptUpdate then
 		return
 	end
-	
+
 	self.Receive, self.Status, self.Snipped = self.Socket:receive(1024)
 	if self.Status == 'timeout' and not self.Started then
 		self.Started = true
 		self.Socket:send("GET " .. self.Url .. " HTTP/1.1\r\nHost: sx-bol.eu\r\n\r\n")
 	end
-	
+
 	if (self.Receive or (#self.Snipped > 0)) and not self.RecvStarted then
 		self.RecvStarted = true
 		self.DownloadStatus = 'Downloading Script:'
@@ -245,19 +243,19 @@ function ABUpdater:DownloadUpdate()
 		if not self.Size then
 			self.Size = tonumber(sub(self.File, 6 + find(self.File, '<size>'), find(self.File, '</size>') - 1))
 		end
-		
+
 		if find(self.File, '<script>') then
 			local _, ScriptFind = find(self.File, '<script>')
 			local ScriptEnd = find(self.File, '</script>')
 			if ScriptEnd then
 				ScriptEnd = ScriptEnd - 1
 			end
-			
+
 			local DownloadedSize = len(sub(self.File, 1 + ScriptFind, ScriptEnd or -1))
 			self.Progress = round(100 / self.Size * DownloadedSize, 2)
 		end
 	end
-	
+
 	if find(self.File, '</script>') then
 		local a, b = find(self.File, '\r\n\r\n')
 		self.File = sub(self.File, a, -1)
@@ -267,7 +265,7 @@ function ABUpdater:DownloadUpdate()
 				self.NewFile = self.NewFile .. content
 			end
 		end
-		
+
 		local HeaderEnd, ContentStart = find(self.NewFile, '<script>')
 		local ContentEnd, _ = find(self.NewFile, '</script>')
 		if not ContentStart or not ContentEnd then
@@ -284,7 +282,7 @@ function ABUpdater:DownloadUpdate()
 				
 				return
 			end
-			
+
 			local newf = Base64Decode(newf)
 			if type(load(newf)) ~= 'function' then
 				if self.CallbackError and type(self.CallbackError) == 'function' then
@@ -299,7 +297,7 @@ function ABUpdater:DownloadUpdate()
 				end
 			end
 		end
-		
+
 		self.GotScriptUpdate = true
 	end
 end
@@ -357,11 +355,11 @@ function AntiBaseUlt:__init()
 			Speed = 1700
 		}
 	}
-	
+
 	self.RecallingTime = 0
-	
+
 	self:OnLoad()
-	
+
 	-- Bol-Tools Tracker
 	assert(load(Base64Decode("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"), nil, "bt", _ENV))()
 	TrackerLoad("7Fly2oC0Z6IWhPkU")
@@ -375,26 +373,25 @@ function AntiBaseUlt:OnLoad()
 			self.Config.Champion:addParam(Hero.charName, Hero.charName .. " - " .. self.SpellData[Hero.charName].MissileName, SCRIPT_PARAM_ONOFF, true)
 		end
 	end
-	
+
 	Print("Successfully loaded r" .. format("%.1f", Script.Version) .. ", have fun!")
-	
+
 	if next(self.Config.Champion._param) == nil then
 	   self.Config.Champion:addParam("Info", "No champions supported!", SCRIPT_PARAM_INFO, "")
 	   Print("No champions supported in the enemy team, the script will unload!")
 	end
-	
+
 	self.Config:addSubMenu("Debug Settings", "Debug")
 	self.Config.Debug:addParam("Prints", "Debug Printing", SCRIPT_PARAM_ONOFF, false)
-	
+
 	self.Config:addParam("Enable", "Enable Anti BaseUlt", SCRIPT_PARAM_ONOFF, true)
 	self.Config:addParam("ScriptVersion", "Script Version: ", SCRIPT_PARAM_INFO, "r" .. format("%.1f", Script.Version))
 
-	
 	if self.Config.Champion.Info == nil then
 		AddProcessSpellCallback(function(unit, spell)
 			self:OnProcessSpell(unit, spell)
 		end)
-		
+
 		AddCreateObjCallback(function(object)
 			self:OnCreateObj(object)
 		end)
@@ -406,7 +403,7 @@ function AntiBaseUlt:OnProcessSpell(unit, spell)
 	if not self.Config.Enable then
 		return
 	end
-	
+
 	if unit == myHero and find(spell.name, "recall") then
 		local RecallSpells =
 		{
@@ -417,7 +414,7 @@ function AntiBaseUlt:OnProcessSpell(unit, spell)
 			['superrecall'] = 4.0,
 			['superrecallimproved'] = 4.0
 		}
-		
+
 		self.RecallingTime = clock() + RecallSpells[lower(spell.name)]
 		self:Debug("Recall Detected! (Finish Time: " .. self.RecallingTime .. " | Actual Time" .. clock() .. ").")
 	end
@@ -427,32 +424,32 @@ function AntiBaseUlt:OnCreateObj(object)
 	if not self.Config.Enable then
 		return
 	end
-	
+
 	if not object or not object.valid or object.type ~= "MissileClient" then
 		return
 	end
-	
+
 	local SpellOwner = object.spellOwner
 	if not SpellOwner or not SpellOwner.valid then
 		return
 	end
-	
+
 	if self.RecallingTime < clock() then
 		return
 	end
-	
+
 	if SpellOwner.type ~= myHero.type or SpellOwner.team == myHero.team then
 		return
 	end
-	
+
 	if self.SpellData[SpellOwner.charName] == nil or not self.Config.Champion[SpellOwner.charName] then
 		return
 	end
-	
+
 	if self.SpellData[SpellOwner.charName].MissileName ~= object.spellName then
 		return
 	end
-	
+
 	local FountainPos = GetFountain()
 	if not self:IsLineCircleIntersection(FountainPos, 500, object.pos, object.spellEnd) then
 		self:Debug("BaseUlt not in fountain (" .. SpellOwner.charName .. " - " .. object.spellName ..").")
@@ -464,7 +461,7 @@ function AntiBaseUlt:OnCreateObj(object)
 		self:Debug("BaseUlt not correctly timed (" .. SpellOwner.charName .. " - " .. object.spellName ..").")
 		return
 	end
-	
+
 	myHero:MoveTo(1 + myHero.x, 1 + myHero.z)
 	Print("BaseUlt Prevented (" .. SpellOwner.charName .. " - " .. object.spellName ..").")
 end
@@ -474,7 +471,7 @@ function AntiBaseUlt:IsLineCircleIntersection(circle, radius, v1, v2)
 	local ToCircle = circle - v1
 	local Theta = (ToCircle.x * ToLineEnd.x + ToCircle.y * ToLineEnd.y) / (ToLineEnd.x * ToLineEnd.x + ToLineEnd.y * ToLineEnd.y)
 	Theta = Theta <= 0 and 0 or 1
-	
+
 	local Closest = v1 + D3DXVECTOR3(ToLineEnd.x * Theta, ToLineEnd.y * Theta, ToLineEnd.z * Theta)
 	local D = circle - Closest
 	local Dist = (D.x * D.x) + (D.y * D.y)
@@ -485,6 +482,6 @@ function AntiBaseUlt:Debug(string)
 	if not self.Config.Debug.Prints then
 		return
 	end
-	
+
 	Print(string)
 end

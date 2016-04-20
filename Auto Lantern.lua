@@ -12,6 +12,10 @@
 	Auto Lantern - Grab the lantern with ease!
 
 	Changelog:
+		April 20, 2016 [r2.3]:
+			- Updated for 6.8.
+			- Updated BoL-Tracker's code.
+
 		April 19, 2016 [r2.2]:
 			- Fixed some FPS Dropping problems.
 
@@ -58,7 +62,7 @@
 local Script =
 {
 	Name = "Auto Lantern",
-	Version = 2.2
+	Version = 2.3
 }
 
 local function Print(string)
@@ -82,14 +86,14 @@ function ALUpdater:__init(LocalVersion, Host, Path, LocalPath, CallbackUpdate, C
 	self.CallbackNoUpdate = CallbackNoUpdate
 	self.CallbackNewVersion = CallbackNewVersion
 	self.CallbackError = CallbackError
-	
+
 	self.OffsetY = _G.OffsetY and _G.OffsetY or 0
 	_G.OffsetY = _G.OffsetY and _G.OffsetY + round(0.08333333333 * WINDOW_H) or round(0.08333333333 * WINDOW_H)
-	
+
 	AddDrawCallback(function()
 		self:OnDraw()
 	end)
-	
+
 	self:CreateSocket(self.VersionPath)
 	self.DownloadStatus = 'Connecting to Server..'
 	self.Progress = 0
@@ -102,7 +106,7 @@ function ALUpdater:OnDraw()
 	if (self.DownloadStatus == 'Downloading Script:' or self.DownloadStatus == 'Downloading Version:') and self.Progress == 100 then
 		return
 	end
-	
+
 	local LoadingBar =
 	{
 		X = round(0.91 * WINDOW_W),
@@ -115,7 +119,7 @@ function ALUpdater:OnDraw()
 		BackgroundColor = 0xFF3C8430,
 		ForegroundColor = 0xFFDE540B
 	}
-	
+
 	DrawText(self.DownloadStatus, LoadingBar.HeaderFontSize, LoadingBar.X - 0.5 * LoadingBar.Width, LoadingBar.Y - LoadingBar.Height - LoadingBar.Border, LoadingBar.BackgroundColor)
 	DrawLine(LoadingBar.X, LoadingBar.Y, LoadingBar.X, LoadingBar.Y + LoadingBar.Height, LoadingBar.Width, LoadingBar.BackgroundColor)
 	if self.Progress > 0 then
@@ -123,7 +127,7 @@ function ALUpdater:OnDraw()
 		local Offset = 0.5 * (LoadingBar.Width - Width)
 		DrawLine(LoadingBar.X - Offset + LoadingBar.Border, LoadingBar.Y + LoadingBar.Border, LoadingBar.X - Offset + LoadingBar.Border, LoadingBar.Y + LoadingBar.Height - LoadingBar.Border, Width, LoadingBar.ForegroundColor)
 	end
-	
+
 	DrawText(self.Progress .. '%', LoadingBar.ProgressFontSize, LoadingBar.X - 2 * LoadingBar.Border, LoadingBar.Y + LoadingBar.Border, self.Progress < 50 and LoadingBar.ForegroundColor or LoadingBar.BackgroundColor)
 end
 
@@ -136,7 +140,7 @@ function ALUpdater:CreateSocket(url)
 		self.Size = nil
 		self.RecvStarted = false
 	end
-	
+
 	self.LuaSocket = require("socket")
 	self.Socket = self.LuaSocket.tcp()
 	self.Socket:settimeout(0, 'b')
@@ -156,18 +160,18 @@ function ALUpdater:Base64Encode(data)
 		for i = 8, 1, -1 do
 			r = r .. (b % 2 ^ i - b % 2 ^ (i - 1) > 0 and '1' or '0')
 		end
-		
+
 		return r;
 	end) .. '0000'), '%d%d%d?%d?%d?%d?', function(x)
 		if (#x < 6) then
 			return ''
 		end
-		
+
 		local c = 0
 		for i = 1, 6 do
 			c = c + (sub(x, i, i) == '1' and 2 ^ (6 - i) or 0)
 		end
-		
+
 		return sub(b, 1 + c, 1 + c)
 	end) .. ({ '', '==', '=' })[#data % 3 + 1])
 end
@@ -183,7 +187,7 @@ function ALUpdater:GetOnlineVersion()
 		self.Started = true
 		self.Socket:send("GET " .. self.Url .. " HTTP/1.1\r\nHost: sx-bol.eu\r\n\r\n")
 	end
-	
+
 	if (self.Receive or (#self.Snipped > 0)) and not self.RecvStarted then
 		self.RecvStarted = true
 		self.DownloadStatus = 'Downloading Version:'
@@ -195,19 +199,19 @@ function ALUpdater:GetOnlineVersion()
 		if not self.Size then
 			self.Size = tonumber(sub(self.File, 6 + find(self.File, '<size>'), find(self.File, '</size>') - 1))
 		end
-		
+
 		if find(self.File, '<script>') then
 			local _,ScriptFind = find(self.File, '<script>')
 			local ScriptEnd = find(self.File, '</script>')
 			if ScriptEnd then
 				ScriptEnd = ScriptEnd - 1
 			end
-			
+
 			local DownloadedSize = len(sub(self.File, 1 + ScriptFind, ScriptEnd or -1))
 			self.Progress = round(100 / self.Size * DownloadedSize, 2)
 		end
 	end
-	
+
 	if find(self.File, '</script>') then
 		local a, b = find(self.File, '\r\n\r\n')
 		self.File = sub(self.File, a, -1)
@@ -217,7 +221,7 @@ function ALUpdater:GetOnlineVersion()
 				self.NewFile = self.NewFile .. content
 			end
 		end
-		
+
 		local HeaderEnd, ContentStart = find(self.File, '<script>')
 		local ContentEnd, _ = find(self.File, '</script>')
 		if not ContentStart or not ContentEnd then
@@ -231,7 +235,7 @@ function ALUpdater:GetOnlineVersion()
 				if self.CallbackNewVersion and type(self.CallbackNewVersion) == 'function' then
 					self.CallbackNewVersion(self.OnlineVersion,self.LocalVersion)
 				end
-				
+
 				self:CreateSocket(self.ScriptPath)
 				self.DownloadStatus = 'Connecting to Server..'
 				self.Progress = 0
@@ -244,7 +248,7 @@ function ALUpdater:GetOnlineVersion()
 				end
 			end
 		end
-		
+
 		self.GotScriptVersion = true
 	end
 end
@@ -253,13 +257,13 @@ function ALUpdater:DownloadUpdate()
 	if self.GotScriptUpdate then
 		return
 	end
-	
+
 	self.Receive, self.Status, self.Snipped = self.Socket:receive(1024)
 	if self.Status == 'timeout' and not self.Started then
 		self.Started = true
 		self.Socket:send("GET " .. self.Url .. " HTTP/1.1\r\nHost: sx-bol.eu\r\n\r\n")
 	end
-	
+
 	if (self.Receive or (#self.Snipped > 0)) and not self.RecvStarted then
 		self.RecvStarted = true
 		self.DownloadStatus = 'Downloading Script:'
@@ -271,19 +275,19 @@ function ALUpdater:DownloadUpdate()
 		if not self.Size then
 			self.Size = tonumber(sub(self.File, 6 + find(self.File, '<size>'), find(self.File, '</size>') - 1))
 		end
-		
+
 		if find(self.File, '<script>') then
 			local _, ScriptFind = find(self.File, '<script>')
 			local ScriptEnd = find(self.File, '</script>')
 			if ScriptEnd then
 				ScriptEnd = ScriptEnd - 1
 			end
-			
+
 			local DownloadedSize = len(sub(self.File, 1 + ScriptFind, ScriptEnd or -1))
 			self.Progress = round(100 / self.Size * DownloadedSize, 2)
 		end
 	end
-	
+
 	if find(self.File, '</script>') then
 		local a, b = find(self.File, '\r\n\r\n')
 		self.File = sub(self.File, a, -1)
@@ -293,7 +297,7 @@ function ALUpdater:DownloadUpdate()
 				self.NewFile = self.NewFile .. content
 			end
 		end
-		
+
 		local HeaderEnd, ContentStart = find(self.NewFile, '<script>')
 		local ContentEnd, _ = find(self.NewFile, '</script>')
 		if not ContentStart or not ContentEnd then
@@ -307,10 +311,10 @@ function ALUpdater:DownloadUpdate()
 				if self.CallbackError and type(self.CallbackError) == 'function' then
 					self.CallbackError()
 				end
-				
+
 				return
 			end
-			
+
 			local newf = Base64Decode(newf)
 			if type(load(newf)) ~= 'function' then
 				if self.CallbackError and type(self.CallbackError) == 'function' then
@@ -325,7 +329,7 @@ function ALUpdater:DownloadUpdate()
 				end
 			end
 		end
-		
+
 		self.GotScriptUpdate = true
 	end
 end
@@ -363,6 +367,46 @@ function AutoLantern:__init()
 	self.GameVersion = sub(GetGameVersion(), 1, 9)
 	self.Packet =
 	{
+		['6.8.140.7'] =
+		{
+			Header = 0x6A,
+			vTable = 0xEA0C48,
+			DataTable =
+			{
+				[0x01] = 0x89, [0x02] = 0x25, [0x03] = 0x27, [0x04] = 0x69, [0x05] = 0x40, [0x06] = 0x1D, [0x07] = 0x8F, [0x08] = 0xEA,
+				[0x09] = 0xFF, [0x0A] = 0xCE, [0x0B] = 0xC5, [0x0C] = 0xB1, [0x0D] = 0xEE, [0x0E] = 0xF9, [0x0F] = 0x81, [0x10] = 0xE8,
+				[0x11] = 0x6F, [0x12] = 0x15, [0x13] = 0x3E, [0x14] = 0x9D, [0x15] = 0x87, [0x16] = 0x5E, [0x17] = 0xAB, [0x18] = 0x18,
+				[0x19] = 0x02, [0x1A] = 0x37, [0x1B] = 0x4C, [0x1C] = 0xCB, [0x1D] = 0xDE, [0x1E] = 0xAD, [0x1F] = 0xF2, [0x20] = 0x57,
+				[0x21] = 0x06, [0x22] = 0xE9, [0x23] = 0xF0, [0x24] = 0x2B, [0x25] = 0x8C, [0x26] = 0x71, [0x27] = 0xC7, [0x28] = 0xE2,
+				[0x29] = 0x7A, [0x2A] = 0x41, [0x2B] = 0xD2, [0x2C] = 0xE1, [0x2D] = 0x98, [0x2E] = 0x11, [0x2F] = 0x53, [0x30] = 0xBA,
+				[0x31] = 0x4D, [0x32] = 0xD8, [0x33] = 0xE5, [0x34] = 0x26, [0x35] = 0x6D, [0x36] = 0x01, [0x37] = 0x13, [0x38] = 0xB5,
+				[0x39] = 0xFE, [0x3A] = 0xA7, [0x3B] = 0xD9, [0x3C] = 0x42, [0x3D] = 0x5F, [0x3E] = 0xCD, [0x3F] = 0x36, [0x40] = 0x2F,
+				[0x41] = 0xBB, [0x42] = 0xB6, [0x43] = 0x7F, [0x44] = 0x14, [0x45] = 0x77, [0x46] = 0x22, [0x47] = 0x93, [0x48] = 0x17,
+				[0x49] = 0x0C, [0x4A] = 0xEF, [0x4B] = 0x61, [0x4C] = 0xFB, [0x4D] = 0x49, [0x4E] = 0x4E, [0x4F] = 0x59, [0x50] = 0x24,
+				[0x51] = 0x48, [0x52] = 0x54, [0x53] = 0x9A, [0x54] = 0x3B, [0x55] = 0x63, [0x56] = 0xD0, [0x57] = 0xC9, [0x58] = 0x96,
+				[0x59] = 0x0D, [0x5A] = 0xBF, [0x5B] = 0xA8, [0x5C] = 0xFD, [0x5D] = 0xF1, [0x5E] = 0x23, [0x5F] = 0x7D, [0x60] = 0xE6,
+				[0x61] = 0x0A, [0x62] = 0x1A, [0x63] = 0x7B, [0x64] = 0xB9, [0x65] = 0xC2, [0x66] = 0xC6, [0x67] = 0x03, [0x68] = 0x78,
+				[0x69] = 0x75, [0x6A] = 0xCF, [0x6B] = 0xE3, [0x6C] = 0x58, [0x6D] = 0xA5, [0x6E] = 0x91, [0x6F] = 0xAA, [0x70] = 0xC4,
+				[0x71] = 0x7C, [0x72] = 0xED, [0x73] = 0x79, [0x74] = 0xA3, [0x75] = 0x1C, [0x76] = 0x82, [0x77] = 0x0F, [0x78] = 0x32,
+				[0x79] = 0x04, [0x7A] = 0xD1, [0x7B] = 0xDF, [0x7C] = 0xFA, [0x7D] = 0x97, [0x7E] = 0x4F, [0x7F] = 0xA6, [0x80] = 0x9C,
+				[0x81] = 0x20, [0x82] = 0x3F, [0x83] = 0x95, [0x84] = 0x62, [0x85] = 0xA9, [0x86] = 0xA1, [0x87] = 0x8E, [0x88] = 0x1B,
+				[0x89] = 0x46, [0x8A] = 0x5A, [0x8B] = 0x86, [0x8D] = 0x88, [0x8E] = 0x7E, [0x8F] = 0x9F, [0x90] = 0x74, [0x91] = 0x84,
+				[0x92] = 0x2A, [0x93] = 0xBE, [0x94] = 0xA0, [0x95] = 0x34, [0x96] = 0xBC, [0x97] = 0xB7, [0x98] = 0x1E, [0x99] = 0xCC,
+				[0x9A] = 0xA4, [0x9B] = 0xFC, [0x9C] = 0x65, [0x9D] = 0x30, [0x9E] = 0x07, [0x9F] = 0xB3, [0xA0] = 0x4A, [0xA1] = 0xD6,
+				[0xA2] = 0xAF, [0xA3] = 0x9B, [0xA4] = 0x5C, [0xA5] = 0xF7, [0xA6] = 0x12, [0xA7] = 0x5D, [0xA8] = 0x28, [0xA9] = 0xC0,
+				[0xAA] = 0xB0, [0xAB] = 0xCA, [0xAC] = 0xEB, [0xAD] = 0x56, [0xAE] = 0x29, [0xAF] = 0xC8, [0xB0] = 0x47, [0xB1] = 0x6E,
+				[0xB2] = 0x33, [0xB3] = 0x8A, [0xB4] = 0xD3, [0xB5] = 0xE4, [0xB6] = 0xDB, [0xB7] = 0x35, [0xB8] = 0x50, [0xB9] = 0x31,
+				[0xBA] = 0x43, [0xBB] = 0x55, [0xBC] = 0xF6, [0xBD] = 0x68, [0xBE] = 0x64, [0xBF] = 0x80, [0xC0] = 0x94, [0xC1] = 0x6A,
+				[0xC2] = 0x2D, [0xC3] = 0x3C, [0xC4] = 0x51, [0xC5] = 0x5B, [0xC6] = 0x76, [0xC7] = 0xDC, [0xC8] = 0x45, [0xC9] = 0xD7,
+				[0xCA] = 0x99, [0xCB] = 0x21, [0xCC] = 0x83, [0xCD] = 0x38, [0xCE] = 0x10, [0xCF] = 0xDA, [0xD0] = 0x3D, [0xD1] = 0xC3,
+				[0xD2] = 0x60, [0xD3] = 0xB4, [0xD4] = 0x6C, [0xD5] = 0x0E, [0xD6] = 0x70, [0xD7] = 0xDD, [0xD8] = 0x8B, [0xD9] = 0x08,
+				[0xDA] = 0x44, [0xDB] = 0x09, [0xDC] = 0x19, [0xDD] = 0x05, [0xDE] = 0xAC, [0xDF] = 0x90, [0xE0] = 0xD4, [0xE1] = 0xF4,
+				[0xE2] = 0xB8, [0xE3] = 0xF3, [0xE4] = 0xF5, [0xE5] = 0x66, [0xE6] = 0xF8, [0xE7] = 0x52, [0xE8] = 0xD5, [0xE9] = 0xEC,
+				[0xEA] = 0x85, [0xEB] = 0x73, [0xEC] = 0x2C, [0xED] = 0x8D, [0xEE] = 0xA2, [0xEF] = 0xBD, [0xF0] = 0x4B, [0xF1] = 0x67,
+				[0xF2] = 0x00, [0xF3] = 0xE0, [0xF4] = 0x72, [0xF5] = 0x9E, [0xF6] = 0x2E, [0xF7] = 0x0B, [0xF8] = 0xE7, [0xF9] = 0xB2,
+				[0xFA] = 0x39, [0xFB] = 0x16, [0xFC] = 0xC1, [0xFD] = 0xAE, [0xFE] = 0x1F, [0xFF] = 0x3A, [0x00] = 0x92
+			}
+		},
 		['6.7.139.4'] =
 		{
 			Header = 0xF1,
@@ -524,7 +568,7 @@ function AutoLantern:__init()
 			}
 		}
 	}
-	
+
 	self.LanternObject = nil
 	self.LanternTick = 0
 	for _, Hero in pairs(GetAllyHeroes()) do
@@ -535,11 +579,11 @@ function AutoLantern:__init()
 			self.ThreshFound = false
 		end
 	end
-	
+
 	self:OnLoad()
-	
+
 	-- Bol-Tools Tracker
-	assert(load(Base64Decode("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"), nil, "bt", _ENV))()
+	assert(load(Base64Decode("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"), nil, "bt", _ENV))()
 	TrackerLoad("DRRkJTi7o3TfeaNv")
 end
 
@@ -551,26 +595,26 @@ function AutoLantern:OnLoad()
 		self.Config.GeneralSettings:addParam("LowHP", "Enable", SCRIPT_PARAM_ONOFF, true)
 		self.Config:addParam("OnTap", "Hotkey", SCRIPT_PARAM_ONKEYDOWN, false, GetKey('T'))
 		self.Config:addParam("ScriptVersion", "Script Version: ", SCRIPT_PARAM_INFO, "r" .. format("%.1f", Script.Version))
-		self.Config:addParam("GameVersion", "Game Version: ", SCRIPT_PARAM_INFO, sub(self.GameVersion, 1, 3))
-	
+		self.Config:addParam("GameVersion", "Game Version: ", SCRIPT_PARAM_INFO, sub(self.GameVersion, 1, 3)
+
 		AddProcessSpellCallback(function(unit, spell)
 			self:OnProcessSpell(unit, spell)
 		end)
-		
+
 		AddCreateObjCallback(function(object)
 			self:OnCreateObj(object)
 		end)
-		
+
 		AddTickCallback(function()
 			self:OnTick()
 		end)
 	end
-	
+
 	Print("Successfully loaded r" .. format("%.1f", Script.Version) .. ", have fun!")
 	if not self.ThreshFound or myHero.charName == "Thresh" then
 		Print((myHero.charName ~= "Thresh") and "Thresh not found in your team, the script will unload!" or "The script detected that you are Thresh, it will unload!")
 	end
-	
+
 	if self.Packet[self.GameVersion] == nil then
 		Print("The script is outdated for this version of the game (" .. self.GameVersion .. ")!")
 	end
@@ -589,15 +633,19 @@ function AutoLantern:OnCreateObj(object)
 	if object.name ~= "ThreshLantern" or object.team ~= myHero.team then
 		return
 	end
-	
+
 	self.LanternObject = object
 end
 
 function AutoLantern:OnTick()
+	if self.LanternObject == nil then
+		return
+	end
+
 	local HPPercentage = (myHero.health / myHero.maxHealth) * 100
 	if (self.Config.GeneralSettings.LowHP and self.Config.GeneralSettings.Percentage >= HPPercentage) or self.Config.OnTap then
 		local TickCalc = clock() - self.LanternTick
-		if self.LanternObject == nil or TickCalc < 5 then
+		if TickCalc < 5 then
 			return
 		end
 
@@ -609,7 +657,7 @@ function AutoLantern:GrabLantern(object)
 	if object == nil or object.name ~= "ThreshLantern" or object.team ~= myHero.team or GetDistanceSqr(object) > 250000 then
 		return
 	end
-	
+
 	local CustomPacket = CLoLPacket(self.Packet[self.GameVersion].Header)
 	CustomPacket.vTable = self.Packet[self.GameVersion].vTable
 	CustomPacket:EncodeF(myHero.networkID)
@@ -621,6 +669,6 @@ function AutoLantern:GrabLantern(object)
 		CustomPacket:Encode1(self.Packet[self.GameVersion].DataTable[temp])
 		CustomPacket.pos = CustomPacket.pos - 4 + i
 	end
-	
+
 	SendPacket(CustomPacket)
 end
