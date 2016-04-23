@@ -59,7 +59,7 @@
 local Script =
 {
 	Name = "Keyboard Controller",
-	Version = 2.2
+	Version = 2.3
 }
 
 local function Print(string)
@@ -377,11 +377,11 @@ function KeyboardController:__init()
 	self.GameVersion = sub(GetGameVersion(), 1, 9)
 	self.CastSpellHeader =
 	{
+		['6.8.141.1'] = 0x7F,
 		['6.8.140.7'] = 0x7F,
 		['6.7.139.4'] = 0x140,
 		['6.7.138.9'] = 0x140,
-		['6.6.138.7'] = 0x15A,
-		['6.6.137.4'] = 0x15A
+		['6.6.138.7'] = 0x15A
 	}
 
 	self:OnLoad()

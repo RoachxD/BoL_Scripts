@@ -79,7 +79,7 @@
 local Script =
 {
 	Name = "Item Swapper",
-	Version = 2.7
+	Version = 2.8
 }
 
 local function Print(string)
@@ -384,7 +384,21 @@ function ItemSwapper:__init()
 	self.GameVersion = sub(GetGameVersion(), 1, 9)
 	self.Packet =
 	{
-		
+		['6.8.141.1'] =
+		{
+			Header = 0x14,
+			vTable = 0xEB7BC4,
+			SourceSlotTable =
+			{
+				[1] = 0x92, [2] = 0x89, [3] = 0x25,
+				[4] = 0x27, [5] = 0x69, [6] = 0x40
+			},
+			TargetSlotTable =
+			{
+				[1] = 0xDE, [2] = 0xDC, [3] = 0xDA,
+				[4] = 0xD8, [5] = 0xD6, [6] = 0xD4
+			}
+		},
 		['6.8.140.7'] =
 		{
 			Header = 0x14,
@@ -445,24 +459,14 @@ function ItemSwapper:__init()
 				[4] = 0xF4, [5] = 0xF1, [6] = 0x8D
 			}
 		},
-		['6.6.137.4'] =
-		{
-			Header = 0x139,
-			vTable = 0xEC1164,
-			SourceSlotTable =
-			{
-				[1] = 0xF8, [2] = 0x4F, [3] = 0x14,
-				[4] = 0x9E, [5] = 0x24, [6] = 0x50
-			},
-			TargetSlotTable =
-			{
-				[1] = 0x2C, [2] = 0xD9, [3] = 0x7F,
-				[4] = 0xF4, [5] = 0xF1, [6] = 0x8D
-			}
-		},
 		Encode = function(packet, networkID, sourceSlotId, targetSlotId)
 			local Struct =
 			{
+				['6.8.141.1'] = function()
+					packet:EncodeF(networkID)
+					packet:Encode1(self.Packet[self.GameVersion].SourceSlotTable[sourceSlotId])
+					packet:Encode1(self.Packet[self.GameVersion].TargetSlotTable[targetSlotId])
+				end,
 				['6.8.140.7'] = function()
 					packet:EncodeF(networkID)
 					packet:Encode1(self.Packet[self.GameVersion].SourceSlotTable[sourceSlotId])
@@ -479,21 +483,6 @@ function ItemSwapper:__init()
 					packet:Encode1(self.Packet[self.GameVersion].SourceSlotTable[sourceSlotId])
 				end,
 				['6.6.138.7'] = function()
-					packet:EncodeF(networkID)
-					packet:Encode1(self.Packet[self.GameVersion].SourceSlotTable[sourceSlotId])
-					packet:Encode1(self.Packet[self.GameVersion].TargetSlotTable[targetSlotId])
-				end,
-				['6.6.137.4'] = function()
-					packet:EncodeF(networkID)
-					packet:Encode1(self.Packet[self.GameVersion].SourceSlotTable[sourceSlotId])
-					packet:Encode1(self.Packet[self.GameVersion].TargetSlotTable[targetSlotId])
-				end,
-				['6.5.0.280'] = function()
-					packet:EncodeF(networkID)
-					packet:Encode1(self.Packet[self.GameVersion].SourceSlotTable[sourceSlotId])
-					packet:Encode1(self.Packet[self.GameVersion].TargetSlotTable[targetSlotId])
-				end,
-				['6.5.0.277'] = function()
 					packet:EncodeF(networkID)
 					packet:Encode1(self.Packet[self.GameVersion].SourceSlotTable[sourceSlotId])
 					packet:Encode1(self.Packet[self.GameVersion].TargetSlotTable[targetSlotId])
