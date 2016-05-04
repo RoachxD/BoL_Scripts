@@ -12,6 +12,12 @@
 	Item Swapper - Swap items from your inventory using the Numpad!
 
 	Changelog:
+		May 04, 2016 [r2.9]:
+			- Updated for 6.9.
+
+		April 23, 2016 [r2.8]:
+			- Updated for 6.8 Mini-Patch.
+
 		April 20, 2016 [r2.7]:
 			- Updated for 6.8.
 			- Updated BoL-Tracker's code.
@@ -79,7 +85,7 @@
 local Script =
 {
 	Name = "Item Swapper",
-	Version = 2.8
+	Version = 2.9
 }
 
 local function Print(string)
@@ -384,6 +390,21 @@ function ItemSwapper:__init()
 	self.GameVersion = sub(GetGameVersion(), 1, 9)
 	self.Packet =
 	{
+		['6.9.142.7'] =
+		{
+			Header = 0x7C,
+			vTable = 0xEA953C,
+			SourceSlotTable =
+			{
+				[1] = 0x62, [2] = 0x45, [3] = 0x17,
+				[4] = 0xD9, [5] = 0xE3, [6] = 0xB7
+			},
+			TargetSlotTable =
+			{
+				[1] = 0xDB, [2] = 0x2C, [3] = 0x07,
+				[4] = 0x7D, [5] = 0x17, [6] = 0x43
+			}
+		},
 		['6.8.141.1'] =
 		{
 			Header = 0x14,
@@ -444,24 +465,14 @@ function ItemSwapper:__init()
 				[4] = 0x59, [5] = 0x50, [6] = 0x7C
 			}
 		},
-		['6.6.138.7'] =
-		{
-			Header = 0x139,
-			vTable = 0xEC2164,
-			SourceSlotTable =
-			{
-				[1] = 0xF8, [2] = 0x4F, [3] = 0x14,
-				[4] = 0x9E, [5] = 0x24, [6] = 0x50
-			},
-			TargetSlotTable =
-			{
-				[1] = 0x2C, [2] = 0xD9, [3] = 0x7F,
-				[4] = 0xF4, [5] = 0xF1, [6] = 0x8D
-			}
-		},
 		Encode = function(packet, networkID, sourceSlotId, targetSlotId)
 			local Struct =
 			{
+				['6.9.142.7'] = function()
+					packet:EncodeF(networkID)
+					packet:Encode1(self.Packet[self.GameVersion].TargetSlotTable[targetSlotId])
+					packet:Encode1(self.Packet[self.GameVersion].SourceSlotTable[sourceSlotId])
+				end,
 				['6.8.141.1'] = function()
 					packet:EncodeF(networkID)
 					packet:Encode1(self.Packet[self.GameVersion].SourceSlotTable[sourceSlotId])
@@ -481,11 +492,6 @@ function ItemSwapper:__init()
 					packet:EncodeF(networkID)
 					packet:Encode1(self.Packet[self.GameVersion].TargetSlotTable[targetSlotId])
 					packet:Encode1(self.Packet[self.GameVersion].SourceSlotTable[sourceSlotId])
-				end,
-				['6.6.138.7'] = function()
-					packet:EncodeF(networkID)
-					packet:Encode1(self.Packet[self.GameVersion].SourceSlotTable[sourceSlotId])
-					packet:Encode1(self.Packet[self.GameVersion].TargetSlotTable[targetSlotId])
 				end
 			}
 
