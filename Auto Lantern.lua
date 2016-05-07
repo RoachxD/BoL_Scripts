@@ -68,7 +68,7 @@
 local Script =
 {
 	Name = "Auto Lantern",
-	Version = 2.5
+	Version = 2.51
 }
 
 local function Print(string)
@@ -601,7 +601,7 @@ function AutoLantern:OnLoad()
 		self.Config.GeneralSettings:addParam("LowHP", "Enable", SCRIPT_PARAM_ONOFF, true)
 		self.Config:addParam("OnTap", "Hotkey", SCRIPT_PARAM_ONKEYDOWN, false, GetKey('T'))
 		self.Config:addParam("ScriptVersion", "Script Version: ", SCRIPT_PARAM_INFO, "r" .. format("%.1f", Script.Version))
-		self.Config:addParam("GameVersion", "Game Version: ", SCRIPT_PARAM_INFO, sub(self.GameVersion, 1, 3)
+		self.Config:addParam("GameVersion", "Game Version: ", SCRIPT_PARAM_INFO, sub(self.GameVersion, 1, 3))
 
 		AddProcessSpellCallback(function(unit, spell)
 			self:OnProcessSpell(unit, spell)
