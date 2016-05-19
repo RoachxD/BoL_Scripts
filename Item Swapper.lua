@@ -12,6 +12,9 @@
 	Item Swapper - Swap items from your inventory using the Numpad!
 
 	Changelog:
+		May 19, 2016 [r3.0]:
+			- Updated for 6.10.
+
 		May 04, 2016 [r2.9]:
 			- Updated for 6.9.
 
@@ -85,7 +88,7 @@
 local Script =
 {
 	Name = "Item Swapper",
-	Version = 2.9
+	Version = 3.0
 }
 
 local function Print(string)
@@ -387,10 +390,25 @@ end)
 
 class "ItemSwapper"
 function ItemSwapper:__init()
-	self.GameVersion = sub(GetGameVersion(), 1, 9)
+	self.GameVersion = GetGameVersion():split(' ')[1]
 	self.Packet =
 	{
-		['6.9.142.7'] =
+		['6.10.143.8420'] =
+		{
+			Header = 0x123,
+			vTable = 0xECEE00,
+			SourceSlotTable =
+			{
+				[1] = 0x71, [2] = 0xF1, [3] = 0x31,
+				[4] = 0xB1, [5] = 0x7A, [6] = 0xFA
+			},
+			TargetSlotTable =
+			{
+				[1] = 0x01, [2] = 0x3F, [3] = 0x00,
+				[4] = 0x3E, [5] = 0x61, [6] = 0x9F
+			}
+		},
+		['6.9.142.751'] =
 		{
 			Header = 0x7C,
 			vTable = 0xEA953C,
@@ -405,7 +423,7 @@ function ItemSwapper:__init()
 				[4] = 0x7D, [5] = 0x17, [6] = 0x43
 			}
 		},
-		['6.8.141.1'] =
+		['6.8.141.1875'] =
 		{
 			Header = 0x14,
 			vTable = 0xEB7BC4,
@@ -420,7 +438,7 @@ function ItemSwapper:__init()
 				[4] = 0xD8, [5] = 0xD6, [6] = 0xD4
 			}
 		},
-		['6.8.140.7'] =
+		['6.8.140.7619'] =
 		{
 			Header = 0x14,
 			vTable = 0xEB7BC4,
@@ -433,65 +451,30 @@ function ItemSwapper:__init()
 			{
 				[1] = 0xDE, [2] = 0xDC, [3] = 0xDA,
 				[4] = 0xD8, [5] = 0xD6, [6] = 0xD4
-			}
-		},
-		['6.7.139.4'] =
-		{
-			Header = 0xFE,
-			vTable = 0xE941B8,
-			SourceSlotTable =
-			{
-				[1] = 0x7C, [2] = 0x5C, [3] = 0x1B,
-				[4] = 0x0E, [5] = 0x35, [6] = 0xCD
-			},
-			TargetSlotTable =
-			{
-				[1] = 0x52, [2] = 0x28, [3] = 0xDA,
-				[4] = 0x59, [5] = 0x50, [6] = 0x7C
-			}
-		},
-		['6.7.138.9'] =
-		{
-			Header = 0xFE,
-			vTable = 0xE941B8,
-			SourceSlotTable =
-			{
-				[1] = 0x7C, [2] = 0x5C, [3] = 0x1B,
-				[4] = 0x0E, [5] = 0x35, [6] = 0xCD
-			},
-			TargetSlotTable =
-			{
-				[1] = 0x52, [2] = 0x28, [3] = 0xDA,
-				[4] = 0x59, [5] = 0x50, [6] = 0x7C
 			}
 		},
 		Encode = function(packet, networkID, sourceSlotId, targetSlotId)
 			local Struct =
 			{
-				['6.9.142.7'] = function()
-					packet:EncodeF(networkID)
-					packet:Encode1(self.Packet[self.GameVersion].TargetSlotTable[targetSlotId])
-					packet:Encode1(self.Packet[self.GameVersion].SourceSlotTable[sourceSlotId])
-				end,
-				['6.8.141.1'] = function()
+				['6.10.143.8420'] = function()
 					packet:EncodeF(networkID)
 					packet:Encode1(self.Packet[self.GameVersion].SourceSlotTable[sourceSlotId])
 					packet:Encode1(self.Packet[self.GameVersion].TargetSlotTable[targetSlotId])
 				end,
-				['6.8.140.7'] = function()
-					packet:EncodeF(networkID)
-					packet:Encode1(self.Packet[self.GameVersion].SourceSlotTable[sourceSlotId])
-					packet:Encode1(self.Packet[self.GameVersion].TargetSlotTable[targetSlotId])
-				end,
-				['6.7.139.4'] = function()
+				['6.9.142.751'] = function()
 					packet:EncodeF(networkID)
 					packet:Encode1(self.Packet[self.GameVersion].TargetSlotTable[targetSlotId])
 					packet:Encode1(self.Packet[self.GameVersion].SourceSlotTable[sourceSlotId])
 				end,
-				['6.7.138.9'] = function()
+				['6.8.141.1875'] = function()
 					packet:EncodeF(networkID)
-					packet:Encode1(self.Packet[self.GameVersion].TargetSlotTable[targetSlotId])
 					packet:Encode1(self.Packet[self.GameVersion].SourceSlotTable[sourceSlotId])
+					packet:Encode1(self.Packet[self.GameVersion].TargetSlotTable[targetSlotId])
+				end,
+				['6.8.140.7619'] = function()
+					packet:EncodeF(networkID)
+					packet:Encode1(self.Packet[self.GameVersion].SourceSlotTable[sourceSlotId])
+					packet:Encode1(self.Packet[self.GameVersion].TargetSlotTable[targetSlotId])
 				end
 			}
 
