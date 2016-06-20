@@ -12,6 +12,9 @@
 	Keyboard Controller - Move your hero using the keyboard!
 
 	Changelog:
+		June 20, 2016 [r2.7]:
+			- Updated for 6.12.
+
 		June 03, 2016 [r2.6]:
 			- Updated for 6.11.
 
@@ -71,7 +74,7 @@
 local Script =
 {
 	Name = "Keyboard Controller",
-	Version = 2.6
+	Version = 2.7
 }
 
 local function Print(string)
@@ -389,10 +392,9 @@ function KeyboardController:__init()
 	self.GameVersion = GetGameVersion():split(' ')[1]
 	self.CastSpellHeader =
 	{
-		['6.10.145.3450'] = 0x11E,
-		['6.10.143.8420'] = 0x69,
-		['6.9.142.751'] = 0x40,
-		['6.8.141.1875'] = 0x7F
+		['6.12.147.611'] = 0x122,
+		['6.11.145.3450'] = 0x11E,
+		['6.10.143.8420'] = 0x69
 	}
 
 	self:OnLoad()

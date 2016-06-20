@@ -12,6 +12,9 @@
 	Item Swapper - Swap items from your inventory using the Numpad!
 
 	Changelog:
+		June 20, 2016 [r3.2]:
+			- Updated for 6.12.
+
 		June 03, 2016 [r3.1]:
 			- Updated for 6.11.
 
@@ -91,7 +94,7 @@
 local Script =
 {
 	Name = "Item Swapper",
-	Version = 3.1
+	Version = 3.2
 }
 
 local function Print(string)
@@ -396,6 +399,21 @@ function ItemSwapper:__init()
 	self.GameVersion = GetGameVersion():split(' ')[1]
 	self.Packet =
 	{
+		['6.12.147.611'] =
+		{
+			Header = 0x27,
+			vTable = 0xFC138C,
+			SourceSlotTable =
+			{
+				[1] = 0x51, [2] = 0x5A, [3] = 0x58,
+				[4] = 0x5B, [5] = 0x59, [6] = 0x56
+			},
+			TargetSlotTable =
+			{
+				[1] = 0x61, [2] = 0x2D, [3] = 0xBC,
+				[4] = 0x18, [5] = 0x0A, [6] = 0x7B
+			}
+		},
 		['6.11.145.3450'] =
 		{
 			Header = 0x123,
@@ -426,24 +444,14 @@ function ItemSwapper:__init()
 				[4] = 0x3E, [5] = 0x61, [6] = 0x9F
 			}
 		},
-		['6.9.142.751'] =
-		{
-			Header = 0x7C,
-			vTable = 0xEA953C,
-			SourceSlotTable =
-			{
-				[1] = 0x62, [2] = 0x45, [3] = 0x17,
-				[4] = 0xD9, [5] = 0xE3, [6] = 0xB7
-			},
-			TargetSlotTable =
-			{
-				[1] = 0xDB, [2] = 0x2C, [3] = 0x07,
-				[4] = 0x7D, [5] = 0x17, [6] = 0x43
-			}
-		},
 		Encode = function(packet, networkID, sourceSlotId, targetSlotId)
 			local Struct =
 			{
+				['6.12.147.611'] = function()
+					packet:EncodeF(networkID)
+					packet:Encode1(self.Packet[self.GameVersion].TargetSlotTable[targetSlotId])
+					packet:Encode1(self.Packet[self.GameVersion].SourceSlotTable[sourceSlotId])
+				end,
 				['6.11.145.3450'] = function()
 					packet:EncodeF(networkID)
 					packet:Encode1(self.Packet[self.GameVersion].SourceSlotTable[sourceSlotId])
@@ -453,11 +461,6 @@ function ItemSwapper:__init()
 					packet:EncodeF(networkID)
 					packet:Encode1(self.Packet[self.GameVersion].SourceSlotTable[sourceSlotId])
 					packet:Encode1(self.Packet[self.GameVersion].TargetSlotTable[targetSlotId])
-				end,
-				['6.9.142.751'] = function()
-					packet:EncodeF(networkID)
-					packet:Encode1(self.Packet[self.GameVersion].TargetSlotTable[targetSlotId])
-					packet:Encode1(self.Packet[self.GameVersion].SourceSlotTable[sourceSlotId])
 				end
 			}
 
@@ -540,12 +543,15 @@ function ItemSwapper:SwapItem(sourceSlotId, targetSlotId)
 	end
 
 	if GetInventorySlotIsEmpty(5 + sourceSlotId) and not GetInventorySlotIsEmpty(5 + targetSlotId) then
+		print("Yay")
 		sourceSlotId, targetSlotId = targetSlotId, sourceSlotId
 	end
 
 	local CustomPacket = CLoLPacket(self.Packet[self.GameVersion].Header)
 	CustomPacket.vTable = self.Packet[self.GameVersion].vTable
 	self.Packet.Encode(CustomPacket, myHero.networkID, sourceSlotId, targetSlotId)
+	
+	print(DumpPacketData(CustomPacket))
 
 	SendPacket(CustomPacket)
 end
