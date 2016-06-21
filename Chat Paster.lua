@@ -325,7 +325,6 @@ function ChatPaster:__init()
 		V = 0x56
 	}
 
-	self.Clipboard = require("clipboard")
 	self.ConfirmationNeeded = false
 	self.KeysPressed = false
 
@@ -360,8 +359,8 @@ function ChatPaster:OnWndMsg(msg, key)
 			if self.KeysPressed then
 				return
 			end
-			
-			local ClipboardText = self.Clipboard.gettext()
+
+			local ClipboardText = GetClipboardText()
 			if self.Config.Settings.Confirmation then
 				if not self.ConfirmationNeeded then
 					Print("To confirm press CTRL-V once again.")
