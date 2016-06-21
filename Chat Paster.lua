@@ -387,5 +387,3 @@ function ChatPaster:OnWndMsg(msg, key)
 		self.ConfirmationNeeded = false
 	end
 end
-
-ChatPaster()
