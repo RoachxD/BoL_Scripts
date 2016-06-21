@@ -21,7 +21,7 @@
 local Script =
 {
 	Name = "Chat Paster",
-	Version = 1.0
+	Version = 1.1
 }
 
 local function Print(string)
