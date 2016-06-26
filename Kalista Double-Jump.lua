@@ -7,7 +7,7 @@ function OnTick()
 	
 	local EnemyHeroes = GetEnemyHeroes()
 	local TickCount = GetTickCount()
-	local CanAttack, CanMove = TickCount > LastAATick + AttackSpeed * 1000 - 150, TickCount >= LastAATick + 1
+	local CanAttack, CanMove = TickCount > LastAATick + 1000 / AttackSpeed - 150, TickCount >= LastAATick + 1
 	if not (CanAttack or CanMove) then
 		return
 	end
