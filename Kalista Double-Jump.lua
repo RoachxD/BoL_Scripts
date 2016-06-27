@@ -31,7 +31,7 @@ function OnTick()
 end
 
 function OnAnimation(unit, anim)
-	if unit ~= myHero or not anim:lower():find("attack") or not anim:lower():find("crit") then
+	if unit ~= myHero or not (anim:lower():find("attack") or anim:lower():find("crit")) then
 		return
 	end
 	
